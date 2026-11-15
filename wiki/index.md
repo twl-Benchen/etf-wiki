@@ -21,6 +21,9 @@ updated: 2026-11-16
 - [申購買回與套利](concepts/creation-redemption.md)：利用淨值和市價的價差套利，把市價拉回淨值附近。(別名: 套利, 申購買回)
 - [主動式與被動式 ETF](concepts/active-vs-passive.md)：被動式追蹤指數，主動式由經理人主動調整，不保證打敗績效指標。(別名: 主動式, 被動式, 平衡型, 績效指標)
 - [ETF 代碼與簡稱怎麼看](concepts/etf-ticker-codes.md)：從名稱、簡稱、代碼第六碼分辨主動式 (A/D) 和平衡型 (T)。(別名: 證券代碼, 第六碼)
+- [配息與總報酬](concepts/dividend-and-total-return.md)：配息只是報酬的一部分，ETF 不保證固定配息，看表現要看總報酬率。(別名: 配息率, 月配, 高股息)
+- [ETF 的風險](concepts/etf-risks.md)：折溢價、流動性、追蹤誤差、市場、集中度與下市風險。(別名: 風險, 下市)
+- [新手常見誤解](concepts/common-misconceptions.md)：各頁常見誤解的總整理。(別名: 迷思)
 
 ## 對象 (entities/)
 
@@ -35,4 +38,4 @@ updated: 2026-11-16
 | s02 | [s02 ETF 的成本](sources/s02-etf-costs.md) | 已 ingest (2026-11-16) |
 | s03 | [s03 折溢價與套利](sources/s03-premium-discount.md) | 已 ingest (2026-11-16) |
 | s04 | [s04 主動式與被動式](sources/s04-active-vs-passive.md) | 已 ingest (2026-11-16) |
-| s05 | (未建立) | 待 ingest |
+| s05 | [s05 配息與總報酬](sources/s05-dividend-vs-total-return.md) | 已 ingest (2026-11-16) |

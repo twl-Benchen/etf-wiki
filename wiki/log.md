@@ -68,3 +68,10 @@ type: log
 - 問題與修正：
   - [格式] lint.py 的表格規則沒有在新段落重設，etf-ticker-codes.md 的表格沒有前導句，卻借用上一段的來源而通過檢查。修正腳本 (遇到標題就重設)，頁面改成表格前先寫一句有來源的前導句。這次是檢查工具本身出錯，而不是 Wiki 內容出錯
   - [缺資料] 卡片寫「主動式和被動式都要每天公開投資組合」，但 s04b 只寫到主動式，「兩者都要」只有沒建卡的報導提到，所以不寫進 Wiki
+
+## [2026-11-16] ingest | s05 配息與總報酬
+- 討論：AI 提出 5 個重點 (不是固定配息、看總報酬、月配季配的意思、六種風險、廣告提醒)。和卡片規劃不同：多開一頁 etf-risks，因為原文列出的六種風險可以把前面幾頁串起來，適合當簡報的總結章。原文的詐騙手法和定期定額建議不寫入。使用者授權 AI 自行決定
+- 寫入：新增 sources/s05-dividend-vs-total-return.md、concepts/dividend-and-total-return.md、concepts/etf-risks.md、concepts/common-misconceptions.md；修改 what-is-etf.md (相關頁面)、index.md
+- 檢查：lint.py 第 1 次 1 個問題 (總整理頁表格沒有前導句)，修正後 0 個；語意檢查：etf-risks 表格的「白話意思」欄是 AI 對風險名稱的解釋，屬於說明而不是新事實；common-misconceptions 沒有放新事實
+- 問題與修正：
+  - [格式] 總整理頁的表格表頭沒有來源，補上前導句。同樣的錯誤 (表格忘了前導句) 已經是第 2 次，代表 AGENTS.md 3.5 的頁面模板應該直接寫出表格的範例，見之後的流程修改
