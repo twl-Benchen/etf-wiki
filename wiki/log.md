@@ -29,3 +29,11 @@ type: log
 - 原因：v0 有多處規則互相衝突或無法執行，例如 index/log 的 type 不在清單內、例子無法標來源、eval 讀題目時同時讀到答案、孤立頁面的定義永遠不會成立
 - 使用者決定的 6 件事：例子不標來源 (是)、子編號 (用)、核對發現的新來源 (回報後由人決定建卡)、eval 拆檔與 holdout (要，門檻 80%)、狀態欄 (搬到 index)、commit 與 lint 腳本 (AI 每次 ingest 後 commit，要寫腳本)
 - 同步調整 raw 卡：補上 subids 對照、s05 補確切發布日期 2024-11-29 (屬於定案前的整理，之後 raw/ 由人維護)
+
+## [2026-11-16] ingest | s01 什麼是 ETF
+- 討論：AI 提出 4 個重點 (英文全名與正式名稱、指數、股票、基金三面向)，規劃新增 3 頁 (what-is-etf、index-tracking、twse) 與來源摘要頁。使用者授權 AI 依 AGENTS.md 自行決定，未另外修改計畫
+- 寫入：新增 sources/s01-what-is-etf.md、concepts/what-is-etf.md、concepts/index-tracking.md、entities/twse.md；更新 index.md
+- 檢查：lint.py 第 1 次 1 個問題，修正後 0 個；語意檢查：「投信」「成分股」在首次出現處已補括號解釋，無建議句
+- 問題與修正：
+  - [格式] AI 在 twse.md 自行加上證交所官網網址，原文沒有提到，lint 判為缺來源。刪除，等有來源時再補。這是 AI 用自己的知識補內容的典型錯誤，機械檢查有效擋下
+  - s01a 是放在個人網站的轉載文，不是官方原始網址，已記在來源摘要頁核對紀錄
