@@ -52,3 +52,11 @@ type: log
 ## [2026-11-16] rule-change | v1.1
 - 修改：AGENTS.md 3.4 新增表格的來源規則 (前導句有標來源就代表整張表)；scripts/lint.py 同步支援
 - 原因：ingest s02 時，0050 分級費率很適合用表格呈現，但 v1 的「每個事實句都要標來源」讓表格每一列都要重複標，表格會變得很難讀
+
+## [2026-11-16] ingest | s03 折溢價與套利
+- 討論：AI 提出 5 個重點 (兩個價格、兩個市場、套利機制與失效情況、2026 參考範圍、高溢價風險)，規劃 4 頁概念頁，並把 s02b 對初級市場門檻的說明合併進 primary-secondary-market。使用者授權 AI 自行決定
+- 寫入：新增 sources/s03-premium-discount.md、concepts/nav.md、premium-discount.md、primary-secondary-market.md、creation-redemption.md；修改 expense-ratio.md (補回淨值連結)、twse.md (補上網站與專欄，有來源了)、what-is-etf.md (相關頁面)、index.md
+- 檢查：lint.py 0 個問題；語意檢查發現 1 個問題 (見下)；0.5% / 3% / 5% 已標「截至 2026-05」
+- 問題與修正：
+  - [原文無法讀取] s03a 的 PDF 被證交所網站資安機制擋下，依 5.1 改用搜尋引擎提供的同一份 PDF 內文摘錄，另一篇同系列報導說法一致
+  - [格式] 語意檢查發現 nav.md 寫「換算成每一個單位的價值」，來源只說「持股的總價值」，這半句是 AI 自己補的。lint.py 抓不到這種問題，因為整句有標來源。已刪除那半句

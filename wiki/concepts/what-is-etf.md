@@ -31,3 +31,4 @@ ETF 是 Exchange Traded Fund 的縮寫，意思是在交易所買賣的基金，
 
 - [指數與追蹤](index-tracking.md)
 - [臺灣證券交易所](../entities/twse.md)
+- [淨值](nav.md)
