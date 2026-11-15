@@ -12,17 +12,21 @@ updated: 2026-11-16
 
 - [什麼是 ETF](concepts/what-is-etf.md)：ETF 是在交易所像股票一樣買賣、追蹤某個指數的基金，正式名稱是指數股票型基金。(別名: ETF, 指數股票型基金)
 - [指數與追蹤](concepts/index-tracking.md)：指數代表一群股票的整體表現，被動式 ETF 依照指數的成分股和比重買進。(別名: 指數, 成分股)
+- [內扣費用與費用率](concepts/expense-ratio.md)：持有 ETF 期間的經理費、保管費等費用，直接從淨值裡扣除。(別名: 費用率, 經理費, 保管費)
+- [交易成本：手續費與證交稅](concepts/trading-costs.md)：買賣時付券商手續費，賣出時另付證交稅。(別名: 手續費, 證交稅)
+- [追蹤誤差](concepts/tracking-error.md)：ETF 實際報酬和指數報酬之間的差距。(別名: tracking error)
 
 ## 對象 (entities/)
 
 - [臺灣證券交易所](entities/twse.md)：ETF 掛牌交易的地方，也發布 ETF 相關提醒。(別名: 證交所, TWSE)
+- [0050 元大台灣50](entities/etf-0050.md)：台灣第一檔 ETF，投資上市市值最大的 50 家公司。(別名: 0050, 元大台灣50)
 
 ## 來源 (sources/)
 
 | 編號 | 來源摘要頁 | 狀態 |
 |---|---|---|
 | s01 | [s01 什麼是 ETF](sources/s01-what-is-etf.md) | 已 ingest (2026-11-16) |
-| s02 | (未建立) | 待 ingest |
+| s02 | [s02 ETF 的成本](sources/s02-etf-costs.md) | 已 ingest (2026-11-16) |
 | s03 | (未建立) | 待 ingest |
 | s04 | (未建立) | 待 ingest |
 | s05 | (未建立) | 待 ingest |

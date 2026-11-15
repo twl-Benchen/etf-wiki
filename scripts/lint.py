@@ -69,13 +69,19 @@ def main():
         if meta.get("type") == "source":
             continue
         section = ""
+        prev_sourced = False  # 表格上一行有標來源時，整張表視為有來源 (AGENTS.md 3.4)
         for n, line in enumerate(body.splitlines(), 1):
             s = line.strip()
             if s.startswith("#"):
                 section = s.lstrip("#").strip()
                 continue
-            if not s or section in EXEMPT_SECTIONS or s.startswith("|---"):
+            if not s or section in EXEMPT_SECTIONS:
                 continue
+            if s.startswith("|"):
+                if prev_sourced:
+                    continue
+            else:
+                prev_sourced = bool(SRC_RE.search(s))
             if not re.search(r"[一-鿿]", s) or s.lstrip("-* ").startswith("假設"):
                 continue
             ids = SRC_RE.findall(s)
