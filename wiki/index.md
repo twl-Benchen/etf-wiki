@@ -19,6 +19,8 @@ updated: 2026-11-16
 - [折溢價](concepts/premium-discount.md)：市價和淨值的落差，市價比較高叫溢價，比較低叫折價。(別名: 折價, 溢價)
 - [初級市場與次級市場](concepts/primary-secondary-market.md)：大額向投信用淨值申購買回，或一般人用市價買賣。(別名: 一級市場, 二級市場)
 - [申購買回與套利](concepts/creation-redemption.md)：利用淨值和市價的價差套利，把市價拉回淨值附近。(別名: 套利, 申購買回)
+- [主動式與被動式 ETF](concepts/active-vs-passive.md)：被動式追蹤指數，主動式由經理人主動調整，不保證打敗績效指標。(別名: 主動式, 被動式, 平衡型, 績效指標)
+- [ETF 代碼與簡稱怎麼看](concepts/etf-ticker-codes.md)：從名稱、簡稱、代碼第六碼分辨主動式 (A/D) 和平衡型 (T)。(別名: 證券代碼, 第六碼)
 
 ## 對象 (entities/)
 
@@ -32,5 +34,5 @@ updated: 2026-11-16
 | s01 | [s01 什麼是 ETF](sources/s01-what-is-etf.md) | 已 ingest (2026-11-16) |
 | s02 | [s02 ETF 的成本](sources/s02-etf-costs.md) | 已 ingest (2026-11-16) |
 | s03 | [s03 折溢價與套利](sources/s03-premium-discount.md) | 已 ingest (2026-11-16) |
-| s04 | (未建立) | 待 ingest |
+| s04 | [s04 主動式與被動式](sources/s04-active-vs-passive.md) | 已 ingest (2026-11-16) |
 | s05 | (未建立) | 待 ingest |

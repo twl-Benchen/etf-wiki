@@ -74,6 +74,7 @@ def main():
             s = line.strip()
             if s.startswith("#"):
                 section = s.lstrip("#").strip()
+                prev_sourced = False  # 換段落就重算，表格不能借用上一段的來源
                 continue
             if not s or section in EXEMPT_SECTIONS:
                 continue

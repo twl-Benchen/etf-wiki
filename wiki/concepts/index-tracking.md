@@ -3,7 +3,7 @@ title: 指數與追蹤
 type: concept
 summary: 指數代表一群股票的整體表現，被動式 ETF 依照指數的成分股和比重買進，讓表現貼近指數。
 aliases: [指數, 追蹤指數, 成分股, index, 指數化投資]
-sources: [s01a]
+sources: [s01a, s04b]
 updated: 2026-11-16
 ---
 
@@ -18,6 +18,7 @@ updated: 2026-11-16
 - 指數的成分股 (被選進指數的那些股票)，就是 ETF 的投資組合 (來源: s01a)。
 - ETF 的重點是追蹤指數，不是打敗指數，所以投信會把持股調整到和指數成分股一致 (來源: s01a)。
 - 追蹤得好的 ETF，表現會很接近指數 (來源: s01a)。
+- 這種以追蹤指數為目標的 ETF 稱為被動式 ETF；另外還有由經理人主動選股的[主動式 ETF](active-vs-passive.md) (不追蹤指數、追求超越績效指標) (來源: s04b)。
 
 ## 例子
 
@@ -26,3 +27,5 @@ updated: 2026-11-16
 ## 相關頁面
 
 - [什麼是 ETF](what-is-etf.md)
+- [主動式與被動式 ETF](active-vs-passive.md)
+- [追蹤誤差](tracking-error.md)
