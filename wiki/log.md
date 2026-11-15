@@ -141,3 +141,6 @@ type: log
   - AGENTS.md 5.5 第 6 步：加入 check_slides.py 與電腦、手機截圖檢查，能用 HTML 排版的不用 SVG
   - docs/workflow.md 更新成 v1.2 流程圖，新增原文讀取分支、卡片 vs 原文、語意檢查、找錯頁出路、holdout、簡報三段檢查
 - 原因：跑完一輪後回頭看 log。最常出錯的節點是「寫入 Wiki」(lint 共抓到 9 個問題，語意檢查 1 個)；eval 唯一的缺資料 (d04) 在 ingest s02 就已經發現，卻拖到 eval 才補；簡報的版面問題靠截圖才發現。所以把這三種檢查往前移
+
+## [2026-11-16] lint | 更正上一筆統計
+- 上一筆 rule-change 寫「lint 共抓到 9 個問題」，重新對照各次 ingest 紀錄後，實際是 12 個 (s01 1、s02 6、s04 4、s05 1)。docs/workflow.md 已更正；依第 6 節規定不修改舊紀錄，以這筆為準
