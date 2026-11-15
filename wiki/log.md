@@ -75,3 +75,33 @@ type: log
 - 檢查：lint.py 第 1 次 1 個問題 (總整理頁表格沒有前導句)，修正後 0 個；語意檢查：etf-risks 表格的「白話意思」欄是 AI 對風險名稱的解釋，屬於說明而不是新事實；common-misconceptions 沒有放新事實
 - 問題與修正：
   - [格式] 總整理頁的表格表頭沒有來源，補上前導句。同樣的錯誤 (表格忘了前導句) 已經是第 2 次，代表 AGENTS.md 3.5 的頁面模板應該直接寫出表格的範例，見之後的流程修改
+
+## [2026-11-16] eval | dev 第 1 次 (作答)
+- 作答方式：只讀 eval/questions.json 的 dev 題，依 5.2 查 index.md 後打開頁面作答，作答時未打開 answers.json
+- 作答紀錄：
+  - d01 Exchange Traded Fund，正式名稱指數股票型基金 (what-is-etf)
+  - d02 追蹤指數，不是打敗指數 (index-tracking)
+  - d03 經理費、保管費等從淨值直接扣除，不會收到帳單 (expense-ratio)
+  - d04 0.1%；和一般股票的比較：Wiki 沒有這項資料 (trading-costs)
+  - d05 折價 (premium-discount)
+  - d06 初級市場用淨值、次級市場用市價，一般人主要在次級市場 (primary-secondary-market)
+  - d07 申購買回的套利機制會縮小價差 (creation-redemption)
+  - d08 股票型 A、債券型 D (etf-ticker-codes)
+  - d09 總報酬率，因為配息不固定、價格變化影響很大 (dividend-and-total-return)
+  - d10 不是，由投信依基金狀況決定 (dividend-and-total-return)
+  - d11 ETF 和指數的報酬差距，原因例如要付內扣費用 (tracking-error)
+  - d12 Wiki 只提供觀念，不提供投資建議，附上 etf-0050、expense-ratio (依 5.2 第 4 點)
+
+## [2026-11-16] eval | dev 第 1 次 (批改)
+- 題數 / 正確率：12 題，正確 11、部分正確 1、錯誤 0、Wiki 沒有資料 0，正確率 91.7%，達到通過標準
+- 錯題與原因：d04 部分正確，原因是缺資料。Wiki 只有 ETF 證交稅 0.1%，沒有一般股票的稅率。這個問題在 ingest s02 時就已經記下 (卡片寫了 0.3%，但來源沒有)，eval 證實它確實會影響回答
+- 處理：依 5.4 第 5 點補新的 raw 卡，不把標準答案寫進 Wiki。找到財政部法規資料庫的證券交易稅條例當官方來源，建立 s06 (使用者授權 AI 代建，卡片上註明 added_by)
+- 待人確認：d04 判成「部分正確」，依 5.4 第 6 點需要人看過
+
+## [2026-11-16] ingest | s06 證券交易稅條例
+- 討論：AI 提出 3 個重點 (股票 0.3%、其他核准有價證券 0.1%、債券 ETF 暫停徵收到 2026-12-31)，只修改 trading-costs.md，不新開頁面
+- 寫入：新增 raw/s06 卡、sources/s06-securities-transaction-tax.md；修改 trading-costs.md、index.md、raw/README.md
+- 檢查：lint.py 0 個問題；語意檢查：債券 ETF 的期限已寫明並提醒以最新公告為準
+- 問題與修正：
+  - 法條沒有直接寫 ETF 的稅率，ETF 0.1% 仍標 s02b，股票 0.3% 標 s06a，避免把兩個來源混成一句話
+  - 附帶發現：債券 ETF 暫停徵收在 2026-12-31 到期，離現在只剩一個多月，簡報要特別標日期

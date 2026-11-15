@@ -39,3 +39,4 @@ updated: 2026-11-16
 | s03 | [s03 折溢價與套利](sources/s03-premium-discount.md) | 已 ingest (2026-11-16) |
 | s04 | [s04 主動式與被動式](sources/s04-active-vs-passive.md) | 已 ingest (2026-11-16) |
 | s05 | [s05 配息與總報酬](sources/s05-dividend-vs-total-return.md) | 已 ingest (2026-11-16) |
+| s06 | [s06 證券交易稅條例](sources/s06-securities-transaction-tax.md) | 已 ingest (2026-11-16，eval 後補) |
