@@ -8,7 +8,7 @@
 
 - [x] 規則手冊 AGENTS.md (v0 → v1 → v1.1 → v1.2)
 - [x] Ingest 6 篇資料 (s01 到 s05，加上 eval 後補的 s06)，共 22 個 wiki 頁面
-- [x] Eval：dev 12 題 (第 1 次 91.7%，補資料後 100%)、holdout 6 題 (100%)
+- [x] Eval：dev 12 題 (第 1 次 91.7%，補資料後 100%)、holdout 6 題 (100%)、外部題庫 holdout 25 題 (範圍內 80%，缺口全是缺資料)
 - [x] 教學 HTML 簡報 17 頁：https://twl-benchen.github.io/etf-wiki/slides/
 - [x] 反思與流程修改 (docs/workflow.md)
 
