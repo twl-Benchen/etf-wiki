@@ -2,9 +2,11 @@
 id: s05
 title: 證交所提醒：ETF 不是固定配息商品，看績效要看總報酬率
 publisher: 鉅亨網 (報導證交所說明)
-published: 2024 (確切日期 ingest 時從原文確認)
+published: 2024-11-29
 url: https://anuenews.cnyes.com/news/id/5794181
 retrieved: 2026-11-13
+subids:
+  s05a: 鉅亨網報導證交所提醒 (2024-11-29)
 ---
 
 ## 為什麼選這篇

@@ -7,6 +7,9 @@ url:
   - https://technews.tw/2025/01/23/expense-rate/
   - https://moneymate.space/etf-important-points/
 retrieved: 2026-11-13
+subids:
+  s02a: 科技新報 0050 調降費率 (2025-01-23)
+  s02b: MoneyMate ETF 費用、追蹤誤差、折溢價
 ---
 
 ## 為什麼選這篇

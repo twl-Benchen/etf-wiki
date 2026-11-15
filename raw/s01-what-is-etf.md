@@ -5,6 +5,8 @@ publisher: 銓敘部 (臉書文章，轉載)
 published: 2024-01-30
 url: https://www.skyman.url.tw/note/M-42.pdf
 retrieved: 2026-11-13
+subids:
+  s01a: 銓敘部轉載文 (skyman.url.tw M-42.pdf)
 ---
 
 ## 為什麼選這篇

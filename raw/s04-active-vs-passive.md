@@ -7,6 +7,9 @@ url:
   - https://www.twse.com.tw/zh/ETFortune/hotetf/8a8216d69dbea9fd019e14d657250174
   - https://www.ctee.com.tw/news/20250123701419-430201
 retrieved: 2026-11-13
+subids:
+  s04a: 證交所 e添富 主動式與被動式三大差異 (2026-05-11)
+  s04b: 工商時報引述證交所 (2025-01-23)
 ---
 
 ## 為什麼選這篇

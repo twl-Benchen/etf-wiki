@@ -1,29 +1,17 @@
 # eval/ QA 考題
 
-這裡的題目是用來**考 Wiki** 的，不能 ingest 進 Wiki。流程請見 `AGENTS.md` 5.4。
+用來**考 Wiki** 的題目，不能 ingest 進 Wiki。流程見 `AGENTS.md` 5.4。
 
-## 檔案
+- `questions.json`：只有題目，作答時只能讀這個檔
+- `answers.json`：標準答案與出處，全部答完才能打開批改
+- `set`：`dev` 用來找問題、修 Wiki；`holdout` 最後只考一次
 
-- `qa.example.json`：格式範例，只有 2 題示範
-- `qa.json`：正式題目 (由使用者放入，建議 20 到 30 題基本概念題)
+## 目前題目的來歷
 
-## 格式
+18 題 (dev 12、holdout 6) 是 AI 在 ingest **之前**，直接從 raw 卡上的原文連結出的題目 (origin: ai-from-raw)，標準答案已由人看過。因為題目在 Wiki 寫出來之前就固定了，不會出現「看著 Wiki 出題」的問題。
 
-```json
-[
-  {
-    "id": "q001",
-    "question": "題目",
-    "answer": "標準答案",
-    "topic": "對應的主題，例如 折溢價",
-    "origin": "human"
-  }
-]
-```
+限制：出題和寫 Wiki 的是同一個 AI，作答時它可能記得題目內容。之後可以加入人寫的題目，用新開的 AI 對話作答，結果會更客觀。
 
-- `origin`：`human` 是人寫的題目；`ai-from-raw` 是 AI 從 `raw/` 原始資料出的題目，要人工看過答案才能用。
-- 不要讓 AI 從 `wiki/` 出題，自己出題自己考會測不出問題。
+## 加入自己的題目
 
-## 結果紀錄
-
-每次考試的正確率、錯題和原因寫在 `wiki/log.md`，類型用 `eval`。
+在兩個檔案各加一筆，id 用 `d13`、`h07` 往後排，問題與答案的 id 要一致。

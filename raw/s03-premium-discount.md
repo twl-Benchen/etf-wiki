@@ -7,6 +7,9 @@ url:
   - https://www.twse.com.tw/downloads/zh/ETF/concept08.pdf
   - https://www.twse.com.tw/zh/ETFortune/invest/8a8216d69e2f5671019e4805aa92005d
 retrieved: 2026-11-13
+subids:
+  s03a: 證交所 ETF 系列專題 concept08.pdf (2024-03-05)
+  s03b: 證交所 e添富 溢價風險專欄 (2026-05-25)
 ---
 
 ## 為什麼選這篇
