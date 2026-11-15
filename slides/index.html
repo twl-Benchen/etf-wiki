@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ETF 入門：給沒投資過的大學生</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<main class="deck">
+
+<!-- 1 封面 -->
+<section class="slide" data-source="">
+  <div class="card">
+    <span class="chapter">ETF 入門</span>
+    <h1>ETF 是什麼？<br>新手要看懂的幾個數字</h1>
+    <p class="lead">給沒投資過的大學生的 15 分鐘入門</p>
+    <p class="note">內容整理自本專案的 LLM Wiki，僅供教學，不構成任何投資建議。用鍵盤左右鍵、下方按鈕或手機左右滑動翻頁。</p>
+  </div>
+</section>
+
+<!-- 2 目錄 -->
+<section class="slide" data-source="">
+  <div class="card">
+    <h2>今天會講的五件事</h2>
+    <div class="grid g2">
+      <div class="box"><h3>1. ETF 是什麼</h3><p>指數、股票、基金三個關鍵字</p></div>
+      <div class="box"><h3>2. 持有 ETF 要花多少錢</h3><p>內扣費用、交易成本、追蹤誤差</p></div>
+      <div class="box"><h3>3. ETF 的兩個價格</h3><p>淨值、市價、折溢價與套利</p></div>
+      <div class="box"><h3>4. ETF 的種類</h3><p>主動式、被動式，代碼怎麼看</p></div>
+      <div class="box warm"><h3>5. 新手觀念</h3><p>配息與總報酬、風險、常見誤解</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 什麼是 ETF -->
+<section class="slide" data-source="wiki/concepts/what-is-etf.md">
+  <div class="card">
+    <span class="chapter">1. ETF 是什麼</span>
+    <h2>ETF = 在交易所買賣的基金</h2>
+    <p>ETF 是 Exchange Traded Fund 的縮寫，證交所的正式名稱是<strong>「指數股票型基金」</strong>。把名稱拆成三個詞來看：</p>
+    <div class="grid g3">
+      <div class="box"><h3>指數</h3><p>追蹤某個指數 (一群股票的整體表現)，目標是貼近指數，不是打敗指數。</p></div>
+      <div class="box"><h3>股票</h3><p>在交易所掛牌，買賣方式和股票一樣。</p></div>
+      <div class="box"><h3>基金</h3><p>由投信 (專門管理基金的公司) 發行管理，把一籃子股票切成很多小單位。</p></div>
+    </div>
+    <div class="key">買一個單位的 ETF，等於同時持有指數裡所有成分股的一小部分。</div>
+  </div>
+</section>
+
+<!-- 4 指數與追蹤 -->
+<section class="slide" data-source="wiki/concepts/index-tracking.md wiki/concepts/what-is-etf.md">
+  <div class="card">
+    <span class="chapter">1. ETF 是什麼</span>
+    <h2>「追蹤指數」是怎麼做到的</h2>
+    <ul>
+      <li>指數的成分股 (被選進指數的那些股票)，就是 ETF 的投資組合。</li>
+      <li>投信會把持股調整到和指數成分股一致，讓表現緊貼指數。</li>
+      <li>這種以追蹤指數為目標的 ETF，叫做<strong>被動式 ETF</strong>。</li>
+    </ul>
+    <p class="note">以下為假設的例子</p>
+    <div class="split" role="img" aria-label="假設指數 A 公司 30%、B 公司 70%，ETF 照同樣比例持有">
+      <span class="lbl">假設的指數</span>
+      <div class="row"><div class="a" style="width:30%">A 30%</div><div class="b" style="width:70%">B 70%</div></div>
+      <span class="lbl">追蹤它的 ETF</span>
+      <div class="row"><div class="a" style="width:30%">A 30%</div><div class="b" style="width:70%">B 70%</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 內扣費用 -->
+<section class="slide" data-source="wiki/concepts/expense-ratio.md">
+  <div class="card">
+    <span class="chapter">2. 持有 ETF 要花多少錢</span>
+    <h2>內扣費用：不會寄帳單，但每天都在扣</h2>
+    <div class="grid g2">
+      <div class="box"><h3>經理費</h3><p>付給管理基金的投信。</p></div>
+      <div class="box"><h3>保管費</h3><p>付給保管基金資產的銀行。</p></div>
+    </div>
+    <ul>
+      <li>這些費用直接從 ETF 的淨值 (一籃子資產真正的價值) 裡扣除，投資人不會收到帳單。</li>
+      <li>費用率用「一年多少 %」表示，會讓報酬變少。</li>
+      <li>追蹤同一個指數的不同 ETF，費用率可能不一樣。</li>
+    </ul>
+    <div class="key">常見誤解：以為買進之後就不用再付錢。其實只要持有，內扣費用就會持續扣除。</div>
+  </div>
+</section>
+
+<!-- 6 0050 範例 -->
+<section class="slide" data-source="wiki/entities/etf-0050.md wiki/concepts/expense-ratio.md">
+  <div class="card">
+    <span class="chapter">2. 持有 ETF 要花多少錢</span>
+    <h2>實例：0050 在 2025 年調降費率</h2>
+    <p>0050 是元大投信發行的 ETF，投資台灣上市市值最大的 50 家公司，2003 年成立。2025-01-24 起改成依規模分級計算的費率。</p>
+    <div class="bars" role="img" aria-label="經理費調降前 0.32%，調降後約 0.11%">
+      <div class="bar-row"><span>經理費 (調降前)</span><div class="bar-track"><div class="bar warm" style="width:100%"></div></div><span class="bar-val">0.32%</span></div>
+      <div class="bar-row"><span>經理費 (調降後)</span><div class="bar-track"><div class="bar" style="width:34%"></div></div><span class="bar-val">約 0.11%</span></div>
+      <div class="bar-row"><span>保管費 (調降前)</span><div class="bar-track"><div class="bar warm" style="width:11%"></div></div><span class="bar-val">0.035%</span></div>
+      <div class="bar-row"><span>保管費 (調降後)</span><div class="bar-track"><div class="bar" style="width:9.4%"></div></div><span class="bar-val">0.03%</span></div>
+    </div>
+    <p class="note">調降後的數字是以當時規模約 4,469 億元估算，截至 2025-01。規模越大，超過門檻的部分費率越低。另一份 2022 年的資料寫 0050 內扣約 0.46%，那是調降前的舊數字。這裡只列數字，不代表任何投資建議。</p>
+  </div>
+</section>
+
+<!-- 7 交易成本 -->
+<section class="slide" data-source="wiki/concepts/trading-costs.md">
+  <div class="card">
+    <span class="chapter">2. 持有 ETF 要花多少錢</span>
+    <h2>交易成本：買賣的時候才付</h2>
+    <div class="grid g2">
+      <div class="box"><h3>券商手續費</h3><p>買和賣各收一次，費率 0.1425%，券商通常會給折扣。</p></div>
+      <div class="box warm"><h3>證券交易稅 (證交稅)</h3><p>賣出時由政府收取。</p></div>
+    </div>
+    <div class="bars" role="img" aria-label="證交稅：一般股票 0.3%，股票型 ETF 0.1%">
+      <div class="bar-row"><span>一般股票</span><div class="bar-track"><div class="bar warm" style="width:100%"></div></div><span class="bar-val">0.3%</span></div>
+      <div class="bar-row"><span>股票型 ETF</span><div class="bar-track"><div class="bar" style="width:33%"></div></div><span class="bar-val">0.1%</span></div>
+    </div>
+    <p class="note">債券 ETF 從 2017-01-01 到 2026-12-31 暫停徵收證交稅 (槓桿型與反向型不適用)，期限過後以財政部最新公告為準。手續費與 ETF 稅率資料截至 2022-07，股票稅率截至 2025-01。</p>
+  </div>
+</section>
+
+<!-- 8 追蹤誤差 -->
+<section class="slide" data-source="wiki/concepts/tracking-error.md">
+  <div class="card">
+    <span class="chapter">2. 持有 ETF 要花多少錢</span>
+    <h2>追蹤誤差：ETF 不會和指數一模一樣</h2>
+    <p>指數的報酬和 ETF 實際報酬之間的差距叫追蹤誤差，兩者幾乎不可能完全一樣。常見原因：</p>
+    <div class="grid g2">
+      <div class="box"><h3>要付費用</h3><p>指數只是計算出來的數字，ETF 要付內扣費用。</p></div>
+      <div class="box"><h3>換股有成本</h3><p>ETF 換成分股要實際買賣，時間和價格可能和指數不同。</p></div>
+      <div class="box"><h3>交易受限</h3><p>流動性不好時，沒辦法照指數即時調整。</p></div>
+      <div class="box"><h3>保留現金</h3><p>為了配息保留現金，也會造成差距。</p></div>
+    </div>
+    <p class="note">假設某年指數漲 10%，ETF 只漲 9.7%，中間 0.3% 的差距就是追蹤誤差。</p>
+  </div>
+</section>
+
+<!-- 9 淨值與市價 -->
+<section class="slide" data-source="wiki/concepts/nav.md">
+  <div class="card">
+    <span class="chapter">3. ETF 的兩個價格</span>
+    <h2>同一檔 ETF，有兩個價格</h2>
+    <div class="grid g2">
+      <div class="box"><div class="big">淨值</div><p>ETF 所有持股加起來的總價值，也就是資產的真實價值。證交所說明，合理價格應該以淨值為基礎。</p></div>
+      <div class="box warm"><div class="big">市價</div><p>市場上實際買賣的價格，由買賣雙方的供需決定，不一定等於淨值。</p></div>
+    </div>
+    <div class="key">證交所提醒：交易前可以先查投信官網上的即時淨值，判斷市價是否合理。</div>
+  </div>
+</section>
+
+<!-- 10 折溢價 -->
+<section class="slide" data-source="wiki/concepts/premium-discount.md">
+  <div class="card">
+    <span class="chapter">3. ETF 的兩個價格</span>
+    <h2>折溢價：市價和淨值差多少</h2>
+    <div class="grid g2">
+      <div class="box warm"><h3>溢價</h3><p>市價 <strong>高於</strong> 淨值：需求大於供給時出現。</p></div>
+      <div class="box"><h3>折價</h3><p>市價 <strong>低於</strong> 淨值：需求小於供給時出現。</p></div>
+    </div>
+    <h3 style="margin-top:18px">證交所的參考範圍 (截至 2026-05)</h3>
+    <div class="gauge" role="img" aria-label="0.5% 以內是通常範圍，超過 3% 明顯偏離，5% 以上要格外小心">
+      <div class="seg ok"><b>0 到 0.5%</b><span>通常範圍</span></div>
+      <div class="seg mid"><b>0.5% 到 3%</b><span>留意</span></div>
+      <div class="seg warn"><b>超過 3%</b><span>明顯偏離</span></div>
+      <div class="seg bad"><b>5% 以上</b><span>格外小心</span></div>
+    </div>
+    <p class="note">流動性好、透明度高的 ETF，折溢價通常在 0.5% 以內。假設淨值 100 元、市價 103 元，溢價就是 3%。</p>
+  </div>
+</section>
+
+<!-- 11 兩個市場與套利 -->
+<section class="slide" data-source="wiki/concepts/primary-secondary-market.md wiki/concepts/creation-redemption.md wiki/concepts/premium-discount.md">
+  <div class="card">
+    <span class="chapter">3. ETF 的兩個價格</span>
+    <h2>為什麼市價通常會貼近淨值？</h2>
+    <div class="flow" role="img" aria-label="初級市場用淨值申購買回，次級市場用市價買賣，套利把兩邊價格拉近">
+      <div class="box"><h3>初級市場</h3><p>用淨值向投信大額申購或買回</p></div>
+      <div class="arrows"><span>溢價：申購後賣出 →</span><span>← 折價：買進後買回</span></div>
+      <div class="box warm"><h3>次級市場</h3><p>一般人用證券帳戶以市價買賣</p></div>
+    </div>
+    <p>兩邊價格不同就有套利空間，套利交易會把價差縮小。</p>
+    <ul>
+      <li>初級市場門檻很高 (例如 0050 基本單位 500 張、數千萬元)，一般人主要在次級市場買賣。</li>
+      <li>套利不一定有效：流動性不佳、發行額度用完時，折溢價可能一直存在。</li>
+    </ul>
+    <div class="key">所以追價買到高溢價，等溢價收斂、市價被拉回淨值附近時，就算資產沒跌也可能虧損。</div>
+  </div>
+</section>
+
+<!-- 12 主動式與被動式 -->
+<section class="slide" data-source="wiki/concepts/active-vs-passive.md">
+  <div class="card">
+    <span class="chapter">4. ETF 的種類</span>
+    <h2>主動式 vs 被動式</h2>
+    <table>
+      <tr><th>面向</th><th>被動式 ETF</th><th>主動式 ETF</th></tr>
+      <tr><td>設計理念</td><td>追蹤某個指數，表現和指數一致</td><td>經理人做投資決策，追求超越指數等特定成果</td></tr>
+      <tr><td>投資專業</td><td>依指數建立投資組合</td><td>依靠經理人與研究團隊判斷</td></tr>
+      <tr><td>風險管理</td><td>跟著指數定期調整</td><td>可以依市況調整</td></tr>
+    </table>
+    <div class="key">證交所強調：主動式 ETF 不保證超越績效指標、大盤或被動式 ETF，兩種沒有絕對優劣，要看自己的目標與風險承受度。</div>
+    <p class="note">被動式平衡型 ETF 也屬於被動式，追蹤的指數同時包含股票和債券。</p>
+  </div>
+</section>
+
+<!-- 13 代碼怎麼看 -->
+<section class="slide" data-source="wiki/concepts/etf-ticker-codes.md">
+  <div class="card">
+    <span class="chapter">4. ETF 的種類</span>
+    <h2>從名稱和代碼分辨 ETF</h2>
+    <table>
+      <tr><th>類型</th><th>基金名稱</th><th>簡稱前兩字</th><th>代碼第六碼</th></tr>
+      <tr><td>主動式股票 ETF</td><td>含「主動式」</td><td>主動</td><td><span class="tag">A</span></td></tr>
+      <tr><td>主動式債券 ETF</td><td>含「主動式」</td><td>主動</td><td><span class="tag">D</span></td></tr>
+      <tr><td>被動式平衡型 ETF</td><td>無特別規定</td><td>平衡</td><td><span class="tag">T</span></td></tr>
+    </table>
+    <p class="note">證交所說明，截至 2025-01。假設你看到一檔六碼 ETF 最後一碼是 A、簡稱以「主動」開頭，就可以判斷它是主動式股票 ETF。</p>
+  </div>
+</section>
+
+<!-- 14 配息與總報酬 -->
+<section class="slide" data-source="wiki/concepts/dividend-and-total-return.md">
+  <div class="card">
+    <span class="chapter">5. 新手觀念</span>
+    <h2>配息率高 ≠ 賺得多</h2>
+    <p>證交所提醒：ETF 不是固定配息商品，過去配多少不代表未來；判斷表現要看<strong>總報酬率</strong> (價格漲跌 + 配息)。</p>
+    <p class="note">以下為假設的例子</p>
+    <div class="bars" role="img" aria-label="假設 A 配息 8% 但價格跌 10%，總報酬 -2%；B 配息 2%、價格漲 5%，總報酬 7%">
+      <div class="bar-row"><span>A 配息</span><div class="bar-track"><div class="bar warm" style="width:80%"></div></div><span class="bar-val">8%</span></div>
+      <div class="bar-row"><span>A 價格</span><div class="bar-track"><div class="bar neg" style="width:100%"></div></div><span class="bar-val">-10%</span></div>
+      <div class="bar-row"><span>B 配息</span><div class="bar-track"><div class="bar warm" style="width:20%"></div></div><span class="bar-val">2%</span></div>
+      <div class="bar-row"><span>B 價格</span><div class="bar-track"><div class="bar" style="width:50%"></div></div><span class="bar-val">+5%</span></div>
+    </div>
+    <p>只看配息會以為 A 比較好，但 A 的總報酬是 -2%，B 是 +7%。</p>
+    <div class="key">月配、季配是投信定期評估能不能配，實際配不配、配多少由投信依基金狀況決定。</div>
+  </div>
+</section>
+
+<!-- 15 風險 -->
+<section class="slide" data-source="wiki/concepts/etf-risks.md">
+  <div class="card">
+    <span class="chapter">5. 新手觀念</span>
+    <h2>分散投資，不等於沒有風險</h2>
+    <p>證交所列出的六種 ETF 風險：</p>
+    <div class="grid g3">
+      <div class="box"><h3>折溢價</h3><p>用比淨值高很多的價格買進</p></div>
+      <div class="box"><h3>流動性</h3><p>想買賣時不容易成交</p></div>
+      <div class="box"><h3>追蹤誤差</h3><p>表現和指數有落差</p></div>
+      <div class="box"><h3>市場</h3><p>整個市場下跌，ETF 也跟著跌</p></div>
+      <div class="box"><h3>集中度</h3><p>集中在少數股票或產業</p></div>
+      <div class="box"><h3>下市</h3><p>ETF 終止上市</p></div>
+    </div>
+    <div class="key">證交所提醒：投資前要詳閱公開說明書，評估自己的需求、目標與風險承受度。</div>
+  </div>
+</section>
+
+<!-- 16 常見誤解 -->
+<section class="slide" data-source="wiki/concepts/common-misconceptions.md">
+  <div class="card">
+    <span class="chapter">5. 新手觀念</span>
+    <h2>五個新手常見誤解</h2>
+    <table>
+      <tr><th>誤解</th><th>正確觀念</th></tr>
+      <tr><td>買進之後就不用再付錢</td><td>持有期間內扣費用持續從淨值扣除</td></tr>
+      <tr><td>被動投資，不用看買進價格</td><td>追價買到高溢價，收斂時可能虧損</td></tr>
+      <tr><td>主動式 ETF 一定比較會賺</td><td>不保證超越績效指標、大盤或被動式</td></tr>
+      <tr><td>配息率高就是賺得多</td><td>要看總報酬率，價格下跌可能抵消配息</td></tr>
+      <tr><td>月配息 ETF 每月一定會配</td><td>實際配不配由投信依基金狀況決定</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- 17 結語 -->
+<section class="slide" data-source="wiki/concepts/what-is-etf.md wiki/concepts/expense-ratio.md wiki/concepts/nav.md wiki/concepts/dividend-and-total-return.md">
+  <div class="card">
+    <h2>重點回顧</h2>
+    <div class="grid g2">
+      <div class="box"><h3>ETF 是什麼</h3><p>指數、股票、基金三個關鍵字</p></div>
+      <div class="box"><h3>花多少錢</h3><p>內扣費用、交易成本、追蹤誤差</p></div>
+      <div class="box"><h3>兩個價格</h3><p>淨值、市價、折溢價</p></div>
+      <div class="box"><h3>新手觀念</h3><p>看總報酬，也要認識風險</p></div>
+    </div>
+    <p class="note" style="margin-top:20px">本簡報內容全部來自本專案的 LLM Wiki，每頁下方附有對應的 wiki 頁面。內容僅供教學，不構成任何投資建議；費率、稅率等數字以各機構最新公告為準。</p>
+  </div>
+</section>
+
+</main>
+<footer class="src">
+  <span class="paths" id="paths"></span>
+  <span class="nav"><button id="prev" aria-label="上一頁">‹</button><span id="counter"></span><button id="next" aria-label="下一頁">›</button></span>
+</footer>
+<script src="js/deck.js"></script>
+</body>
+</html>
