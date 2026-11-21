@@ -87,14 +87,14 @@ def followups(plan: Plan, results: list[ToolResult]) -> list[str]:
         return [f"每月 5000 買 {k}，從 2020 到現在會怎樣？", f"{k} 跟 {other(k)} 差在哪？", f"{k} 近三年報酬"]
     if t == "scenario":
         r = _f(results, "simulate_dca"); k = r.data["etf"] if r else "0050"
-        return [f"換成 {other(k)} 呢？", f"{k} 前十大是哪些？", "回到全城"]
+        return [f"換成 {other(k)} 呢？", f"{k} 前十大是哪些？", "回到廣場"]
     if t == "portfolio":
-        return ["改成 0050 20萬、00878 40萬", "聯發科站有哪些線經過？", "回到全城"]
+        return ["改成 0050 20萬、00878 40萬", "哪些 ETF 持有聯發科？", "回到廣場"]
     if t == "company":
         r = _f(results, "get_stock_info")
         if r and r.data["held_by"]:
             n = r.data["name"]; ks = [h["etf"] for h in r.data["held_by"]]
-            first = f"{n}今天怎麼了？" if plan.focus.get("station") else f"{n}站有哪些線經過？"
+            first = f"{n}今天怎麼了？" if plan.focus.get("station") else f"哪些 ETF 持有{n}？"
             return [first, f"{ks[0]} 跟 {ks[-1]} 差在哪？" if len(ks) >= 2 else f"{ks[0]} 前十大是哪些？", "今天城市怎麼了？"]
     if t == "market":
         r = _f(results, "market_summary")

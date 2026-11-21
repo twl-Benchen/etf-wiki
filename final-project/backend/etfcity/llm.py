@@ -74,13 +74,33 @@ def get_llm(provider: str | None = None):
     return GroqLLM() if provider == "groq" else MockLLM()
 
 
+_CC = None
+
+
+def _protected() -> list[str]:
+    """不能被轉換的專有名稱：公司與 ETF 名稱 (例如台積電不能變成臺積電，臺企銀本來就是臺)"""
+    from .data import get_store
+    s = get_store()
+    return sorted({*s.companies, *(e["name"] for e in s.etfs.values())}, key=len, reverse=True)
+
+
 def to_tw(text: str) -> str:
-    """輸出統一成台灣繁體用語 (有裝 OpenCC 才轉換)"""
+    """LLM 可能夾雜簡體字，統一成台灣繁體用語 (有裝 OpenCC 才轉換)。
+    s2twp 會把「台」轉成「臺」，所以先保護專有名稱，轉完後一般用字的「臺」改回台灣慣用的「台」。"""
+    global _CC
     try:
         from opencc import OpenCC  # type: ignore
-        return OpenCC("s2twp").convert(text)
+        _CC = _CC or OpenCC("s2twp")
     except Exception:
         return text
+    keep = {}
+    for i, n in enumerate(_protected()):
+        if n in text:
+            k = f"\uE000{i}\uE001"; keep[k] = n; text = text.replace(n, k)
+    out = _CC.convert(text).replace("臺", "台")
+    for k, n in keep.items():
+        out = out.replace(k, n)
+    return out
 
 
 def parse_json(text: str) -> dict:

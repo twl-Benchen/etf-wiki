@@ -37,7 +37,8 @@ def city_bundle() -> dict:
     """前端畫城市需要的全部資料"""
     s = get_store()
     return {"etfs": s.etfs, "holdings": {k: s.top10(k) for k in s.etfs}, "holdings_meta": s.holdings_meta,
-            "companies": {n: {k: c[k] for k in ("code", "industry", "district")} for n, c in s.companies.items() if n in s.city_companies()},
+            "companies": {n: {k: s.companies[n][k] for k in ("code", "industry", "district", "mcap_rank", "mcap_share") if k in s.companies[n]} for n in s.city_companies()},
+            "market_cap": s.mcap_meta,
             "districts": {k: d["name"] for k, d in config.DISTRICTS.items()}, "daily": s.daily, "rules": RULES,
             "prices_as_of": {k: s.last_date(k) for k in s.etfs if s.has_prices(k)}}
 

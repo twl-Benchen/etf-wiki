@@ -4,6 +4,7 @@ import json, sys
 from pathlib import Path
 R = Path(__file__).resolve().parents[2]; sys.path.insert(0, str(R / "backend"))
 from etfcity.data import get_store
+from etfcity.config import DISTRICTS
 from etfcity.tools import lookthrough, top10_overlap
 
 s = get_store(); T = []
@@ -30,7 +31,7 @@ ov = next(f.value for f in top10_overlap("0050", "006208").facts if f.id.startsw
 mc("0050 和 006208 的前十大持股是否幾乎相同？", "幾乎相同" if ov > 60 else "差很多", ["幾乎相同", "差很多", "完全沒有重疊"])
 pf2 = {"00878": 200000, "00919": 200000}; lt2 = lookthrough(pf2)
 dist = lt2.data["districts"][0]["name"]
-mc("小華持有 00878 與 00919 各 20 萬元。他的錢 (以前十大估算) 最集中在哪個產業？", dist, [v["name"] for v in [{"name": "半導體園區"}, {"name": "金融區"}, {"name": "航運港區"}, {"name": "電子科技區"}]])
+mc("小華持有 00878 與 00919 各 20 萬元。他的錢 (以前十大估算) 最集中在哪一條街 (產業)？", dist, [DISTRICTS[k]["name"] for k in ("semi", "fin", "port", "tech")])
 mc("下列哪一家公司，同時在 0056 和 00919 的前十大裡？", next(n for n in s.weights("0056") if n in s.weights("00919")),
    [n for n in s.weights("0050") if n not in s.weights("0056") or n not in s.weights("00919")][:3])
 out = {"data_note": f"前十大持股 {s.holdings_meta.get('as_of') or '初始資料'}；價格到 {s.last_date('0050')}", "tasks": T,

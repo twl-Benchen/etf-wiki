@@ -153,7 +153,7 @@ def lookthrough(positions: dict[str, float], s: DataStore | None = None) -> Tool
     share = {n: v / total for n, v in ex.items()}; order = sorted(ex, key=lambda n: -ex[n])
     cp = round(covered / total * 100, 1)
     facts = [Fact("lt_total", total, "twd", "投入金額合計", "使用者輸入"), Fact("lt_covered", cp, "pct1", "前十大成分股涵蓋的資金比例", src),
-             Fact("lt_rest", round(100 - cp, 1), "pct1", "前十大以外、沒有畫進城市的資金比例", src), Fact("lt_etf_count", len(positions), "count:檔", "持有的 ETF 檔數", "使用者輸入")]
+             Fact("lt_rest", round(100 - cp, 1), "pct1", "前十大以外的資金比例", src), Fact("lt_etf_count", len(positions), "count:檔", "持有的 ETF 檔數", "使用者輸入")]
     top = []
     for n in order[:6]:
         c = s.companies[n]["code"]
@@ -183,13 +183,17 @@ def get_stock_info(company: str, s: DataStore | None = None) -> ToolResult:
     facts = []
     if pct is not None:
         facts.append(Fact(f"chg_{c['code']}", pct, "pct_signed", f"{company}今天的漲跌幅", src, s.daily.get("date")))
+    if c.get("mcap_share") is not None:
+        facts.append(Fact(f"mcap_{c['code']}", c["mcap_share"], "pct", f"{company}的市值占大盤比重 (上市公司第 {c['mcap_rank']} 大)",
+                          s.mcap_meta.get("source", "市值排行") + (f"，{s.mcap_meta['provided']} 提供" if s.mcap_meta.get("provided") else "")))
     held = s.etfs_holding(company)
     for h in held:
         facts.append(Fact(f"w_{h['etf']}_{c['code']}", h["weight"], "pct", f"{company}在 {h['etf']} 的權重 (第 {h['rank']} 大)", hs))
-    facts += [Fact("rule_boom", RULES["boom_above"], "pct0", "大樓放煙火的漲幅門檻", "城市規則"), Fact("rule_crash", abs(RULES["crash_below"]), "pct0", "大樓龜裂的跌幅門檻", "城市規則")]
+    facts += [Fact("rule_boom", RULES["boom_above"], "pct0", "店門口掛彩帶的漲幅門檻", "城市規則"), Fact("rule_crash", abs(RULES["crash_below"]), "pct0", "店家拉下鐵捲門的跌幅門檻", "城市規則")]
     return ToolResult("get_stock_info", {"company": company}, facts=facts, sources=[src, hs], note="示意行情" if s.daily.get("demo") else "",
                       data={"name": company, "code": c["code"], "industry": c["industry"], "district": DISTRICTS[c["district"]]["name"], "demo": bool(s.daily.get("demo")),
                             "state": _state(pct) if pct is not None else None, "change_fact": f"chg_{c['code']}" if pct is not None else None,
+                            "mcap_fact": f"mcap_{c['code']}" if c.get("mcap_share") is not None else None, "mcap_rank": c.get("mcap_rank"),
                             "held_by": [{"etf": h["etf"], "rank": h["rank"], "fact": f"w_{h['etf']}_{c['code']}"} for h in held]})
 
 
@@ -211,7 +215,7 @@ def market_summary(district: str | None = None, s: DataStore | None = None) -> T
     crash = [item(n) for n in movers if s.change_of(n) <= RULES["crash_below"]][:3]
     boom = [item(n) for n in reversed(movers) if s.change_of(n) >= RULES["boom_above"]][:3]
     ups = [item(n) for n in reversed(movers) if s.change_of(n) > 0][:3]; downs = [item(n) for n in movers if s.change_of(n) < 0][:3]
-    facts += [Fact("rule_boom", RULES["boom_above"], "pct0", "大樓放煙火的漲幅門檻", "城市規則"), Fact("rule_crash", abs(RULES["crash_below"]), "pct0", "大樓龜裂的跌幅門檻", "城市規則")]
+    facts += [Fact("rule_boom", RULES["boom_above"], "pct0", "店門口掛彩帶的漲幅門檻", "城市規則"), Fact("rule_crash", abs(RULES["crash_below"]), "pct0", "店家拉下鐵捲門的跌幅門檻", "城市規則")]
     order = sorted(avg, key=lambda k: avg[k])
     return ToolResult("market_summary", {"district": district}, facts=facts, sources=[src], note="示意行情" if s.daily.get("demo") else "",
                       data={"date": s.daily.get("date"), "demo": bool(s.daily.get("demo")), "district": district, "district_name": DISTRICTS[district]["name"] if district else None,

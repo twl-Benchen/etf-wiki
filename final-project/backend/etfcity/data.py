@@ -13,7 +13,8 @@ class DataStore:
         h = self._json("holdings.json")
         self.holdings_meta = {k: h.get(k) for k in ("as_of", "source", "scope")}
         self.holdings: dict = h["holdings"]
-        self.companies: dict = self._json("companies.json")["companies"]
+        cj = self._json("companies.json"); self.companies: dict = cj["companies"]
+        self.mcap_meta: dict = cj.get("market_cap") or {}
         for n, c in self.companies.items():
             c["name"] = n
             c["district"] = district_of(c["industry"])
@@ -104,12 +105,14 @@ class DataStore:
         return out
 
     def city_companies(self) -> list[str]:
-        seen = []
+        """城市商店街裡的公司：市值前 100 大加上 ETF 前十大持股，依市值排行排序"""
+        held = []
         for k in self.etfs:
             for t in self.holdings[k]["top10"]:
-                if t["name"] not in seen:
-                    seen.append(t["name"])
-        return seen
+                if t["name"] not in held:
+                    held.append(t["name"])
+        names = [n for n in self.companies if n in held or self.companies[n].get("mcap_rank")]
+        return sorted(names, key=lambda n: self.companies[n].get("mcap_rank", 999))
 
     # ---------- 價格 ----------
     def has_prices(self, etf: str) -> bool:

@@ -57,6 +57,13 @@
   - 配息 `scripts/fetch_dividends.py` → `data/dividends.json` (5 檔共 123 筆，`amount` 是當時每單位配息，`amount_adj` 依分割換算成和價格檔同一基準)。和 Yahoo 核對：Yahoo 的 0050 在 2014 年以前沒有除以 4、2022-08-02 多一筆，006208 有一筆日期錯誤，其餘一致
   - `get_dividends` 工具現在有資料了，來源標示改成依 `dividends.json`
   - `update_all.py`、GitHub Actions (要在 repo Secrets 加 `FINMIND_TOKEN`)、Colab 筆記本、`docs/deploy.md` 都已加上 FinMind
+- [x] 城市納入上市公司市值前 100 大 (`data/market_cap.json`，使用者 2026-11-21 提供的排行；`scripts/update_companies.py` 合併進 `companies.json`，新公司的產業查 FinMind)
+  - 城市公司 (`city_companies`) = 市值前 100 大加上 ETF 前十大，共 100 家；當日行情 105 檔 (含 5 檔 ETF) 全到
+  - 區改名成街：半導體街、電子街、金融街、航運港、民生街 (程式裡仍叫 district)
+  - `get_stock_info` 多了市值占大盤比重；沒有被 ETF 前十大持有的公司 (例如大立光) 會說明「不在前十大，櫥窗沒有貼紙」
+  - 後端回答改成商店街的比喻 (店長、導引線、櫥窗貼紙、鐵捲門、彩帶)
+  - 修正：OpenCC 會把「台積電」轉成「臺積電」，現在先保護公司與 ETF 名稱，一般用字統一用「台」
+  - 實驗二第 7 題的選項原本寫死舊區名 (答案不在選項裡)，改成讀設定
 
 ## 待辦清單 (依序)
 1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。

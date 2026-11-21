@@ -8,8 +8,8 @@ from .schemas import Plan
 CN_NUM = "零一兩三四五六七八九十"
 cn = lambda n: CN_NUM[n] if 0 <= n <= 10 else str(n)
 P = lambda fid: "{" + fid + "}"
-STATE_TEXT = {"boom": "漲超過 {rule_boom}，頂樓放起煙火，窗戶幾乎全亮", "up": "小漲，窗戶比平常亮", "flat": "變動不大，燈光照常", "down": "下跌，窗戶暗了一些",
-              "crash": "跌超過 {rule_crash}，外牆出現裂痕、搭起鷹架，窗戶暗了一大半"}
+STATE_TEXT = {"boom": "漲超過 {rule_boom}，店門口掛起彩帶、燈全亮", "up": "小漲，店裡燈比平常亮", "flat": "變動不大，照常營業", "down": "下跌，店裡燈暗了一些",
+              "crash": "跌超過 {rule_crash}，鐵捲門拉下一半 (只代表今天的漲跌)"}
 
 
 def _find(results: list[ToolResult], name: str) -> ToolResult | None:
@@ -20,12 +20,12 @@ def role_of(plan: Plan, results: list[ToolResult]) -> dict:
     r = _find(results, "get_stock_info")
     if plan.type == "company" and r:
         n = r.data["name"]
-        return {"name": f"{n}站站務員", "icon": "站", "color": "#2e6b5e"} if plan.focus.get("station") else {"name": f"{n}大樓管理員", "icon": "管", "color": "#5b4a8a"}
+        return {"name": f"{n}店長", "icon": "店", "color": "#2e6b5e" if plan.focus.get("station") else "#5b4a8a"}
     if plan.type == "scenario":
         return {"name": "城市檔案室", "icon": "檔", "color": "#7a5c2e"}
     h = _find(results, "get_top10_holdings")
     if plan.type == "number" and h:
-        return {"name": f"{h.data['etf']} 線站長", "icon": "線", "color": None, "etf": h.data["etf"]}
+        return {"name": f"{h.data['etf']} 導覽員", "icon": "線", "color": None, "etf": h.data["etf"]}
     return {"name": "城市導覽員", "icon": "導", "color": "#435369"}
 
 
@@ -45,9 +45,9 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
             d = ov.data; a, b = d["a"], d["b"]; n = len(d["shared"]); names = "、".join(x["name"] for x in d["shared"])
             cnt, w = P(f"overlap_count_{a}_{b}"), P(f"overlap_weight_{a}_{b}")
             if n == 0:
-                out.append(f"{a} 和 {b} 的前十大成分股沒有共同持股，兩條線完全不重疊。")
+                out.append(f"{a} 和 {b} 的前十大成分股沒有共同持股，兩條導引線沒有經過同一家店。")
             elif n >= 8:
-                out.append(f"{a} 和 {b} 的前十大成分股有 {cnt}相同，前十大重疊權重 {w}，幾乎是同一條線，同時持有兩檔的分散效果很有限。")
+                out.append(f"{a} 和 {b} 的前十大成分股有 {cnt}相同，前十大重疊權重 {w}，兩條導引線幾乎走同一條路，同時持有兩檔的分散效果很有限。")
             else:
                 out.append(f"{a} 和 {b} 的前十大成分股有 {cnt}重疊 ({names})，前十大重疊權重 {w}。")
             ta, tb = d["top"][a], d["top"][b]
@@ -64,9 +64,9 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
         else:
             out.append(f"和{d['prev_label']}相比，{k} 的前十大有 {P('chg_added_' + k)}新進、{P('chg_removed_' + k)}退出。")
             if d["added"]:
-                out.append(f"新進的是{'、'.join(x['name'] + ' ' + P(x['fact']) for x in d['added'])}，城市裡這幾站是新開的。")
+                out.append(f"新進的是{'、'.join(x['name'] + ' ' + P(x['fact']) for x in d['added'])}，這幾家店門口亮起綠色光柱。")
             if d["removed"]:
-                out.append(f"退出的是{'、'.join(x['name'] + ' (原本 ' + P(x['fact']) + ')' for x in d['removed'])}，這幾站停駛了。")
+                out.append(f"退出的是{'、'.join(x['name'] + ' (原本 ' + P(x['fact']) + ')' for x in d['removed'])}，導引線不再經過這幾家店。")
         mv = [x for x in d["moves"]]
         if mv:
             out.append("留下來的公司中，權重變化最大的是" + "、".join(f"{x['name']} (從 {P(x['old'])} 變成 {P(x['now'])})" for x in mv[:2]) + "。")
@@ -76,8 +76,8 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
         if h:
             d = h.data; top = d["top10"][0]; k = d["etf"]; dist = d["districts"][0]
             name = info.data["name"] if info else d["name"]
-            out.append(f"{k} {name}是一檔{d['type']} ETF，前十大成分股中最大的是{top['name']} {P(top['fact'])}，前十大合計 {P(f'top10_sum_{k}')}，其餘分散在其他公司，沒有畫進城市。")
-            out.append(f"前十大依序是：{'、'.join(x['name'] for x in d['top10'])}。這條線在{dist['name']}停最多，合計 {P(dist['fact'])}。")
+            out.append(f"{k} {name}是一檔{d['type']} ETF，前十大成分股中最大的是{top['name']} {P(top['fact'])}，前十大合計 {P(f'top10_sum_{k}')}，其餘分散在其他公司 (只計前十大)。")
+            out.append(f"前十大依序是：{'、'.join(x['name'] for x in d['top10'])}。這條導引線在{dist['name']}經過最多店，合計 {P(dist['fact'])}。")
             ask_d = (plan.focus.get("entities") or {}).get("district")
             hit = next((x for x in d["districts"] if x["key"] == ask_d), None)
             if ask_d and hit and hit is not dist:
@@ -99,7 +99,7 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
                 out.append(f"{k} 的資料從 {P(p + '_start')} 才開始，所以從那個月起算。")
             out.append(f"從 {P(p + '_start')} 開始，每月第一個交易日買 {P(p + '_monthly')}的 {k}，共買 {P(p + '_n')}，總共投入 {P(p + '_invested')}。到 {P(p + '_end')}，市值約 {P(p + '_value')}，價格報酬 {P(p + '_ret')} (未含息)。")
             out.append(f"最難熬的是 {P(p + '_worst_month')}，帳面 {P(p + '_worst_pnl')}。" if d["ever_negative"] else "整段期間，每個月初的帳面都沒有虧損。")
-            out.append(f"單月跌最多是 {P(p + '_maxdrop_month')} ({P(p + '_maxdrop')}){'，回放到那個月時城市下了一場大雨' if d['rained'] else ''}；漲最多是 {P(p + '_maxgain_month')} ({P(p + '_maxgain')}){'，那個月頂樓放了煙火' if d['fireworks'] else ''}。")
+            out.append(f"單月跌最多是 {P(p + '_maxdrop_month')} ({P(p + '_maxdrop')}){'，回放到那個月時城市下了一場大雨' if d['rained'] else ''}；漲最多是 {P(p + '_maxgain_month')} ({P(p + '_maxgain')}){'，那個月廣場放了煙火' if d['fireworks'] else ''}。")
     elif t == "portfolio":
         r = _find(results, "lookthrough")
         if r:
@@ -110,25 +110,32 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
             out.append(f"你一共投入 {P('lt_total')}，分在 {P('lt_etf_count')} ETF。把它們拆開來看，你實際持有最多的是{t0['name']}，估計占 {P(t0['fact'])}，{src}。")
             multi = next((x for x in d["top"][1:] if len(x["from"]) >= 3), None) or next((x for x in d["top"][1:] if len(x["from"]) >= 2), None)
             if multi:
-                out.append(f"{multi['name']} {P(multi['fact'])} 比較特別，{'、'.join(multi['from'])} {cn(len(multi['from']))}條線都經過它，等於重複買了{'好幾次' if len(multi['from']) >= 3 else '兩次'}。")
-            out.append(f"前十大成分股只涵蓋你 {P('lt_covered')} 的錢，其餘 {P('lt_rest')} 分散在其他公司，沒有畫進城市，所以以上是估計值。金色框越高，代表你在那棟樓持有越多。")
+                out.append(f"{multi['name']} {P(multi['fact'])} 比較特別，{'、'.join(multi['from'])} {cn(len(multi['from']))}檔都持有它，等於重複買了{'好幾次' if len(multi['from']) >= 3 else '兩次'}。")
+            out.append(f"前十大成分股只涵蓋你 {P('lt_covered')} 的錢，其餘 {P('lt_rest')} 分散在其他公司，所以以上是估計值。店門口的金色購物袋越大，代表你在那家店持有越多。")
     elif t == "company":
         r = _find(results, "get_stock_info")
         if r:
             d = r.data; n = d["name"]; L = d["held_by"]
+            not_held = f"{n}不在城市裡這幾檔 ETF 的前十大，所以櫥窗上沒有 ETF 貼紙 (ETF 可能持有它，只是不在前十大)。"
             if plan.focus.get("station"):
-                if len(L) == 1:
-                    out.append(f"{n}站只有 {L[0]['etf']} 經過，權重 {P(L[0]['fact'])}，是它的第 {L[0]['rank']} 大持股。")
+                if not L:
+                    out.append(not_held)
+                elif len(L) == 1:
+                    out.append(f"{n}只在 {L[0]['etf']} 的前十大，權重 {P(L[0]['fact'])}，是它的第 {L[0]['rank']} 大持股。")
                 else:
-                    out.append(f"{n}站是{cn(len(L))}條線的轉乘站：{'、'.join(x['etf'] + ' ' + P(x['fact']) for x in L)}。這{cn(len(L))}檔的前十大都有{n}，同時買的話，等於在這站重複買了好幾次。")
+                    out.append(f"{n}同時在{cn(len(L))}檔 ETF 的前十大：{'、'.join(x['etf'] + ' ' + P(x['fact']) for x in L)}。這{cn(len(L))}檔的前十大都有{n}，櫥窗上貼了{cn(len(L))}張 ETF 貼紙，同時買的話，等於在這家店重複買了好幾次。")
             else:
                 demo = " (示意行情)" if d["demo"] else ""
                 if d["change_fact"]:
                     out.append(f"{n} ({d['code']}) 今天 {P(d['change_fact'])}{demo}，{STATE_TEXT[d['state']]}。")
                 else:
                     out.append(f"{n} ({d['code']}) 今天沒有行情資料。")
+                if d.get("mcap_fact"):
+                    out.append(f"它的市值占大盤 {P(d['mcap_fact'])}，是上市公司第 {d['mcap_rank']} 大，所以店面{'是整排最寬的旗艦店' if d['mcap_rank'] == 1 else '比較寬' if d['mcap_rank'] <= 10 else '中等大小' if d['mcap_rank'] <= 40 else '比較小'}。")
                 if L:
-                    out.append(f"經過這棟樓的捷運線有{cn(len(L))}條：{'、'.join(x['etf'] + ' (權重 ' + P(x['fact']) + '，第 ' + str(x['rank']) + ' 大)' for x in L)}。")
+                    out.append(f"持有這家店的 ETF 有{cn(len(L))}檔 (櫥窗貼紙)：{'、'.join(x['etf'] + ' (權重 ' + P(x['fact']) + '，第 ' + str(x['rank']) + ' 大)' for x in L)}。")
+                else:
+                    out.append(not_held)
     elif t == "market":
         r = _find(results, "market_summary")
         if r:
@@ -151,12 +158,12 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
                 out.append("；".join(parts) + "。" if parts else "各區變動都不大，燈光照常。")
             ev = []
             if d["crash"]:
-                ev.append(f"跌超過 {P('rule_crash')} 的有{li(d['crash'][:2])}，外牆龜裂、搭起鷹架")
+                ev.append(f"跌超過 {P('rule_crash')} 的有{li(d['crash'][:2])}，鐵捲門拉下一半")
             if d["boom"]:
-                ev.append(f"漲超過 {P('rule_boom')} 的有{li(d['boom'][:2])}，頂樓在放煙火")
+                ev.append(f"漲超過 {P('rule_boom')} 的有{li(d['boom'][:2])}，門口掛起彩帶")
             if ev:
                 out.append("；".join(ev) + "。")
-            out.append("點任何一棟大樓，可以直接問它的管理員。")
+            out.append("走到任何一家店門口，可以直接問店長。")
     elif t == "concept":
         r = _find(results, "search_knowledge")
         if r:
@@ -168,12 +175,12 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
         sc = plan.scene[0] if plan.scene else None
         if sc and sc.name == "set_time":
             night = sc.args["hour"] >= 18.5
-            out.append("切到晚上。晚上最容易看出今天的行情：漲越多的大樓窗戶亮越多，跌很多的大樓會整片暗掉。" if night else "切到白天。白天看外觀：漲的大樓頂樓燈框是紅色，跌的是綠色，大跌的大樓搭著鷹架。")
+            out.append("切到晚上。晚上最容易看出今天的行情：漲越多的店燈越亮，跌很多的店會暗掉、鐵捲門拉下一半。" if night else "切到白天。白天看招牌下的跑馬燈：紅色是漲，綠色是跌，大跌的店鐵捲門拉下一半。")
         else:
-            out.append("回到全城視角。每條彩色的線是一檔 ETF，轉乘站代表兩檔以上的 ETF 前十大都有這家公司。")
+            out.append("回到 ETF 廣場。地上每條彩色的導引線是一檔 ETF，沿著線走會經過它的前十大；櫥窗上的貼紙代表哪幾檔 ETF 持有這家店。")
     else:
         hi = "嗨，我是城市導覽員。" if plan.focus.get("greeting") else "這個問題我還聽不懂。"
-        out.append(hi + "我可以回答：今天的行情、某家公司、兩檔 ETF 的比較、某檔 ETF 的報酬與前十大成分股、每月定期定額的回放、你的持股穿透，以及 ETF 的名詞與觀念。也可以直接點城市裡的大樓或車站。")
+        out.append(hi + "我可以回答：今天的行情、某家公司、兩檔 ETF 的比較、某檔 ETF 的報酬與前十大成分股、每月定期定額的回放、你的持股穿透，以及 ETF 的名詞與觀念。也可以直接走到店門口，或點任何一家店。")
     for r in failed:
         if r.error and t not in ("concept",):
             out.append(r.error)
@@ -210,7 +217,7 @@ WRITER_SYSTEM = """你是「ETF 都會」的城市導覽員，用繁體中文、
 - 不預測漲跌，不建議買賣，不說哪一檔比較好。
 - 報酬都是價格報酬，要說明「未含息」。持股資料只有前十大，要說明是「前十大」的結果。
 - 三到六句話，口語、好懂，不要條列、不要標題、不要 markdown。括號用半形 ()。
-- 如果角色是大樓管理員或站務員，用那個角色的口吻。"""
+- 如果角色是店長或導覽員，用那個角色的口吻。"""
 
 
 def writer_messages(plan: Plan, results: list[ToolResult], book: FactBook, question: str, role: dict, feedback: str = "") -> list[dict]:
