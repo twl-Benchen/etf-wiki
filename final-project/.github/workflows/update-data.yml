@@ -33,6 +33,11 @@ jobs:
         continue-on-error: true
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+      - name: 新聞標題 (FinMind，給遊戲裡的 NPC 聊天)
+        run: python scripts/fetch_news.py
+        continue-on-error: true
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
       - name: 前端資料
         run: python scripts/build_site_data.py
         continue-on-error: true

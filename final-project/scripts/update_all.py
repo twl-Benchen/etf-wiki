@@ -1,9 +1,9 @@
 """一次更新全部資料並重建網頁 (需要能連網)：python scripts/update_all.py
-步驟：當日行情 → 歷史價格 → 配息 → 前端資料 → 網頁 → 後端測試。任何一步失敗都會繼續，最後列出結果。"""
+步驟：當日行情 → 歷史價格 → 配息 → 新聞 → 前端資料 → 網頁 → 後端測試。任何一步失敗都會繼續，最後列出結果。"""
 import os, subprocess, sys
 from pathlib import Path
 R = Path(__file__).resolve().parents[1]
-steps = [("當日行情", [sys.executable, "scripts/fetch_daily.py"]), ("歷史價格", [sys.executable, "scripts/fetch_prices.py"]), ("配息", [sys.executable, "scripts/fetch_dividends.py"]),
+steps = [("當日行情", [sys.executable, "scripts/fetch_daily.py"]), ("歷史價格", [sys.executable, "scripts/fetch_prices.py"]), ("配息", [sys.executable, "scripts/fetch_dividends.py"]), ("新聞", [sys.executable, "scripts/fetch_news.py"]),
          ("前端資料", [sys.executable, "scripts/build_site_data.py"]), ("網頁", [sys.executable, "web/build.py"]),
          ("實驗二題目", [sys.executable, "experiments/exp2/make_tasks.py"]), ("網頁 (含新題目)", [sys.executable, "web/build.py"]),
          ("後端測試", [sys.executable, "-m", "pytest", "-q"])]

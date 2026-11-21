@@ -5,7 +5,7 @@ rd = lambda n: open(os.path.join(S, n), encoding="utf-8").read()
 city = json.load(open(os.path.join(W, "data", "city.json"), encoding="utf-8"))
 data = rd("data.part.js").replace("__CITY__", json.dumps(city, ensure_ascii=False, separators=(",", ":")))
 scene = rd("scene.part.js").replace("__DATA_PART__", data)
-ui = rd("chat_ui.part.js").replace("__API_PART__", rd("api.part.js"))
+ui = rd("chat_ui.part.js").replace("__API_PART__", rd("api.part.js")) + rd("game.part.js")
 head = rd("chat_head.part.html")
 html = "<!doctype html>\n<html lang=\"zh-Hant-TW\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"
 i = head.index("<div id=\"sky\">")

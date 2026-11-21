@@ -42,6 +42,8 @@ def open_page(p, w=1366, h=768, page="index.html", **ctx):
     if page == "index.html":
         pg.wait_for_function("window.__ready===true", timeout=90000)
         pg.wait_for_function("!!window.__assets", timeout=90000)
+        if not os.environ.get("HQ"):   # 軟體模擬的顯示卡很慢，測試預設用省電畫質 (HQ=1 可以測高畫質)
+            pg.evaluate("document.querySelector('[data-q=low]').click()")
     return b, pg, errs
 
 

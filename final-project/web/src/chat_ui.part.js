@@ -585,7 +585,7 @@ async function ask(q) {
   if (replay) finishReplay(true);
   $('hud').hidden = true;
   busy = true; $('send').disabled = true; $('q').value = '';
-  addUser(q); setChips([]);
+  addUser(q); setChips([]); if (typeof gameOnAsk === 'function') gameOnAsk(q);
   const typing = addTyping();
   if (online && await askApi(q, typing)) { busy = false; $('send').disabled = false; return; }
   const P = planner(q), Hd = HANDLERS[P.intent](P);
@@ -663,7 +663,7 @@ __API_PART__
 const setBtn = $('setBtn'), setPanel = $('settings');
 function toggleSettings(open) { setPanel.hidden = !open; setBtn.setAttribute('aria-expanded', String(open)); }
 setBtn.addEventListener('click', () => toggleSettings(setPanel.hidden));
-addEventListener('keydown', e => { if (e.key === 'Escape') { toggleSettings(false); closeCard(); toggleMap(false); } });
+addEventListener('keydown', e => { if (e.key === 'Escape') { toggleSettings(false); closeCard(); toggleMap(false); closeTalk(); toggleQuests(false); } });
 if (!REAL) $('scn-real').hidden = true;
 document.querySelectorAll('[data-scn]').forEach(bt => bt.addEventListener('click', () => applyScenario(bt.dataset.scn)));
 $('time').addEventListener('input', e => applyTime(Number(e.target.value)));
@@ -676,7 +676,7 @@ $('mapBtn').onclick = () => toggleMap();
 $('mapClose').onclick = () => toggleMap(false);
 $('homeBtn').onclick = () => { closeCard(); goPlaza(); };
 $('walkSkip').onclick = () => finishAuto(true);
-$('near').onclick = () => { if (NEAR) openCard(NEAR); };
+$('near').onclick = () => { if (NEAR_NPC != null) openTalk(NEAR_NPC); else if (NEAR) openCard(NEAR); };
 $('chatMini').onclick = () => { const c = $('chat'), m = c.classList.toggle('mini'); $('chatMini').textContent = m ? '展開' : '收合'; $('chatMini').setAttribute('aria-expanded', String(!m)); setTimeout(layoutView, 280); };
 if (TOUCH) $('joy').hidden = false;
 $('tip').textContent = TOUCH ? '左下搖桿走路・拖曳轉頭・點店家走過去・右上可以騎滑板車' : 'WASD 走路・拖曳轉頭・Shift 跑步 (加速)・F 滑板車・V 切換視角・M 導覽圖・點店家走過去';
@@ -700,7 +700,7 @@ applyScenario(REAL ? 'real' : 'mixed');
 resetCity();
 setView('tp');
 addBot(ROLE.guide, '歡迎來到 ETF 都會商店街。每家店是一家上市公司 (市值前 100 大)，同產業的店在同一條街，<b>店面越寬，市值越大</b>。地上彩色的<b>導引線</b>是 ETF，跟著線走會經過它的前十大成分股，櫥窗上的貼紙寫著哪幾檔 ETF 持有這家店。今天的漲跌決定店的樣子：跑馬燈紅色是漲、綠色是跌，大漲的店掛彩帶，大跌的店鐵捲門拉下一半。' +
-  (TOUCH ? '用左下的搖桿走路，拖曳畫面轉頭，點店家會自動走過去；店很多，可以按右上的「滑板車」移動得快一點。' : '用 WASD 走路、拖曳畫面轉頭，按 V 切換背後視角和眼睛視角，按 M 看導覽圖，點店家會自動走過去；店很多，可以按 F 騎滑板車 (Shift 加速)。') +
+  (TOUCH ? '用左下的搖桿走路，拖曳畫面轉頭，點店家會自動走過去；店很多，可以按右上的「滑板車」移動得快一點。' : '用 WASD 走路、拖曳畫面轉頭，按 V 切換背後視角和眼睛視角，按 M 看導覽圖，點店家會自動走過去；店很多，可以按 F 騎滑板車 (Shift 加速)。') + (TOUCH ? '<br>想玩的話按右上的「任務」打開 ETF 集章卡：' : '<br>想玩的話按 <b>Q</b> (或工具列的「任務」) 打開 ETF 集章卡：') + '走到前十大的店門口就會蓋章。路上的人也可以聊天，他們會聊最近的新聞。' +
   `<div class="lg">${Object.entries(ETFS).map(([k, e]) => `<span style="--c:${e.color}">${k} ${e.name}</span>`).join('')}</div>`,
   '本系統只說明資料，不提供投資建議，也不預測漲跌。報酬是價格報酬 (未含息)，持股只計前十大。');
 setChips(START_CHIPS);

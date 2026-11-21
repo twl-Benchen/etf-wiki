@@ -555,6 +555,9 @@ const KEEP = people(shopkeepers.length);
 const WALKERS = [];
 { const r = rng(5); for (let i = 0; i < 40; i++) WALKERS.push({ s: r() * LAY.P, off: (r() < 0.5 ? 1 : -1) * (r() < 0.6 ? L.road + 1.25 + r() * 0.6 : L.front + 1.1 + r() * 1.2), dir: r() < 0.5 ? 1 : -1, v: 1 + r() * 0.6, ph: r() * 6 }); }
 const WALK_MESH = people(WALKERS.length);
+const WNAMES = ['阿明', '小華', '美玲', '志豪', '雅婷', '家豪', '怡君', '俊宏', '淑芬', '建宏', '佳穎', '冠宇', '詩涵', '宗翰', '欣怡', '柏翰', '品妤', '承恩', '郁婷', '子軒'];
+WALKERS.forEach((w, i) => { w.name = WNAMES[i % WNAMES.length]; });
+function nearWalker() { let best = null, bd = 2.4; WALKERS.forEach((w, i) => { if (!w.p) return; const d = Math.hypot(w.p.x - ME.x, w.p.z - ME.z); if (d < bd) { bd = d; best = i; } }); return best; }
 
 /* ---------------- 車流：機車與汽車 (靠右行駛，遇到人會停) ---------------- */
 const CARS = [];
@@ -781,6 +784,14 @@ function setBag(name, scale) {
   if (!scale) return;
   const m = new THREE.Mesh(bagGeo, bagMat), [x, z] = worldOf(b.c, b.h0 % 2 ? 1.6 : -1.6, -0.9); m.position.set(x, 0.05, z); m.rotation.y = b.c.rotY; m.scale.setScalar(0.7 + 1.6 * scale); m.castShadow = true; scene.add(m); b.bag = m;
 }
+const QSTAR = (() => { const cv = mkCanvas(64, 64), g = cv.getContext('2d'); g.translate(32, 32); g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 11 : 26, a = -Math.PI / 2 + i * Math.PI / 5; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fillStyle = '#ffcc33'; g.fill(); g.lineWidth = 4; g.strokeStyle = '#7a4b00'; g.stroke(); return canvasTex(cv); })();
+function setQuestMarks(names) {
+  for (const b of Object.values(B)) {
+    const on = names.has(b.c.name);
+    if (on && !b.qm) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: QSTAR, depthTest: false, transparent: true, toneMapped: false })); sp.renderOrder = 19; const [x, z] = worldOf(b.c, 0, 0.8); sp.position.set(x, b.H + (b.roof ? 3 : 1.4), z); sp.userData.y0 = sp.position.y; scene.add(sp); b.qm = sp; }
+    else if (!on && b.qm) { scene.remove(b.qm); b.qm.material.dispose(); b.qm = null; }
+  }
+}
 let FOCUS = null;
 function focusEtfs(set) {
   FOCUS = set && set.size ? set : null;
@@ -909,7 +920,8 @@ addEventListener('keydown', e => {
   if (k === 'v') setView(ME.view === 'tp' ? 'fp' : 'tp');
   if (k === 'f') setRide(!ME.ride);
   if (k === 'm') toggleMap();
-  if ((k === 'e' || k === 'enter') && NEAR) openCard(NEAR);
+  if (k === 'e' || k === 'enter') { if (NEAR_NPC != null) openTalk(NEAR_NPC); else if (NEAR) openCard(NEAR); }
+  if (k === 'q') toggleQuests();
 });
 addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
@@ -971,7 +983,7 @@ function setView(v) {
 }
 
 /* ---------------- 附近的店：提示、店家卡片 ---------------- */
-let NEAR = null, CARD = null;
+let NEAR = null, CARD = null, NEAR_NPC = null;
 function nearestStore() {
   let best = null, bd = 1e9;
   for (const b of Object.values(B)) {
@@ -980,8 +992,15 @@ function nearestStore() {
   }
   return best;
 }
-function showNear(name) {
-  if (name === NEAR) return; NEAR = name; const el = document.getElementById('near'); if (!el) return;
+function updateNear() {
+  if (ME.auto) { setNear(null, null); return; }
+  const w = ME.v > 4 ? null : nearWalker();
+  if (w != null) setNear(null, w); else setNear(nearestStore(), null);
+}
+function showNear(name) { setNear(name, null); }
+function setNear(name, npc) {
+  if (name === NEAR && npc === NEAR_NPC) return; NEAR = name; NEAR_NPC = npc; const el = document.getElementById('near'); if (!el) return;
+  if (npc != null) { el.innerHTML = `<b>${WALKERS[npc].name}</b><span class="k">路人｜${TOUCH ? '點這裡聊天' : '按 E 聊天'}</span>`; el.hidden = !!CHAT; return; }
   if (!name || CARD === name) { el.hidden = true; return; }
   const c = CO[name], v = chg[name] ?? 0;
   el.innerHTML = `<b>${c.name}</b> <span class="${v > 0 ? 'up' : v < 0 ? 'down' : ''}">${fmtPct(v)}</span><span class="k">${TOUCH ? '點這裡看店家' : '按 E 看店家'}</span>`;
@@ -990,19 +1009,21 @@ function showNear(name) {
 const STATE_LOOK = { boom: '大漲，門口掛起彩帶、燈全亮', up: '小漲，店裡燈比平常亮', flat: '變動不大，照常營業', down: '下跌，店裡燈暗了一些', crash: '大跌，鐵捲門拉下一半' };
 function openCard(name) {
   const c = CO[name], el = document.getElementById('card'); if (!c || !el) return;
-  CARD = name; showNear(null); NEAR = null;
+  CARD = name; setNear(null, null);
   const v = chg[name] ?? 0, st = stateOf(v), demo = scenarioNow === 'real' ? '' : ' (示意行情)';
   const etfs = c.etfs.map(k => ({ k, w: ETFS[k].w[name], rank: Object.entries(ETFS[k].w).sort((a, b) => b[1] - a[1]).findIndex(([n]) => n === name) + 1 }));
   el.innerHTML = `<div class="card-h"><div><b>${c.name}</b> <span class="note">${c.code}｜${c.ind}｜${DIST[c.d].name}</span></div><button type="button" class="icon-btn" id="cardX" aria-label="關閉">關閉</button></div>
     <div class="card-row"><span class="big ${v > 0 ? 'up' : v < 0 ? 'down' : ''}">${fmtPct(v)}</span><span class="note">今天的漲跌${demo}<br>${STATE_LOOK[st]} (只代表今天)</span></div>
     ${c.share != null ? `<div class="note">市值占大盤 <b>${c.share.toFixed(2)}%</b>，上市公司第 ${c.rank} 大 (${TIER[c.tier].name})</div>` : ''}
     <div class="stk">${etfs.length ? etfs.map(x => `<span style="--c:${ETFS[x.k].color}">${x.k} <b>${x.w.toFixed(2)}%</b> 第 ${x.rank} 大</span>`).join('') : '<span class="none">不在城市裡這幾檔 ETF 的前十大，櫥窗沒有貼紙</span>'}</div>
+    ${(NEWS[name] || []).length ? `<div class="say"><b>店長：</b>今天客人都在聊這則新聞 <span id="cardNews"></span></div>` : ''}
     <div class="card-a"><button type="button" class="primary" id="cardAsk">問店長</button>${etfs.length ? '<button type="button" class="icon-btn" id="cardEtf">哪些 ETF 持有？</button>' : ''}</div>
     <div class="note src">資料：${scenarioNow === 'real' ? `證交所每日行情 (${CITY.daily.date})` : '示意行情'}；前十大成分股${CITY.holdings_meta && CITY.holdings_meta.as_of ? ' (' + CITY.holdings_meta.as_of + ')' : ''}${c.share != null ? '；市值排行 (' + (MCAP.provided || '') + ' 提供)' : ''}</div>`;
   el.hidden = false;
   el.querySelector('#cardX').onclick = closeCard;
   el.querySelector('#cardAsk').onclick = () => { closeCard(); ask(`${name}今天怎麼了？`); };
   const ce = el.querySelector('#cardEtf'); if (ce) ce.onclick = () => { closeCard(); ask(`哪些 ETF 持有${name}？`); };
+  const cn_ = el.querySelector('#cardNews'); if (cn_) { let k = 0; const show = () => { const it = NEWS[name][k % NEWS[name].length]; cn_.innerHTML = newsHtml(it) + (NEWS[name].length > 1 ? ' <button type="button" class="link" id="cardNext">下一則</button>' : ''); const nb = cn_.querySelector('#cardNext'); if (nb) nb.onclick = () => { k++; show(); }; }; show(); }
 }
 function closeCard() { CARD = null; const el = document.getElementById('card'); if (el) el.hidden = true; }
 
@@ -1305,7 +1326,8 @@ function worldUpdate(dt, T) {
   // 影子跟著角色
   sun.position.set(ME.x + SUNDIR.x * 120, SUNDIR.y * 120, ME.z + SUNDIR.z * 120); sun.target.position.set(ME.x, 0, ME.z);
   // 附近的店
-  showNear(ME.auto ? null : nearestStore());
+  updateNear();
+  if (GAME_ON) gameUpdate(dt);
   if (CARD) { const c = CO[CARD]; if (Math.hypot(ME.x - c.door[0], ME.z - c.door[1]) > 16) closeCard(); }
   if (reduceMotion) { lodT -= dt; if (lodT <= 0) { lodT = 0.25; for (const b of ALLB) b.det.visible = Math.hypot(b.c.front[0] - camera.position.x, b.c.front[1] - camera.position.z) < 95; } drawMinimap(); return; }
   // 導引線流動、跑馬燈
@@ -1320,6 +1342,7 @@ function worldUpdate(dt, T) {
   for (const b of Object.values(B)) {
     if (b.beacon) b.beacon.material.opacity = 0.22 + 0.12 * Math.sin(T * 3 + b.h0);
     if (b.label) { const d = camera.position.distanceTo(b.label.position), s = clamp(d * 0.12, 3.2, 22); b.label.scale.set(s, s * b.label.userData.aspect, 1); }
+    if (b.qm) { const d = camera.position.distanceTo(b.qm.position), s = clamp(d * 0.05, 1.3, 9); b.qm.scale.set(s, s, 1); b.qm.position.y = b.qm.userData.y0 + Math.sin(T * 2.5 + b.h0) * 0.3; }
   }
   // 車流
   const me = ringS(ME.x, ME.z);
@@ -1335,7 +1358,7 @@ function worldUpdate(dt, T) {
   {
     const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), S = new THREE.Vector3(1, 1, 1);
     WALKERS.forEach((w, i) => {
-      const p0 = ringPt(w.s, w.off); const near = Math.hypot(p0.x - ME.x, p0.z - ME.z) < 1.1;
+      const p0 = ringPt(w.s, w.off); const near = Math.hypot(p0.x - ME.x, p0.z - ME.z) < 1.1 || (CHAT && CHAT.walker === i);
       if (!near) w.s = modP(w.s + w.dir * w.v * dt);
       const p = ringPt(w.s, w.off), a = ringPt(w.s + w.dir, w.off); w.ph += dt * (near ? 0 : 7);
       const yaw = Math.atan2(a.x - p.x, a.z - p.z); w.near = near; w.p = p; w.yaw = yaw;
