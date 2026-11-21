@@ -54,6 +54,7 @@ class Agent:
     def write(self, plan: Plan, results: list[ToolResult], book: FactBook, q: str, role: dict, trace: dict) -> dict:
         kb = next((r for r in results if r.name == "search_knowledge" and r.ok), None)
         allowed = "\n".join(d["text"] for d in kb.data["_docs"][:2]) if kb else ""
+        allowed += "\n" + "\n".join(str(v) for r in results for k, v in r.data.items() if k.endswith("_label"))   # 資料版本的說明文字 (例如「2025 年整理」) 不算數字
         attempts = []
         if self.llm.name != "mock" and plan.type not in ("scene", "help"):
             feedback = ""

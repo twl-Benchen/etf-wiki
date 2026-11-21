@@ -262,6 +262,12 @@ const TOOLS = {
     const cp = r1(covered / total * 100);
     return { total, top, covered_pct: cp, rest_pct: r1(100 - cp), note: '只計各檔前十大成分股', _share: share };
   },
+  holdings_change({ etf }) {
+    const old = Object.fromEntries((CITY.prev.holdings[etf] || []).map(t => [t.name, t.weight])), now = ETFS[etf].w;
+    const added = Object.keys(now).filter(n => !(n in old)).map(n => ({ name: n, w: now[n] })), removed = Object.keys(old).filter(n => !(n in now)).map(n => ({ name: n, w: old[n] }));
+    const moves = Object.keys(now).filter(n => n in old).sort((a, b) => Math.abs(now[b] - old[b]) - Math.abs(now[a] - old[a])).slice(0, 3).map(n => ({ name: n, now: now[n], old: old[n] }));
+    return { etf, prev_label: CITY.prev.label, added, removed, moves };
+  },
   search_knowledge({ query }) {
     // 和後端 rag.py 相同的規則：內容相似度，加上標題或別名出現在問題裡的加分 (太短或太常見的詞不加分)
     const strip = query.replace(/什麼是|是什麼|什麼意思|為什麼|怎麼|如何|請問|可以|嗎|呢|多少|哪些|？|\?/g, ' ').trim() || query;
@@ -331,6 +337,7 @@ function planner(q0) {
   else if (Object.keys(E.pairs).length && has(/我(有|買|持有|手上|的)|持股|改成|換成|配置/)) intent = 'mine';
   else if (has(/我的城市|我的持股|看穿/)) intent = 'mine';
   else if (followUp && E.etfs.length === 1 && ctx && ['replay', 'etf', 'refuse'].includes(ctx.intent)) intent = ctx.intent;
+  else if (E.etfs.length === 1 && CITY.prev && has(/換股|換了|改道|新增了|新進|剔除|退出|換掉|持股變化|成分股變化|調整了|有什麼變化/)) intent = 'rebalance';
   else if (E.etfs.length >= 2) intent = 'compare';
   else if (KB_KEYS.test(q)) intent = 'kb';
   else if (E.cos.length && has(/站|轉乘|經過/)) intent = 'station';
@@ -443,6 +450,23 @@ const HANDLERS = {
       },
       src: '資料：前十大成分股權重',
       follow: (eh) => eh.etfs.length >= 2 ? [`${eh.etfs[0].etf} 跟 ${eh.etfs[eh.etfs.length - 1].etf} 差在哪？`, `${n}今天怎麼了？`] : [`${eh.etfs[0].etf} 前十大是哪些？`, `${n}今天怎麼了？`],
+    };
+  },
+  rebalance({ E }) {
+    const k = E.etfs[0];
+    return {
+      role: [`${k} 線站長`, '線', ETFS[k].color], tools: [['holdings_change', { etf: k }]],
+      scene: [['focus_lines', { lines: [k] }], ['ring', { names: '新進前十大的公司' }], ['fly_to', { line: k }]],
+      act([c]) { setMine(null); setFocus(new Set([k])); setRings(c.added.filter(x => CO[x.name]).map(x => ringForCo(x.name, 0x3fd391))); setLabels(c.added.map(x => [x.name, 'w:' + k])); fitNames(Object.keys(ETFS[k].w).filter(n => CO[n]), { maxZoom: 1.3 }); },
+      write([c]) {
+        let h = `和${c.prev_label}相比，${k} 的前十大有 <b>${c.added.length} 家</b>新進、<b>${c.removed.length} 家</b>退出。`;
+        if (c.added.length) h += `新進的是${c.added.map(x => `${x.name} <b>${x.w.toFixed(2)}%</b>`).join('、')}，城市裡這幾站是新開的 (綠色光圈)。`;
+        if (c.removed.length) h += `退出的是${c.removed.map(x => `${x.name} (原本 <b>${x.w.toFixed(2)}%</b>)`).join('、')}，這幾站停駛了。`;
+        if (c.moves.length) h += '留下來的公司中，權重變化最大的是' + c.moves.slice(0, 2).map(x => `${x.name} (從 <b>${x.old.toFixed(2)}%</b> 變成 <b>${x.now.toFixed(2)}%</b>)`).join('、') + '。';
+        return h + '以上只比較前十大成分股。';
+      },
+      src: '資料：前十大成分股 (目前與前一份資料)',
+      follow: () => [`${k} 前十大是哪些？`, '什麼是成分股調整？', '回到全城'],
     };
   },
   compare({ E }) {

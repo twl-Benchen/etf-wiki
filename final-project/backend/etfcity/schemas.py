@@ -90,7 +90,7 @@ class ArgsSearch(BaseModel):
     k: int = Field(default=3, ge=1, le=5)
 
 
-TOOL_ARGS: dict[str, type[BaseModel]] = {"get_etf_info": _Etf, "get_top10_holdings": _Etf, "top10_overlap": ArgsOverlap, "get_return": ArgsReturn,
+TOOL_ARGS: dict[str, type[BaseModel]] = {"holdings_change": _Etf, "get_etf_info": _Etf, "get_top10_holdings": _Etf, "top10_overlap": ArgsOverlap, "get_return": ArgsReturn,
                                          "get_dividends": ArgsDividends, "simulate_dca": ArgsDca, "lookthrough": ArgsLookthrough,
                                          "get_stock_info": ArgsCompany, "market_summary": ArgsMarket, "search_knowledge": ArgsSearch}
 SCENE_NAMES = {"focus_etfs", "fly_to", "mark_companies", "show_portfolio", "replay", "set_time", "reset"}

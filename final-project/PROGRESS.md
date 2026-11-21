@@ -40,12 +40,17 @@
 - [x] 實驗二：`make_tasks.py` 產生 8 題 (答案由工具計算)、`web/table.html` 對照介面、`web/study.html` 測試頁、`analyze.py`
 - [x] 實驗三：README、標準答案範本、看圖模型與傳統 OCR 兩種辨識腳本、評分程式
 - [x] `docs/deploy.md`：本機、Groq、HF Space、GitHub Pages、資料更新、搬 repo
+- [x] 前十大持股更新到 2026-11-20 (來源 pocket.tw，待與投信官網核對)；舊資料存在 `data/holdings_history/initial.json`；更新方式 `scripts/update_holdings.py`
+- [x] 換股比較 `holdings_change` (後端工具、離線版、畫面上新進的車站亮綠色光圈)
+- [x] 假 LLM 測試 (`backend/tests/test_llm_path.py`)：計畫驗證失敗重試、Writer 寫了沒編號的數字被退回、退回模板
+- [x] `scripts/update_all.py` 一鍵更新資料；`notebooks/etf_metropolis_colab.ipynb` 在 Colab 更新資料、測 Groq、跑實驗一
+- [x] `docs/demo.md` 期末 demo 流程
 
 ## 待辦清單 (依序)
 1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。
 2. **需要使用者**：建 HF Space 部署後端 (docs/deploy.md 第 3 節)，把網址填進城市設定。
-3. 在能連網的電腦跑 `scripts/fetch_prices.py` 與 `scripts/fetch_daily.py`，更新價格與當日行情；之後重跑 `build_site_data.py`、`web/build.py`。
-4. 更新前十大持股 (`data/holdings.json`，填 `as_of` 與來源)，並整理配息資料 `data/dividends.json` (格式：`{"dividends": {"0056": [{"date": "YYYY-MM-DD", "amount": 0.0}]}}`)。
+3. 在能連網的電腦 (或 Colab 筆記本) 跑 `python scripts/update_all.py`，更新價格與當日行情。**目前價格只到 2025-05-29，但持股已是 2026-11-20，報酬題的日期會和持股不一致，這一步很重要。**
+4. 前十大持股與投信官網核對；整理配息資料 `data/dividends.json` (格式：`{"dividends": {"0056": [{"date": "YYYY-MM-DD", "amount": 0.0}]}}`)。
 5. 跑實驗一 A、B、C、D，產生 `experiments/exp1/report.md`。
 6. 實驗二：找受試者；實驗三：收截圖並標註。
 7. 期末報告與 demo 腳本。

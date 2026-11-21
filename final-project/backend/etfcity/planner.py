@@ -115,6 +115,8 @@ def rule_plan(q: str, ctx: dict | None = None) -> dict:
     if has("晚上|夜景|夜晚|天黑|白天|早上|中午|下午|傍晚") or E["hour"] is not None:
         h = E["hour"] if E["hour"] is not None else 20.5 if has("晚上|夜景|夜晚|天黑") else 18 if has("傍晚") else 9.5 if has("早上") else 12.5 if has("中午") else 14.5
         return {"type": "scene", "scene": [{"name": "set_time", "args": {"hour": max(8, min(22, h))}}], "reason": "切換時間", "focus": {"entities": E}}
+    if len(E["etfs"]) == 1 and has("換股|換了|改道|新增了|新進|剔除|退出|換掉|持股變化|成分股變化|調整了|有什麼變化"):
+        return {"type": "number", "tools": [T("holdings_change", etf=E["etfs"][0])], "reason": "比較前後兩份持股", "focus": {"entities": E}}
     if len(E["etfs"]) == 1 and not (KB_RE.search(q) and not has("報酬|績效|漲了|跌了|前十大|成分股|持股|持有")):
         k = E["etfs"][0]
         if has("報酬|績效|漲了多少|跌了多少|漲幅|跌幅") or E["period"]:
@@ -148,6 +150,7 @@ def planner_prompt() -> str:
 - simulate_dca(etf, monthly, start)：定期定額回測。monthly 是每月金額 (整數)，start 是 "YYYY-MM"
 - lookthrough(positions)：穿透持股。positions 是 {{"ETF 代號": 金額}}
 - get_stock_info(company)：公司今日漲跌與哪些 ETF 持有它
+- holdings_change(etf)：和前一份持股比較，哪些公司新進或退出前十大
 - market_summary(district?)：今日市場摘要。district 可省略，或是 semi, tech, fin, port, life
 - search_knowledge(query)：檢索 ETF 觀念文件
 

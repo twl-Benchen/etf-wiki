@@ -33,6 +33,7 @@ class DataStore:
                             ds.append(r["date"]); cs.append(c)
                 self.prices[k] = (ds, cs)
         self.dividends: dict = self._json("dividends.json", {}).get("dividends", {})
+        self.prev = self._load_prev()
         self.daily = self._load_daily()
         self.price_source = self._json("prices/_meta.json", {}).get("source", "ETF 歷史收盤價")
 
@@ -43,6 +44,21 @@ class DataStore:
                 return default
             raise FileNotFoundError(p)
         return json.loads(p.read_text(encoding="utf-8"))
+
+    def _load_prev(self) -> dict:
+        """data/holdings_history/ 裡最新的一份 (不含目前這份)，用來比較換股"""
+        d = self.dir / "holdings_history"; cur = self.holdings_meta.get("as_of") or ""
+        snaps = []
+        for p in d.glob("*.json") if d.exists() else []:
+            if p.name.startswith("_"):
+                continue
+            j = json.loads(p.read_text(encoding="utf-8"))
+            if (j.get("as_of") or "") != cur:
+                snaps.append(((j.get("as_of") or "0000"), j))
+        if not snaps:
+            return {}
+        j = max(snaps, key=lambda x: x[0])[1]
+        return {"label": j.get("label") or f"{j.get('as_of')} 的持股", "as_of": j.get("as_of"), "holdings": j["holdings"]}
 
     # ---------- 每日行情 ----------
     def _load_daily(self) -> dict:

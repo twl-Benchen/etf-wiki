@@ -57,6 +57,20 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
             x, y = rr.data["rows"]
             out.append(f"{rr.data['period_name']} ({P(x['facts']['from'])} 到 {P(x['facts']['to'])}) 的價格報酬：{x['etf']} {P(x['facts']['ret'])}，{y['etf']} {P(y['facts']['ret'])}，相差 {P(rr.data['diff']['fact'])}。這只算股價，配息沒有加回來；配息比較多的 ETF，加回去之後差距會不一樣。")
         out.append("以上只計前十大成分股，不是完整持股。")
+    elif t == "number" and _find(results, "holdings_change"):
+        d = _find(results, "holdings_change").data; k = d["etf"]
+        if not d["added"] and not d["removed"]:
+            out.append(f"和{d['prev_label']}相比，{k} 的前十大成分股名單沒有變。")
+        else:
+            out.append(f"和{d['prev_label']}相比，{k} 的前十大有 {P('chg_added_' + k)}新進、{P('chg_removed_' + k)}退出。")
+            if d["added"]:
+                out.append(f"新進的是{'、'.join(x['name'] + ' ' + P(x['fact']) for x in d['added'])}，城市裡這幾站是新開的。")
+            if d["removed"]:
+                out.append(f"退出的是{'、'.join(x['name'] + ' (原本 ' + P(x['fact']) + ')' for x in d['removed'])}，這幾站停駛了。")
+        mv = [x for x in d["moves"]]
+        if mv:
+            out.append("留下來的公司中，權重變化最大的是" + "、".join(f"{x['name']} (從 {P(x['old'])} 變成 {P(x['now'])})" for x in mv[:2]) + "。")
+        out.append("以上只比較前十大成分股。")
     elif t == "number":
         info = _find(results, "get_etf_info"); h = _find(results, "get_top10_holdings"); rr = _find(results, "get_return")
         if h:

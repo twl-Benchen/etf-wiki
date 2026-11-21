@@ -22,6 +22,7 @@ for k in s.etfs:
             f = {x.id: x.value for x in r.facts}
             b["returns"][k][p] = {"ret": f[f"ret_{p}_{k}"], "from": f[f"ret_{p}_{k}_from"], "to": f[f"ret_{p}_{k}_to"], "ann": f.get(f"ann_{p}_{k}")}
 b["period_names"] = PERIOD_NAME
+b["prev"] = {"label": s.prev["label"], "holdings": {k: sorted(v["top10"], key=lambda t: -t["weight"]) for k, v in s.prev["holdings"].items()}} if s.prev else None
 b["kb"] = [{"id": d["id"], "title": d["title"], "summary": d["summary"], "aliases": d["aliases"], "text": d["text"], "source": d["source_note"]} for d in get_kb().docs]
 out = ROOT / "web" / "data"; out.mkdir(parents=True, exist_ok=True)
 (out / "city.json").write_text(json.dumps(b, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

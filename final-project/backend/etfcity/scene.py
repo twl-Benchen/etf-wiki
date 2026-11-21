@@ -19,6 +19,11 @@ def derive_scene(plan: Plan, results: list[ToolResult]) -> list[dict]:
             d = ov.data; a, b = d["a"], d["b"]; shared = [x["name"] for x in d["shared"]]
             names = list(dict.fromkeys([d["top"][a]["name"], d["top"][b]["name"], *shared[:4]]))
             return [A("focus_etfs", etfs=[a, b]), A("mark_companies", companies=names, label="weights", etfs=[a, b], ring=shared), A("fly_to", companies=names)]
+    hc = _f(results, "holdings_change")
+    if hc:
+        k = hc.data["etf"]; added = [x["name"] for x in hc.data["added"]]
+        return [A("focus_etfs", etfs=[k]), A("mark_companies", companies=added or [x["name"] for x in hc.data["moves"]], label="weights", etfs=[k], ring=added),
+                A("fly_to", companies=[x["name"] for x in s.top10(k)])]
     if t == "number":
         h = _f(results, "get_top10_holdings"); rr = _f(results, "get_return")
         k = h.data["etf"] if h else rr.data["rows"][0]["etf"] if rr and rr.data["rows"] else None
@@ -72,6 +77,10 @@ def followups(plan: Plan, results: list[ToolResult]) -> list[str]:
         if r:
             a, b = r.data["a"], r.data["b"]
             return [f"每月 5000 買 {b}，從 2020 到現在會怎樣？", f"我有 {a} 30萬、{b} 20萬", "什麼是收益平準金？"]
+    hc = _f(results, "holdings_change")
+    if hc:
+        k = hc.data["etf"]
+        return [f"{k} 前十大是哪些？", f"每月 5000 買 {k}，從 2020 到現在會怎樣？", "什麼是成分股調整？"]
     if t == "number":
         h = _f(results, "get_top10_holdings"); rr = _f(results, "get_return")
         k = h.data["etf"] if h else rr.data["rows"][0]["etf"] if rr and rr.data["rows"] else codes[0]

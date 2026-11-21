@@ -230,6 +230,31 @@ def search_knowledge(query: str, k: int = 3, s: DataStore | None = None) -> Tool
                       data={"hits": [{"id": h["id"], "title": h["title"], "score": h["score"], "summary": h["summary"]} for h in hits], "_docs": hits})
 
 
-TOOLS = {"get_etf_info": get_etf_info, "get_top10_holdings": get_top10_holdings, "top10_overlap": top10_overlap, "get_return": get_return,
+def holdings_change(etf: str, s: DataStore | None = None) -> ToolResult:
+    """和前一份持股比較：新進、退出前十大的公司，以及留下來的公司權重變化"""
+    s = s or get_store(); args = {"etf": etf}
+    if not s.prev or etf not in s.prev["holdings"]:
+        return ToolResult("holdings_change", args, ok=False, error="沒有前一份持股資料可以比較。")
+    old = {t["name"]: t for t in s.prev["holdings"][etf]["top10"]}; new = {t["name"]: t for t in s.top10(etf)}
+    added = [n for n in new if n not in old]; removed = [n for n in old if n not in new]; kept = [n for n in new if n in old]
+    src_new, src_old = _hold_src(s), f"前十大成分股 ({s.prev['label']})"
+    facts = [Fact(f"chg_added_{etf}", len(added), "count:家", f"{etf} 新進前十大的公司家數", src_new),
+             Fact(f"chg_removed_{etf}", len(removed), "count:家", f"{etf} 退出前十大的公司家數", src_old)]
+    for n in added:
+        facts.append(Fact(f"w_{etf}_{new[n]['code']}", new[n]["weight"], "pct", f"{n}目前在 {etf} 的權重 (新進)", src_new))
+    for n in removed:
+        facts.append(Fact(f"oldw_{etf}_{old[n]['code']}", old[n]["weight"], "pct", f"{n}在 {etf} 前一份資料的權重 (已退出)", src_old))
+    moves = sorted(kept, key=lambda n: -abs(new[n]["weight"] - old[n]["weight"]))[:3]
+    for n in moves:
+        c = new[n]["code"]
+        facts += [Fact(f"w_{etf}_{c}", new[n]["weight"], "pct", f"{n}目前在 {etf} 的權重", src_new), Fact(f"oldw_{etf}_{c}", old[n]["weight"], "pct", f"{n}在 {etf} 前一份資料的權重", src_old)]
+    return ToolResult("holdings_change", args, facts=facts, sources=[src_new, src_old], note=HOLD_NOTE,
+                      data={"etf": etf, "prev_label": s.prev["label"], "now_label": s.holdings_meta.get("as_of") or "目前資料",
+                            "added": [{"name": n, "fact": f"w_{etf}_{new[n]['code']}"} for n in added],
+                            "removed": [{"name": n, "fact": f"oldw_{etf}_{old[n]['code']}"} for n in removed],
+                            "moves": [{"name": n, "now": f"w_{etf}_{new[n]['code']}", "old": f"oldw_{etf}_{new[n]['code']}", "up": new[n]["weight"] > old[n]["weight"]} for n in moves]})
+
+
+TOOLS = {"holdings_change": holdings_change, "get_etf_info": get_etf_info, "get_top10_holdings": get_top10_holdings, "top10_overlap": top10_overlap, "get_return": get_return,
          "get_dividends": get_dividends, "simulate_dca": simulate_dca, "lookthrough": lookthrough, "get_stock_info": get_stock_info,
          "market_summary": market_summary, "search_knowledge": search_knowledge}
