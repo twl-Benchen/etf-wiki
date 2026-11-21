@@ -64,7 +64,7 @@ function apiTrace(r) {
 function renderApi(r, label) {
   const src = (r.sources || []).map(esc).join('；') + (r.notes && r.notes.length ? `<br>註：${r.notes.map(esc).join('；')}` : '');
   const html = highlightFacts(r.answer, r), rp = (r.scene || []).find(a => a.name === 'replay');
-  const msg = addBot(roleTuple(r), rp ? '<span class="note">回放中，看城市怎麼走過這幾年…</span>' : html, rp ? '' : src);
+  const msg = addBot(roleTuple(r), rp ? '<span class="note">回放中，看走勢圖和廣場大螢幕，城市怎麼走過這幾年…</span>' : html, rp ? '' : src);
   msg.appendChild(apiTrace(r));
   if (rp) msg._final = { html, src, follow: r.followups || [] };
   runScene(r.scene || [], msg);
@@ -83,7 +83,7 @@ async function askApi(q, typing) {
   }
 }
 
-/* ---------- 畫面動作：後端只說「要看什麼」，這裡決定城市怎麼呈現 ---------- */
+/* ---------- 畫面動作：後端只說「要看什麼」，這裡決定商店街怎麼呈現 (走過去、導引線、光柱、標籤、購物袋、導覽圖) ---------- */
 function runScene(actions, msg) {
   const names = xs => (xs || []).filter(n => CO[n]);
   if (!actions.some(a => a.name === 'show_portfolio')) setMine(null);
@@ -96,7 +96,7 @@ function runScene(actions, msg) {
       const mode = g.label === 'weights' ? 'w:' + (g.etfs || []).filter(k => ETFS[k]).join(',') : g.label === 'portfolio' ? 'mine' : 'chg';
       setLabels(names(g.companies).map(n => [n, mode === 'w:' ? 'chg' : mode]));
       setRings(names(g.ring).map(n => ringForCo(n, 0xffffff)));
-    } else if (a.name === 'fly_to') { const ns = names(g.companies); g.overview || !ns.length ? overview() : fitNames(ns, { maxZoom: ns.length === 1 ? 1.9 : 1.4 }); }
+    } else if (a.name === 'fly_to') { const ns = names(g.companies); g.overview || !ns.length ? overview() : fitNames(ns); }
     else if (a.name === 'show_portfolio') setMine({ _share: Object.fromEntries(Object.entries(g.shares || {}).filter(([n]) => CO[n])) });
     else if (a.name === 'set_time') applyTime(clamp(+g.hour || 14.5, 8, 22));
     else if (a.name === 'replay' && ETFS[g.etf] && msg) {

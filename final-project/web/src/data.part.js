@@ -7,64 +7,109 @@ try {   // 放在網站上時，讀同目錄下較新的資料檔
 } catch (e) {}
 const ETF_KEYS = Object.keys(CITY.etfs);
 const ETFS = {};
-ETF_KEYS.forEach((k, i) => {
-  const e = CITY.etfs[k], n = ETF_KEYS.length;
-  ETFS[k] = { name: e.name, type: e.type, color: e.color, off: n > 1 ? -1.5 + 3 * i / (n - 1) : 0, w: Object.fromEntries(CITY.holdings[k].map(t => [t.name, t.weight])), info: e };
-});
-const DIST = {
-  semi: { c: [-15.5, -12], s: [25, 20], ground: '#cfd6df' },
-  tech: { c: [15, -12],   s: [24, 20], ground: '#d6d3cb' },
-  fin:  { c: [-15.5, 14],  s: [25, 20], ground: '#ddd5c6' },
-  port: { c: [15, 14],     s: [24, 20], ground: '#c9cfd2' },
-  life: { c: [-46, 14],    s: [25, 20], ground: '#d3d8c9' },
+ETF_KEYS.forEach(k => { const e = CITY.etfs[k]; ETFS[k] = { name: e.name, type: e.type, color: e.color, w: Object.fromEntries(CITY.holdings[k].map(t => [t.name, t.weight])), info: e }; });
+const DIST = {};
+for (const [k, n] of Object.entries(CITY.districts)) DIST[k] = { name: n };
+const REAL = !!(CITY.daily && !CITY.daily.demo && CITY.daily.stocks);
+const MCAP = CITY.market_cap || {};
+
+/* 店面大小依市值排行：第 1 名是旗艦店，2 到 10 名大店，11 到 40 名中店，其餘小店 (寬度單位：公尺) */
+const TIER = { xl: { w: 26, fl: 11, name: '旗艦店' }, l: { w: 14, fl: 6, name: '大店' }, m: { w: 10, fl: 4, name: '中店' }, s: { w: 7.5, fl: 3, name: '小店' } };
+// 同一條街裡，相近的產業排在一起
+const SUB = {
+  tech: ['電子零組件業', '電腦及週邊設備業', '通信網路業', '光電業', '電子通路業', '其他電子業', '資訊服務業', '數位雲端'],
+  life: ['塑膠工業', '油電燃氣業', '鋼鐵工業', '水泥工業', '玻璃陶瓷', '電機機械', '電器電纜', '汽車工業', '紡織纖維', '食品工業', '貿易百貨', '生技醫療業'],
 };
-for (const k of Object.keys(DIST)) DIST[k].name = CITY.districts[k] || k;
-// 幾家公司有手調的外觀；沒列到的公司依產業自動決定
-const STYLE = {
-  台積電: { kind: 'fab', crane: true }, 聯發科: { tint: '#3b6f8f' }, 聯電: { tint: '#5a7f96' }, 聯詠: { tint: '#2f7c80' }, 瑞昱: { tint: '#46698f' }, 日月光投控: { tint: '#4f7a72' }, 世界: { tint: '#5b6f8c' },
-  群聯: { tint: '#3f6a9a' }, 力成: { tint: '#55748a' },
-  鴻海: { accent: '#c8302c' }, 台達電: { accent: '#2d6db5', crane: true }, 廣達: { accent: '#3a6ea8', crane: true }, 華碩: { accent: '#1c2a3a' }, 瑞儀: { accent: '#7a4fa3' },
-  中華電: { kind: 'telecom', sign: '中華電信' }, 台灣大: { kind: 'telecom', sign: '台灣大哥大' }, 遠傳: { kind: 'telecom', sign: '遠傳電信' },
-  富邦金: { stone: '#c9b99a' }, 國泰金: { stone: '#b9b2a3' }, 中信金: { stone: '#a9b3b8' }, 華南金: { stone: '#cdbfa6' }, 元大金: { stone: '#b7a58a' }, 上海商銀: { stone: '#c4b8a6' },
-  長榮: { kind: 'ship', accent: '#2e7d4f', yard: ['#2e7d4f', '#3c9a62', '#c0392b', '#2c5aa0', '#d6a21e'] }, 陽明: { kind: 'ship', accent: '#d7a41c' }, 萬海: { kind: 'ship', accent: '#1f5fae' },
-  長榮航: { kind: 'air', accent: '#2e7d4f', sign: '長榮航空' }, 華航: { kind: 'air', accent: '#b0355a', sign: '中華航空' },
-};
-const PAL = { tint: ['#3b6f8f', '#5a7f96', '#2f7c80', '#46698f', '#4f7a72', '#5b6f8c'], accent: ['#c8302c', '#2d6db5', '#3a6ea8', '#1c2a3a', '#2e7d4f', '#8a5a2b'], stone: ['#c9b99a', '#b9b2a3', '#a9b3b8', '#cdbfa6', '#b7a58a', '#c4b8a6'] };
 const CO = {};
 for (const [n, c] of Object.entries(CITY.companies)) {
-  const st = STYLE[n] || {}, h = hashStr(n);
-  const etfs = ETF_KEYS.filter(k => ETFS[k].w[n] != null); if (!etfs.length) continue;
-  const maxW = Math.max(...etfs.map(k => ETFS[k].w[n]));
-  const kind = st.kind || (c.district === 'fin' ? 'fin' : c.district === 'semi' ? 'glass' : c.industry === '通信網路業' ? 'telecom' : c.industry === '航運業' ? (/航$|航空/.test(n) ? 'air' : 'ship') : 'tech');
-  CO[n] = { name: n, code: c.code, d: c.district, ind: c.industry, kind, etfs, maxW, H: 4 + 5.2 * Math.sqrt(maxW), sign: st.sign || n, crane: !!st.crane,
-    tint: st.tint || PAL.tint[h % 6], accent: st.accent || PAL.accent[h % 6], stone: st.stone || PAL.stone[h % 6], yard: st.yard || ['#d7a41c', '#e3b93a', '#2c5aa0', '#b03a2e', '#5f6b75'] };
+  const etfs = ETF_KEYS.filter(k => ETFS[k].w[n] != null), rank = c.mcap_rank || 999;
+  CO[n] = { name: n, code: c.code, d: DIST[c.district] ? c.district : Object.keys(DIST).at(-1), ind: c.industry, rank, share: c.mcap_share ?? null, etfs,
+    maxW: etfs.length ? Math.max(...etfs.map(k => ETFS[k].w[n])) : 0, tier: rank === 1 ? 'xl' : rank <= 10 ? 'l' : rank <= 40 ? 'm' : 's' };
 }
-// 自動配置：每個行政區依公司數量排成格子；晶圓廠、貨櫃場、機場占地較大，另外處理
-function layoutDistrict(dk) {
-  const list = Object.values(CO).filter(c => c.d === dk).sort((a, b) => b.maxW - a.maxW); if (!list.length) return;
-  const [W, D] = DIST[dk].s, put = (c, x, z, f) => { c.lot = [x, z]; c.fp = [f, f]; };
-  let rest = list, slots = [];
-  const fab = list.find(c => c.kind === 'fab');
-  if (fab) {
-    put(fab, -3.5, -3.5, 7); rest = list.filter(c => c !== fab);
-    slots = [[5.4, -6.6, 4.4], [10.4, -6.6, 4.2], [5.4, 0, 4.2], [10.4, 0, 4], [5.4, 6.6, 4], [10.4, 6.6, 4], [-10.6, -7.2, 3.6], [-10.6, -1.6, 3.4]];
-  } else if (dk === 'port') {
-    const ships = list.filter(c => c.kind === 'ship'), airs = list.filter(c => c.kind === 'air');
-    const zs = ships.length <= 2 ? [-5, 4.5] : [-6.6, 0, 6.6];
-    ships.slice(0, 3).forEach((c, i) => put(c, -8, zs[i], 4.5));
-    airs.slice(0, 1).forEach(c => put(c, 6, ships.length > 2 ? -4 : 0, 4));
-    rest = list.filter(c => !c.lot); rest.forEach(c => { c.kind = 'tech'; });
-    slots = [[8.5, -7, 3.6], [8.5, 7, 3.6], [3, -7.2, 3.4], [-1, 7.4, 3.4]];
-  }
-  if (!slots.length) {
-    const n = rest.length, cols = n <= 4 ? 2 : n <= 9 ? 3 : 4, rows = Math.ceil(n / cols), cw = (W - 2) / cols, cd = (D - 2) / rows;
-    for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) slots.push([-(W - 2) / 2 + cw * (q + 0.5), -(D - 2) / 2 + cd * (r + 0.5) - 0.6, Math.min(cw - 2.6, cd - 4.2, 6)]);
-  }
-  rest.forEach((c, i) => { const s = slots[i % slots.length]; const f = Math.max(3.2, Math.min(s[2], 3.4 + 0.55 * Math.sqrt(c.maxW))); put(c, s[0], s[1], c.kind === 'telecom' ? Math.min(f, 4) : f); });
-}
-Object.keys(DIST).forEach(layoutDistrict);
-for (const k of Object.keys(DIST)) if (!Object.values(CO).some(c => c.d === k) && k === 'life') delete DIST[k];
-for (const c of Object.values(CO)) c.pos = [DIST[c.d].c[0] + c.lot[0], DIST[c.d].c[1] + c.lot[1]];
-const REAL = !!(CITY.daily && !CITY.daily.demo && CITY.daily.stocks);
-const inDist = (x, z) => Object.values(DIST).some(d => Math.abs(x - d.c[0]) < d.s[0] / 2 + 2 && Math.abs(z - d.c[1]) < d.s[1] / 2 + 2);
 
+/* ---------------- 回字型商店街：一圈道路，兩側都是店；南邊中間是 ETF 廣場 ----------------
+   以道路中心線為準：車道 road、人行道 walk、騎樓 arc，騎樓外緣 (front) 是招牌所在的立面，再往內 arc 是店面玻璃 */
+const L = { road: 4, walk: 2.5, arc: 3, dep: 12, cOut: 10.5, cIn: 20, plazaHalf: 15, plazaDepth: 26, gap: 0.25, dGap: 6 };
+L.front = L.road + L.walk; L.shop = L.front + L.arc; L.band = L.shop - 0.35;
+const D_ORDER = ['semi', 'tech', 'port', 'fin', 'life'].filter(k => DIST[k]).concat(Object.keys(DIST).filter(k => !['semi', 'tech', 'port', 'fin', 'life'].includes(k)));
+function sortedIn(dk) {
+  const sub = SUB[dk] || [], ix = c => { const i = sub.indexOf(c.ind); return i < 0 ? 99 : i; };
+  return Object.values(CO).filter(c => c.d === dk).sort((a, b) => ix(a) - ix(b) || a.rank - b.rank);
+}
+function layoutRing(R) {
+  const side = 2 * R, P = 4 * side, res = { outer: [], inner: [] };
+  for (let i = 0; i <= 4; i++) { res.outer.push([i * side - L.cOut, i * side + L.cOut]); res.inner.push([i * side - L.cIn, i * side + L.cIn]); }
+  for (const o of [0, P]) res.inner.push([R - L.plazaHalf + o, R + L.plazaHalf + o]);
+  const lim = { outer: [R - TIER.xl.w / 2, R - TIER.xl.w / 2 + P], inner: [R + L.plazaHalf, R - L.plazaHalf + P] };
+  const cur = { outer: lim.outer[0], inner: lim.inner[0] };
+  const fit = (row, w, from) => { let a = from; for (let k = 0; k < 20; k++) { const hit = res[row].find(([x, y]) => a < y && a + w > x); if (!hit) break; a = hit[1]; } return a; };
+  const out = [], dists = []; let first = true;
+  for (const dk of D_ORDER) {
+    const list = sortedIn(dk); if (!list.length) continue;
+    if (!first) { const s = Math.max(cur.outer, cur.inner) + L.dGap; cur.outer = cur.inner = s; }
+    const d0 = first ? cur.outer : cur.outer; first = false;
+    for (const c of list) {
+      const w = TIER[c.tier].w + L.gap;
+      const cand = ['outer', 'inner'].filter(r => c.tier !== 'xl' || r === 'outer').map(r => { const a = fit(r, w, cur[r]); return { r, a, e: a + w }; }).sort((x, y) => x.e - y.e)[0];
+      if (cand.e > lim[cand.r][1]) return null;
+      out.push({ c, row: cand.r, s0: cand.a, s1: cand.e - L.gap }); cur[cand.r] = cand.e;
+    }
+    dists.push({ k: dk, s0: d0, s1: Math.max(cur.outer, cur.inner) });
+  }
+  return { R, side, P, res, lim, out, dists };
+}
+let LAY = null;
+for (let R = 50; R < 240 && !LAY; R += 2) LAY = layoutRing(R);
+const RR = LAY.R, PL = { x0: -L.plazaHalf, x1: L.plazaHalf, z0: RR - L.front - L.plazaDepth, z1: RR - L.front };   // 廣場範圍
+
+/* 路中心線上第 s 公尺的位置；off 往外 (+) 或往內 (-) 偏移 */
+function ringPt(s, off = 0) {
+  const { R, side, P } = LAY; s = ((s % P) + P) % P;
+  const i = Math.min(3, Math.floor(s / side)), t = s - i * side - R;
+  const C = [[t, R], [R, -t], [-t, -R], [-R, t]][i], N = [[0, 1], [1, 0], [0, -1], [-1, 0]][i], Dv = [[1, 0], [0, -1], [-1, 0], [0, 1]][i];
+  return { x: C[0] + N[0] * off, z: C[1] + N[1] * off, nx: N[0], nz: N[1], dx: Dv[0], dz: Dv[1], i, t };
+}
+/* 反過來：某個位置最接近中心線的哪裡 (s) 和偏移量 (off，往外為正) */
+function ringS(x, z) {
+  const { R, side } = LAY; let best = null;
+  [[x, z - R], [-z, x - R], [-x, -z - R], [z, -x - R]].forEach(([t, off], i) => {
+    const tc = clamp(t, -R, R), d = Math.hypot(t - tc, off);
+    if (!best || d < best.d) best = { d, s: i * side + R + tc, off, i };
+  });
+  return best;
+}
+// 每家店的位置：front 立面中心、door 店門口 (人行道上)、pos 建築中心、rotY 面向馬路
+function placeStore(c, s0, s1, row) {
+  const sm = (s0 + s1) / 2, sg = row === 'outer' ? 1 : -1, q = ringPt(sm);
+  Object.assign(c, { row, s: sm, w: s1 - s0, sg, side: q.i, fx: -q.nx * sg, fz: -q.nz * sg,
+    front: [q.x + q.nx * sg * L.front, q.z + q.nz * sg * L.front], door: [q.x + q.nx * sg * (L.road + 1.4), q.z + q.nz * sg * (L.road + 1.4)],
+    pos: [q.x + q.nx * sg * (L.front + L.dep / 2), q.z + q.nz * sg * (L.front + L.dep / 2)], fl: TIER[c.tier] ? TIER[c.tier].fl : 3 });
+  c.rotY = Math.atan2(c.fx, c.fz);
+  // 平面上的四個角 (導覽圖、撞牆判定用)
+  const ax = q.dx, az = q.dz, hw = c.w / 2, f0 = L.front, f1 = L.front + L.dep;
+  c.poly = [[-hw, f0], [hw, f0], [hw, f1], [-hw, f1]].map(([a, o]) => [q.x + ax * a + q.nx * sg * o, q.z + az * a + q.nz * sg * o]);
+}
+for (const p of LAY.out) placeStore(p.c, p.s0, p.s1, p.row);
+// 店與店之間的空位補上一般小店 (不是公司，不能互動)
+const FILL_NAMES = ['早餐店', '飲料店', '機車行', '藥局', '文具店', '自助餐', '麵店', '水果行', '洗衣店', '眼鏡行', '書局', '花店', '五金行', '鞋店', '咖啡店', '便當店', '豆花', '鹹酥雞'];
+const FILLERS = [];
+{
+  const r0 = (() => { let s = 7; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })();
+  for (const row of ['outer', 'inner']) {
+    const occ = [...LAY.res[row], ...LAY.out.filter(p => p.row === row).map(p => [p.s0 - L.gap / 2, p.s1 + L.gap / 2])].sort((a, b) => a[0] - b[0]);
+    const [a0, a1] = LAY.lim[row]; let cur = a0;
+    const gaps = [];
+    for (const [x, y] of occ) { if (y <= cur) continue; if (x > cur) gaps.push([cur, Math.min(x, a1)]); cur = Math.max(cur, y); if (cur >= a1) break; }
+    if (cur < a1) gaps.push([cur, a1]);
+    for (const [g0, g1] of gaps) {
+      let s = g0 + 0.1;
+      while (g1 - s >= 4) {
+        let w = 6 + Math.floor(r0() * 4); if (g1 - s - w < 4) w = g1 - s - 0.1;
+        const f = { name: FILL_NAMES[FILLERS.length % FILL_NAMES.length], filler: true, tier: 's', d: null, rank: 999, etfs: [] };
+        placeStore(f, s, s + w, row); f.fl = 2 + Math.floor(r0() * 3); FILLERS.push(f); s += w + L.gap;
+      }
+    }
+  }
+}
+const STORES = [...Object.values(CO).filter(c => c.front), ...FILLERS];
+for (const d of LAY.dists) Object.assign(DIST[d.k], { s0: d.s0, s1: d.s1 });

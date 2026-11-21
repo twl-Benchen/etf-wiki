@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@900&display=swap">
 <style>
-/* Layout: full-bleed 3D city; conversation dock on the right (bottom sheet on phones) drives the camera; small brand chip top-left */
+/* Layout: full-bleed 3D shopping street (third-person or eye view); conversation dock on the right (bottom sheet on phones); brand chip top-left, walking tools bottom-left */
 :root {
   --bg: #0d1522;
   --panel: rgba(248, 250, 252, 0.9);
@@ -117,7 +117,38 @@ details.trace[open] summary::before { content: "▾"; }
 #q { flex: 1; min-width: 0; border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 14px var(--font-body); }
 #send { border: 0; background: var(--bubble); color: var(--bubble-ink); border-radius: 10px; padding: 0 16px; font: 700 14px var(--font-body); cursor: pointer; }
 #send:disabled { opacity: .5; cursor: default; }
-#tip { position: fixed; z-index: 4; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 12px; color: #fff; background: rgba(0,0,0,.38); padding: 5px 11px; border-radius: 999px; pointer-events: none; }
+#tip { position: fixed; z-index: 4; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 12px; color: #fff; background: rgba(0,0,0,.42); padding: 5px 11px; border-radius: 999px; pointer-events: none; }
+
+/* walking tools: minimap + view / map / home buttons */
+#walkbar { position: fixed; z-index: 5; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(46px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+#miniCv { width: 170px; height: 170px; border-radius: 12px; border: 1px solid var(--hair); box-shadow: 0 6px 18px rgba(0,0,0,.2); cursor: pointer; display: block; }
+.tools { display: flex; gap: 6px; padding: 6px; }
+#near { position: fixed; z-index: 5; left: calc(50% - 196px); transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); border: 1px solid var(--hair); background: var(--panel); color: var(--ink); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 999px; padding: 8px 14px; font: 14px var(--font-body); cursor: pointer; display: flex; gap: 8px; align-items: baseline; box-shadow: 0 6px 18px rgba(0,0,0,.2); white-space: nowrap; }
+#near .k { font-size: 12px; color: var(--muted); }
+#walkChip { position: fixed; z-index: 5; left: calc(50% - 196px); transform: translateX(-50%); top: calc(88px + env(safe-area-inset-top, 0px)); display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; font-size: 13.5px; }
+#card { position: fixed; z-index: 6; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(76px + env(safe-area-inset-top, 0px)); width: 330px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.card-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.card-h b { font-size: 18px; }
+.card-row { display: flex; align-items: center; gap: 12px; }
+.card-row .big { font: 700 26px var(--font-body); font-variant-numeric: tabular-nums; }
+.stk { display: flex; flex-wrap: wrap; gap: 6px; }
+.stk span { font-size: 12.5px; border-radius: 8px; padding: 3px 8px; color: #fff; background: var(--c); }
+.stk span.none { background: var(--chip); color: var(--muted); }
+.card-a { display: flex; gap: 8px; }
+.card-a .primary { padding: 8px 14px; }
+.src { font-size: 11.5px; }
+#mapDlg { position: fixed; z-index: 7; left: max(16px, env(safe-area-inset-left, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(calc(100vw - 448px), calc(100vh - 28px)); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+#mapDlg .map-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#mapCv { flex: 1; width: 100%; min-height: 0; border-radius: 10px; }
+#mapEtfs { display: flex; flex-wrap: wrap; gap: 6px; }
+.etfc { border-left: 6px solid var(--c); }
+.etfc[aria-pressed="true"] { background: var(--c); color: #fff; border-color: var(--c); }
+.map-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.map-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+#joy { position: fixed; z-index: 5; left: max(18px, env(safe-area-inset-left, 0px)); bottom: calc(46% + 18px); width: 112px; height: 112px; border-radius: 50%; background: rgba(255,255,255,.18); border: 2px solid rgba(255,255,255,.55); touch-action: none; display: grid; place-items: center; }
+#joy i { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.85); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+#chatMini { display: none; }
 
 .lg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
 .lg span::before { content: ""; display: inline-block; width: 14px; height: 4px; border-radius: 2px; background: var(--c); margin-right: 6px; vertical-align: middle; }
@@ -150,12 +181,30 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
   #brand .sub { display: none; }
   #settings { width: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
   #tip { display: none; }
+  #walkbar { left: auto; right: max(12px, env(safe-area-inset-right, 0px)); bottom: auto; top: calc(66px + env(safe-area-inset-top, 0px)); }
+  #miniCv { display: none; }
+  .tools { flex-direction: column; padding: 5px; }
+  .tools .icon-btn { height: 30px; padding: 0 8px; font-size: 12px; }
+  #near, #walkChip { left: 50%; }
+  #near { bottom: calc(46% + 14px); }
+  #chat.mini ~ #near { bottom: 86px; }
+  #walkChip { top: calc(64px + env(safe-area-inset-top, 0px)); left: 12px; transform: none; }
+  #card { left: 12px; right: 12px; width: auto; top: calc(62px + env(safe-area-inset-top, 0px)); max-height: 46%; overflow: auto; }
+  #mapDlg { left: 8px; right: 8px; width: auto; bottom: 47%; top: calc(8px + env(safe-area-inset-top, 0px)); }
+  #chatMini { display: block; position: absolute; top: 6px; right: 10px; z-index: 2; }
+  #chat { transition: height .25s; }
+  #chat.mini { height: 74px; }
+  #chat.mini #log, #chat.mini #chips { display: none; }
+  #chat.mini #ask { padding-right: 84px; }
+  #chat.mini #chatMini { top: 50%; transform: translateY(-50%); }
+  #chat.mini ~ #joy { bottom: 92px; }
+  #log { padding-top: 34px; }
 }
 @media (prefers-reduced-motion: reduce) { #log { scroll-behavior: auto; } .typing i { animation: none; } }
 </style>
 
 <div id="sky"></div>
-<div id="stage" aria-label="ETF 都會 3D 城市"></div>
+<div id="stage" aria-label="ETF 都會商店街 (3D)"></div>
 
 <div id="brand" class="panel">
   <div><h1>ETF 都會</h1><div class="sub" id="modeTxt">離線示範｜瀏覽器內的規則版 Agent</div></div>
@@ -173,7 +222,7 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
   </div>
   <h2 id="h-time">時間</h2>
   <div class="time-row"><input id="time" type="range" min="8" max="22" step="0.25" value="14.5" aria-labelledby="h-time"><output id="timeOut" for="time">14:30</output></div>
-  <label class="check"><input id="allLabels" type="checkbox"> 顯示所有大樓標籤</label>
+  <label class="check"><input id="allLabels" type="checkbox"> 顯示漲跌最大的 12 家店的標籤</label>
   <div class="note" id="dataNote"></div>
   <h2>後端 (LLM Agent)</h2>
   <div class="api-row"><input id="apiUrl" placeholder="https://你的-space.hf.space" aria-label="後端網址"><button type="button" class="icon-btn" id="apiGo">連線</button></div>
@@ -188,7 +237,8 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
 </div>
 
 <section id="chat" class="panel" aria-label="問城市">
-  <header><div><b>問城市</b><span>點大樓或車站也能直接問</span></div><button type="button" class="icon-btn" id="pfBtn">我的持股</button></header>
+  <header><div><b>問城市</b><span>點店家或走到店門口也能直接問</span></div><button type="button" class="icon-btn" id="pfBtn">我的持股</button></header>
+  <button type="button" class="icon-btn" id="chatMini" aria-expanded="true">收合</button>
   <div id="log" aria-live="polite"></div>
   <div id="chips"></div>
   <form id="ask" autocomplete="off">
@@ -210,7 +260,25 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
     <button type="button" id="pfGo" class="primary">計算穿透持股</button>
   </form>
 </dialog>
-<div id="tip">拖曳旋轉・滾輪縮放・點大樓直接問</div>
+<button type="button" id="near" hidden></button>
+<div id="walkChip" class="panel" hidden><span>走過去…</span><button type="button" class="icon-btn" id="walkSkip">直接傳送</button></div>
+<div id="card" class="panel" hidden aria-live="polite"></div>
+<div id="walkbar">
+  <canvas id="miniCv" width="340" height="340" aria-label="小地圖，點一下打開導覽圖"></canvas>
+  <div class="tools panel">
+    <button type="button" class="icon-btn" id="viewBtn">眼睛視角</button>
+    <button type="button" class="icon-btn" id="mapBtn">導覽圖</button>
+    <button type="button" class="icon-btn" id="homeBtn">回到廣場</button>
+  </div>
+</div>
+<div id="mapDlg" class="panel" hidden role="dialog" aria-label="商店街導覽圖">
+  <div class="map-h"><b>商店街導覽圖</b><button type="button" class="icon-btn" id="mapClose">關閉</button></div>
+  <div class="map-leg"><span><i style="background:#d13a3a"></i>今天上漲</span><span><i style="background:#0f8a55"></i>今天下跌</span><span><i style="background:#e9e2c9"></i>平盤</span><span>點店家可以直接傳送過去</span></div>
+  <div id="mapEtfs" aria-label="選 ETF 看它的導引線 (選兩檔會標出共同持有的店)"></div>
+  <canvas id="mapCv"></canvas>
+</div>
+<div id="joy" hidden aria-label="移動搖桿"><i></i></div>
+<div id="tip"></div>
 
 <script type="importmap">
 { "imports": {

@@ -2,7 +2,8 @@
 three.js 從本地讀 (無頭瀏覽器常連不到 CDN)：mkdir -p vendor && cd vendor && npm pack three@0.160.0 && tar xzf three-0.160.0.tgz
 用法：
   python run.py shot out.png 1366 768 "問題1" "問題2" ...
-  python run.py qa q1.json"""
+  python run.py qa q1.json
+另外：tour.py (商店街多張截圖)、interact.py (鍵盤、視角、點擊走路、手機搖桿)"""
 import json, os, sys
 from playwright.sync_api import sync_playwright
 T = os.path.dirname(os.path.abspath(__file__)); PAGE = os.path.join(T, "..", "index.html")

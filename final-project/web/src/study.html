@@ -37,7 +37,7 @@ input[type=text] { width: 100%; padding: 9px 10px; border: 1px solid var(--hair)
 <script>
 const STUDY = __STUDY__;
 const IFACE = { table: { name: '表格', url: 'table.html', hint: '這是一般 App 常見的表格。可以捲動查看各檔 ETF 的前十大成分股。' },
-                city: { name: '城市', url: 'index.html', hint: '這是 ETF 都會。可以點大樓、車站，或在右邊的對話框發問。也可以用右上角的「我的持股」。' } };
+                city: { name: '城市', url: 'index.html', hint: '這是 ETF 都會商店街。可以用 WASD (手機用搖桿) 走路、點店家看資料，按「導覽圖」看全部的店和 ETF 導引線，或在右邊的對話框發問。也可以用右上角的「我的持股」。' } };
 const S = { id: '', order: [], ci: 0, ti: 0, t0: 0, rows: [], likert: [] };
 const app = document.getElementById('app');
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

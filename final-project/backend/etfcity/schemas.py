@@ -134,7 +134,7 @@ class Plan(BaseModel):
     tools: list[ToolCall] = Field(default_factory=list, max_length=6)
     scene: list[SceneCall] = Field(default_factory=list, max_length=6)
     reason: str = ""
-    focus: dict[str, Any] = {}   # 規則版 Planner 的補充資訊 (例如點的是車站還是大樓)
+    focus: dict[str, Any] = {}   # 規則版 Planner 的補充資訊 (例如問的是哪些 ETF 持有，還是今天的狀況)
 
 
 def validate_plan(obj: dict) -> tuple[Plan | None, str]:
