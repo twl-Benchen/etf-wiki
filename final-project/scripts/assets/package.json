@@ -1,0 +1,11 @@
+{
+  "name": "etfcity-assets",
+  "private": true,
+  "type": "module",
+  "description": "把 3D 素材整理成網頁用的 glb：node build_assets.mjs <UAL1_Standard.glb 的路徑>",
+  "dependencies": {
+    "@gltf-transform/core": "^4.0.0",
+    "@gltf-transform/extensions": "^4.0.0",
+    "@gltf-transform/functions": "^4.0.0"
+  }
+}

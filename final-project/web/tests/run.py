@@ -4,15 +4,28 @@ three.js 從本地讀 (無頭瀏覽器常連不到 CDN)：mkdir -p vendor && cd 
   python run.py shot out.png 1366 768 "問題1" "問題2" ...
   python run.py qa q1.json
 另外：tour.py (商店街多張截圖)、interact.py (鍵盤、視角、點擊走路、手機搖桿)"""
-import json, os, sys
+import json, os, sys, threading, functools
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from playwright.sync_api import sync_playwright
-T = os.path.dirname(os.path.abspath(__file__)); PAGE = os.path.join(T, "..", "index.html")
+T = os.path.dirname(os.path.abspath(__file__)); WEB = os.path.abspath(os.path.join(T, ".."))
 THREE = os.environ.get("THREE_DIR", os.path.join(T, "vendor", "package")) + "/"
+_SRV = {}
 
 
-def open_page(p, w=1366, h=768):
+def serve():
+    """用本機 http 伺服器提供 web/ (3D 素材 .glb 不能從 file:// 讀取)"""
+    if "url" not in _SRV:
+        class Quiet(SimpleHTTPRequestHandler):
+            def log_message(self, *a): pass
+        srv = ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Quiet, directory=WEB))
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        _SRV["url"] = f"http://127.0.0.1:{srv.server_address[1]}/"
+    return _SRV["url"]
+
+
+def open_page(p, w=1366, h=768, page="index.html", **ctx):
     b = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-    pg = b.new_page(viewport={"width": w, "height": h}); errs = []
+    pg = b.new_context(viewport={"width": w, "height": h}, **ctx).new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.on("console", lambda m: errs.append("console: " + m.text) if m.type == "error" and "ERR_FAILED" not in m.text and "Failed to load resource" not in m.text and "URL scheme \"file\"" not in m.text else None)
 
@@ -25,8 +38,10 @@ def open_page(p, w=1366, h=768):
         else:
             r.continue_()
     pg.route("**/*", route)
-    pg.goto("file://" + os.path.abspath(PAGE))
-    pg.wait_for_function("window.__ready===true", timeout=90000)
+    pg.goto(serve() + page)
+    if page == "index.html":
+        pg.wait_for_function("window.__ready===true", timeout=90000)
+        pg.wait_for_function("!!window.__assets", timeout=90000)
     return b, pg, errs
 
 

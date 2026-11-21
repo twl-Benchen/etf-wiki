@@ -3,7 +3,7 @@
 import os, sys, json
 from playwright.sync_api import sync_playwright
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from run import open_page, THREE
+from run import open_page
 out = sys.argv[1]; os.makedirs(out, exist_ok=True)
 ok = lambda c, m: print(("通過" if c else "失敗") + "｜" + m)
 with sync_playwright() as p:
@@ -33,17 +33,8 @@ with sync_playwright() as p:
     ok(pg.evaluate(f"walkable_check={json.dumps(me)}, true"), f"一直往後走不會穿牆，停在 ({me['x']:.1f},{me['z']:.1f})")
     print("ERRORS:", errs); b.close()
     # 手機觸控
-    br = p.chromium.launch(args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-    ctx = br.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, device_scale_factor=2)
-    pg = ctx.new_page(); errs2 = []
-    pg.on("pageerror", lambda e: errs2.append(str(e)))
-    def route(r):
-        u = r.request.url
-        if "three@0.160.0/" in u: r.fulfill(path=THREE + u.split("three@0.160.0/")[1], content_type="application/javascript")
-        elif "fonts.g" in u: r.abort()
-        else: r.continue_()
-    pg.route("**/*", route); pg.goto("file://" + os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "index.html")))
-    pg.wait_for_function("window.__ready===true", timeout=90000)
+    br, pg, errs2 = open_page(p, 390, 844, has_touch=True, is_mobile=True, device_scale_factor=2)
+    ctx = pg.context
     ok(pg.evaluate("!document.getElementById('joy').hidden"), "手機顯示搖桿")
     jb = pg.evaluate("(()=>{const r=document.getElementById('joy').getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2]})()")
     m0 = pg.evaluate("__city.me()")

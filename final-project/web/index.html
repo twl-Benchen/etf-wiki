@@ -299,6 +299,8 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
 
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 /* ---------------- helpers ---------------- */
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -781,7 +783,7 @@ function buildStore(c) {
   const r = rng(h0);
   if (r() < 0.75) { const [x, z] = worldOf(c, (r() - 0.5) * (w - 3), -L.dep * (0.45 + r() * 0.3)); instPush(INST.tank, x, H + 1.1, z); }
   for (let i = 0, n = 1 + Math.floor(r() * 3); i < n; i++) { const [x, z] = worldOf(c, (r() - 0.5) * (w - 2), -2 - r() * (L.dep - 4)); instPush(INST.ac, x, H + 0.35, z, c.rotY); }
-  if (!c.filler) { const side = h0 % 2 ? -1 : 1, [x, z] = worldOf(c, side * Math.min(w / 2 - 1.1, 2.4), -L.arc + 0.8); shopkeepers.push({ x, z, ry: c.rotY, h: h0 }); }
+  if (!c.filler) { const side = h0 % 2 ? -1 : 1, [x, z] = worldOf(c, side * Math.min(w / 2 - 1.1, 2.4), -L.arc + 0.8); shopkeepers.push({ x, z, ry: c.rotY, h: h0, n: c.name }); }
   // 撞牆
   addColl(COLL, [worldOf(c, -w / 2, -L.arc + 0.05), worldOf(c, w / 2, -L.dep)]);
   addColl(COLLB, [worldOf(c, -w / 2, 0), worldOf(c, w / 2, -L.dep)]);
@@ -949,7 +951,7 @@ function people(n) {
 const KEEP = people(shopkeepers.length);
 {
   const M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3(), S = new THREE.Vector3(1, 1, 1);
-  shopkeepers.forEach((k, i) => { Q.setFromEuler(E.set(0, k.ry, 0)); M4.compose(V.set(k.x, 0.04, k.z), Q, S); KEEP[0].setMatrixAt(i, M4); KEEP[1].setMatrixAt(i, M4); KEEP[0].setColorAt(i, SHIRTS[k.h % SHIRTS.length]); });
+  shopkeepers.forEach((k, i) => { Q.setFromEuler(E.set(0, k.ry, 0)); M4.compose(V.set(k.x, 0.04, k.z), Q, S); k.M = M4.clone(); KEEP[0].setMatrixAt(i, M4); KEEP[1].setMatrixAt(i, M4); KEEP[0].setColorAt(i, SHIRTS[k.h % SHIRTS.length]); });
 }
 const WALKERS = [];
 { const r = rng(5); for (let i = 0; i < 40; i++) WALKERS.push({ s: r() * LAY.P, off: (r() < 0.5 ? 1 : -1) * (r() < 0.6 ? L.road + 1.25 + r() * 0.6 : L.front + 1.1 + r() * 1.2), dir: r() < 0.5 ? 1 : -1, v: 1 + r() * 0.6, ph: r() * 6 }); }
@@ -1440,6 +1442,175 @@ function renderMapEtfs() {
   }
 }
 
+/* ---------------- 3D 素材 (CC0)：Quaternius 動畫人物、KayKit 車輛與街道道具 ----------------
+   載入失敗 (例如直接用 file:// 打開) 時保留簡易模型，遊戲照常可以玩 */
+const ZERO3 = new THREE.Vector3(0, 0, 0);
+const ASSET = { ready: false, base: null, clips: {}, kit: null, kitMat: null, player: null, pool: { walk: [], keep: [] } };
+const gltf = new GLTFLoader();
+const loadGLB = url => new Promise((res, rej) => gltf.load(url, res, undefined, rej));
+function boneMap(root) { const m = {}; root.traverse(o => { if (o.isBone) m[o.name] = o; }); return m; }
+// 把裝飾 (背包、頭髮) 黏在骨頭上：用目前的世界座標換算成骨頭的局部座標
+function attachToBone(bone, mesh, worldPos, refObj) {
+  refObj.updateMatrixWorld(true);
+  const inv = bone.matrixWorld.clone().invert(), bq = new THREE.Quaternion(), bs = new THREE.Vector3(), rq = new THREE.Quaternion();
+  bone.matrixWorld.decompose(new THREE.Vector3(), bq, bs); refObj.getWorldQuaternion(rq);
+  mesh.position.copy(worldPos.clone().applyMatrix4(inv)); mesh.quaternion.copy(bq.invert().multiply(rq)); mesh.scale.set(1 / bs.x, 1 / bs.y, 1 / bs.z);
+  bone.add(mesh);
+}
+function makeCharacter(mainHex, jointHex, hairHex, backpack) {
+  const m = SkeletonUtils.clone(ASSET.base), main = new THREE.MeshLambertMaterial({ color: mainHex }), joint = new THREE.MeshLambertMaterial({ color: jointHex });
+  m.traverse(o => { if (o.isSkinnedMesh) { o.material = /Joint/i.test(o.material.name) ? joint : main; o.castShadow = true; } });
+  m.scale.setScalar(ASSET.scale);
+  const holder = new THREE.Group(); holder.add(m); scene.add(holder);
+  const bones = boneMap(m); holder.updateMatrixWorld(true);
+  const hp = new THREE.Vector3(); bones.Head.getWorldPosition(hp);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.122, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), new THREE.MeshLambertMaterial({ color: hairHex })); hair.castShadow = true; hair.scale.z = 1.08;
+  attachToBone(bones.Head, hair, new THREE.Vector3(hp.x, ASSET.headTop - 0.115, hp.z - 0.012), holder); hair.scale.multiply(new THREE.Vector3(1, 1, 1.08));
+  if (backpack) {
+    const sp = new THREE.Vector3(); bones.spine_03.getWorldPosition(sp);
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.42, 0.16), new THREE.MeshLambertMaterial({ color: 0xf0a830 })); bag.castShadow = true;
+    attachToBone(bones.spine_03, bag, new THREE.Vector3(sp.x, sp.y - 0.06, sp.z - ASSET.chestDepth - 0.08), holder);
+  }
+  const mixer = new THREE.AnimationMixer(m), acts = {};
+  for (const [n, c] of Object.entries(ASSET.clips)) acts[n] = mixer.clipAction(c);
+  for (const n of ['Jump_Start', 'Jump_Land', 'Interact']) if (acts[n]) { acts[n].setLoop(THREE.LoopOnce); acts[n].clampWhenFinished = true; }
+  return { holder, m, bones, mixer, acts, cur: null };
+}
+function play(ch, name, fade = 0.22, ts = 1) {
+  const a = ch.acts[name]; if (!a) return; a.timeScale = ts;
+  if (ch.cur === name) return;
+  a.reset().setEffectiveWeight(1).fadeIn(fade).play(); if (ch.cur && ch.acts[ch.cur]) ch.acts[ch.cur].fadeOut(fade);
+  ch.cur = name;
+}
+function setupMannequin(gl) {
+  ASSET.base = gl.scene;
+  for (const c of gl.animations) ASSET.clips[c.name] = c;
+  gl.scene.updateMatrixWorld(true); gl.scene.traverse(o => { if (o.isSkinnedMesh) o.skeleton.update(); });   // 骨架矩陣要先算好，量到的身高才對
+  const box = new THREE.Box3().setFromObject(gl.scene, true), h = box.max.y - box.min.y;
+  ASSET.scale = 1.74 / h; ASSET.headTop = (box.max.y - box.min.y) * ASSET.scale;  ASSET.chestDepth = Math.max(0.08, -box.min.z * ASSET.scale * 0.55);
+  // 主角：藍色上衣、黃色背包
+  const P = makeCharacter(0x2f6fd6, 0x2a2f38, 0x2a211c, true);
+  scene.remove(P.holder); AV.g.add(P.holder); P.holder.position.set(0, 0, 0);
+  AV.g.children.forEach(o => { if (o !== P.holder) o.visible = false; });
+  play(P, 'Idle_Loop', 0); ASSET.player = P;
+  // 路人與店長：離你近的才換成有動畫的模型
+  const nW = isDesk() ? 14 : 7, nK = isDesk() ? 8 : 4, hairs = [0x2a211c, 0x3b2a20, 0x111111, 0x6b4a2b, 0x8a8a8a];
+  for (let i = 0; i < nW + nK; i++) {
+    const NPC_C = [0xe53935, 0x43a047, 0xfdd835, 0x8e24aa, 0xfb8c00, 0x00897b, 0xf5f5f5, 0x6d4c41, 0xec407a, 0x9e9d24], JN = [0x2c3542, 0x3e2723, 0x37474f, 0x4a148c];
+    const c = NPC_C[(i * 3 + 1) % NPC_C.length], ch = makeCharacter(c, JN[i % JN.length], hairs[i % hairs.length], i % 5 === 2);
+    ch.holder.visible = false; ch.who = null; play(ch, 'Idle_Loop', 0);
+    (i < nW ? ASSET.pool.walk : ASSET.pool.keep).push(ch);
+  }
+}
+// 角色動畫：依速度切換站立、走路、慢跑、衝刺；跳起來播跳躍；騎滑板車時手握龍頭
+const _p = new THREE.Vector3(), _q = new THREE.Vector3(), _qa = new THREE.Quaternion(), _qb = new THREE.Quaternion();
+function aimBone(bone, child, target) {   // 讓骨頭指向目標點 (簡單的反向動力學)
+  bone.getWorldPosition(_p); child.getWorldPosition(_q);
+  const cur = _q.sub(_p).normalize(), want = target.clone().sub(_p).normalize();
+  const delta = _qa.setFromUnitVectors(cur, want), wq = bone.getWorldQuaternion(new THREE.Quaternion());
+  const pq = bone.parent.getWorldQuaternion(_qb).invert();
+  bone.quaternion.copy(pq.multiply(delta.multiply(wq))); bone.updateMatrixWorld(true);
+}
+function charUpdate(dt) {
+  const P = ASSET.player; if (!P) return;
+  let name = 'Idle_Loop', ts = 1;
+  if (ME.y > 0.08) name = 'Jump_Loop';
+  else if (ME.ride) name = 'Idle_Loop';
+  else if (ME.speed > 7.5) { name = 'Sprint_Loop'; ts = clamp(ME.speed / 9, 0.8, 1.7); }
+  else if (ME.speed > 2.6) { name = 'Jog_Fwd_Loop'; ts = clamp(ME.speed / 4.4, 0.7, 1.4); }
+  else if (ME.speed > 0.3) { name = 'Walk_Loop'; ts = clamp(ME.speed / 1.6, 0.6, 1.4); }
+  else if (CARD || CHAT) name = 'Idle_Talking_Loop';
+  play(P, name, name === 'Jump_Loop' ? 0.1 : 0.22, ts);
+  P.mixer.update(dt);
+  if (ME.ride) {
+    P.holder.updateMatrixWorld(true); KICK.g.updateMatrixWorld(true);
+    for (const [sd, gx] of [['l', 0.24], ['r', -0.24]]) {
+      const grip = KICK.g.localToWorld(new THREE.Vector3(gx, 1.1, 0.36));
+      aimBone(P.bones['upperarm_' + sd], P.bones['lowerarm_' + sd], grip); aimBone(P.bones['lowerarm_' + sd], P.bones['hand_' + sd], grip);
+    }
+  }
+}
+function npcPoolUpdate(dt) {
+  const pool = ASSET.pool; if (!ASSET.ready) return;
+  npcT -= dt;
+  if (npcT <= 0) {
+    npcT = 0.4;
+    const assign = (list, slots, posOf, maxD, onFree, onTake) => {
+      const cand = list.map((o, i) => { const [x, z] = posOf(o); return { i, d: Math.hypot(x - ME.x, z - ME.z) }; }).filter(o => o.d < maxD).sort((a, b) => a.d - b.d).slice(0, slots.length);
+      const want = new Set(cand.map(o => o.i));
+      for (const ch of slots) if (ch.who != null && !want.has(ch.who)) { onFree(ch.who); list[ch.who].npc = null; ch.who = null; ch.holder.visible = false; }
+      for (const o of cand) if (!list[o.i].npc) { const ch = slots.find(c => c.who == null); if (!ch) break; ch.who = o.i; list[o.i].npc = ch; ch.holder.visible = true; onTake(o.i, ch); }
+    };
+    assign(WALKERS, pool.walk, w => [ringPt(w.s, w.off).x, ringPt(w.s, w.off).z], 40, () => {}, (i, ch) => { ch.formal = i % 4 === 1; });
+    assign(shopkeepers, pool.keep, k => [k.x, k.z], 26, i => { KEEP[0].setMatrixAt(i, shopkeepers[i].M); KEEP[1].setMatrixAt(i, shopkeepers[i].M); KEEP[0].instanceMatrix.needsUpdate = KEEP[1].instanceMatrix.needsUpdate = true; },
+      (i, ch) => { const k = shopkeepers[i], M = new THREE.Matrix4().makeScale(0, 0, 0); KEEP[0].setMatrixAt(i, M); KEEP[1].setMatrixAt(i, M); KEEP[0].instanceMatrix.needsUpdate = KEEP[1].instanceMatrix.needsUpdate = true; ch.holder.position.set(k.x, 0.04, k.z); ch.holder.rotation.y = k.ry; });
+  }
+  for (const ch of pool.walk) if (ch.who != null) {
+    const w = WALKERS[ch.who]; if (!w.p) continue;
+    ch.holder.position.set(w.p.x, 0.04, w.p.z);
+    const talking = CHAT && CHAT.walker === ch.who;
+    if (talking) { const a = Math.atan2(ME.x - w.p.x, ME.z - w.p.z); ch.holder.rotation.y = a; play(ch, 'Idle_Talking_Loop'); }
+    else { ch.holder.rotation.y = w.yaw; w.near ? play(ch, 'Idle_Loop') : play(ch, ch.formal ? 'Walk_Formal_Loop' : 'Walk_Loop', 0.22, w.v / 1.25); }
+    ch.mixer.update(dt);
+  }
+  for (const ch of pool.keep) if (ch.who != null) {
+    const k = shopkeepers[ch.who], talk = (CARD && CARD === k.n) || (CHAT && CHAT.store === k.n);
+    play(ch, talk ? 'Idle_Talking_Loop' : 'Idle_Loop'); ch.mixer.update(dt);
+  }
+}
+let npcT = 0, CHAT = null;
+// KayKit：把模型的網格合成一個幾何體，拿來做大量重複的道具
+function kitGeo(name, height) {
+  const obj = ASSET.kit.getObjectByName(name); if (!obj) return null;
+  obj.updateMatrixWorld(true); const inv = obj.matrixWorld.clone().invert(), geos = [];
+  obj.traverse(o => {
+    if (!o.isMesh) return;
+    const g = new THREE.BufferGeometry(), M = inv.clone().multiply(o.matrixWorld);
+    for (const a of ['position', 'normal', 'uv']) { const src = o.geometry.attributes[a]; if (!src) continue; const n = src.itemSize, arr = new Float32Array(src.count * n); const get = [src.getX, src.getY, src.getZ, src.getW]; for (let i = 0; i < src.count; i++) for (let k = 0; k < n; k++) arr[i * n + k] = get[k].call(src, i); g.setAttribute(a, new THREE.BufferAttribute(arr, n)); }
+    if (o.geometry.index) g.setIndex(Array.from(o.geometry.index.array));
+    g.applyMatrix4(M); geos.push(g);
+  });
+  const geo = mergeGeometries(geos); geo.computeBoundingBox();
+  const b = geo.boundingBox, s = height / (b.max.y - b.min.y); geo.translate(-(b.min.x + b.max.x) / 2, -b.min.y, -(b.min.z + b.max.z) / 2); geo.scale(s, s, s); geo.computeBoundingBox();
+  return geo;
+}
+function setupCitybits(gl) {
+  ASSET.kit = gl.scene;
+  let tex = null; gl.scene.traverse(o => { if (o.isMesh && o.material.map && !tex) tex = o.material.map; });
+  const mat = ASSET.kitMat = new THREE.MeshLambertMaterial({ map: tex });
+  // 汽車：換成 KayKit 的計程車、轎車…
+  const types = ['car_taxi', 'car_sedan', 'car_taxi', 'car_hatchback', 'car_stationwagon', 'car_taxi', 'car_police'], geoCache = {};
+  let k = 0;
+  for (const v of CARS) {
+    if (v.kind !== 'car') continue;
+    const t = types[k++ % types.length];
+    if (!geoCache[t]) { const g = kitGeo(t, 1.5); if (!g) continue; const b = g.boundingBox; if (b.max.x - b.min.x > b.max.z - b.min.z) g.rotateY(Math.PI / 2); g.rotateY(Math.PI); g.computeBoundingBox(); const len = g.boundingBox.max.z - g.boundingBox.min.z, s = 4.2 / len; g.scale(s, s, s); geoCache[t] = g; }   // KayKit 的車頭朝 -z，轉過來
+    const mesh = new THREE.Mesh(geoCache[t], mat); mesh.castShadow = true;
+    v.g.children.forEach(o => { if (o.material !== v.g.userData.hl) o.visible = false; });
+    v.g.add(mesh); v.g.userData.wheels = [];
+  }
+  // 街道道具：紅綠燈 (轉角)、消防栓與垃圾桶 (人行道)、長椅與樹叢 (廣場)
+  const put = (name, h, list) => { const g = kitGeo(name, h); if (g && list.length) buildInstanced(g, mat, list, true); };
+  const lights = [], hyd = [], trash = [], bench = [], bush = [];
+  for (let i = 0; i < 4; i++) for (const [ds, sg] of [[-L.road - 2.2, 1], [L.road + 2.2, -1]]) { const q = ringPt(i * LAY.side + ds, sg * (L.road + 0.7)); const d = ringPt(i * LAY.side + ds); lights.push({ x: q.x, y: 0, z: q.z, ry: Math.atan2(d.dx * -Math.sign(ds), d.dz * -Math.sign(ds)), s: [1, 1, 1] }); }
+  for (let s0 = 12; s0 < LAY.P; s0 += 34) for (const sg of [1, -1]) {
+    const lt = s0 - Math.floor(s0 / LAY.side) * LAY.side; if (lt < 16 || lt > LAY.side - 16) continue;
+    const q = ringPt(s0, sg * (L.road + 0.55)); if (sg < 0 && q.i === 0 && Math.abs(q.x) < L.plazaHalf + 2) continue;
+    (Math.floor(s0 / 34) % 3 === 0 ? hyd : trash).push({ x: q.x, y: 0.04, z: q.z, ry: Math.atan2(q.nx, q.nz), s: [1, 1, 1] });
+  }
+  for (const [x, z, ry] of [[9, PL.z0 + 13, 0], [12.5, PL.z0 + 13, 0], [-12.5, PL.z0 + 15, Math.PI / 2], [12.5, PL.z1 - 9, -Math.PI / 2]]) bench.push({ x, y: 0.03, z, ry, s: [1, 1, 1] });
+  for (let x = PL.x0 + 1.2; x < PL.x1 - 1; x += 2.4) if (Math.abs(x) > 8) bush.push({ x, y: 0.03, z: PL.z0 + 0.9, ry: x, s: [1, 1, 1] });
+  put('trafficlight_A', 4.6, lights); put('firehydrant', 0.8, hyd); put('trash_A', 1.0, trash); put('bench', 0.9, bench); put('bush', 1.1, bush);
+  plazaG.children.filter(o => o.isMesh && o.material === MAT.trunk && o.geometry.parameters && o.geometry.parameters.width === 2.2).forEach(o => o.visible = false);
+}
+async function loadAssets() {
+  try {
+    const [man, kit] = await Promise.all([loadGLB('assets/mannequin.glb'), loadGLB('assets/citybits.glb')]);
+    setupCitybits(kit); setupMannequin(man); ASSET.ready = true;
+  } catch (e) { console.warn('3D 素材載入失敗，改用簡易模型：', e && e.message); }
+  window.__assets = ASSET.ready ? 'ok' : 'fallback';
+}
+
 /* ---------------- 每一格畫面的更新 ---------------- */
 const _fw = new THREE.Vector3();
 function worldUpdate(dt, T) {
@@ -1502,6 +1673,7 @@ function worldUpdate(dt, T) {
     AV.legs[0].rotation.x = sn * sw; AV.legs[1].rotation.x = -sn * sw; AV.arms[0].rotation.x = -sn * sw * 0.9; AV.arms[1].rotation.x = sn * sw * 0.9;
     AV.g.position.set(ME.x, ME.y + Math.abs(Math.cos(ME.phase)) * 0.05 * Math.min(1, ME.speed / 3), ME.z); AV.g.rotation.set(0, ME.face, 0);
   }
+  charUpdate(dt);
   updateCamera(dt);
   // 影子跟著角色
   sun.position.set(ME.x + SUNDIR.x * 120, SUNDIR.y * 120, ME.z + SUNDIR.z * 120); sun.target.position.set(ME.x, 0, ME.z);
@@ -1539,7 +1711,8 @@ function worldUpdate(dt, T) {
       const p0 = ringPt(w.s, w.off); const near = Math.hypot(p0.x - ME.x, p0.z - ME.z) < 1.1;
       if (!near) w.s = modP(w.s + w.dir * w.v * dt);
       const p = ringPt(w.s, w.off), a = ringPt(w.s + w.dir, w.off); w.ph += dt * (near ? 0 : 7);
-      Q.setFromEuler(E.set(0, Math.atan2(a.x - p.x, a.z - p.z), Math.sin(w.ph) * 0.04)); M4.compose(V.set(p.x, 0.04 + Math.abs(Math.sin(w.ph)) * 0.04, p.z), Q, S);
+      const yaw = Math.atan2(a.x - p.x, a.z - p.z); w.near = near; w.p = p; w.yaw = yaw;
+      Q.setFromEuler(E.set(0, yaw, Math.sin(w.ph) * 0.04)); M4.compose(V.set(p.x, 0.04 + Math.abs(Math.sin(w.ph)) * 0.04, p.z), Q, w.npc ? ZERO3 : S);
       WALK_MESH[0].setMatrixAt(i, M4); WALK_MESH[1].setMatrixAt(i, M4);
     });
     WALK_MESH[0].instanceMatrix.needsUpdate = true; WALK_MESH[1].instanceMatrix.needsUpdate = true;
@@ -1560,12 +1733,14 @@ function worldUpdate(dt, T) {
   }
   // 遠處的店只畫建築本體
   lodT -= dt; if (lodT <= 0) { lodT = 0.25; const cx = camera.position.x, cz = camera.position.z; for (const b of ALLB) { const v = Math.hypot(b.c.front[0] - cx, b.c.front[1] - cz) < 95; if (b.det.visible !== v) b.det.visible = v; } }
+  npcPoolUpdate(dt);
   drawMinimap();
 }
 let lodT = 0;
 const ALLB = [...Object.values(B), ...BF];
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let replayingNow = () => false;
+loadAssets();
 
 /* ================= chat-driven city ================= */
 const HIST = {}; for (const k of ETF_KEYS) if (CITY.monthly && CITY.monthly[k]) HIST[k] = { m: CITY.monthly[k], last: CITY.last[k] };

@@ -11,3 +11,4 @@ experiments/exp3/images/
 experiments/exp2/data/*.csv
 data/_fetch_*_log.json
 dist/
+scripts/assets/node_modules
