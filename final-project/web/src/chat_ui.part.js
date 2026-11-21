@@ -687,12 +687,14 @@ function tick() {
   const dt = Math.min(clock.getDelta(), 0.05), T = clock.elapsedTime;
   if (replay) { replay.acc += dt; while (replay && replay.acc >= replay.step) { replay.acc -= replay.step; replayStep(); } }
   worldUpdate(dt, T);
-  renderer.render(scene, camera);
+  renderFrame(dt);
   requestAnimationFrame(tick);
 }
 addEventListener('resize', layoutView);
 
 /* ---------- boot ---------- */
+{ let q = null; try { q = localStorage.getItem('etfcity.quality'); } catch (e) {} setQuality(['high', 'mid', 'low'].includes(q) ? q : (isDesk() ? 'high' : 'mid')); }
+document.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', () => { setQuality(b.dataset.q); applyTime(timeH); }));
 layoutView();
 applyScenario(REAL ? 'real' : 'mixed');
 resetCity();

@@ -221,6 +221,12 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
     <button type="button" id="scn-flat" data-scn="flat" aria-pressed="false">平盤</button>
     <button type="button" id="scn-down" data-scn="down" aria-pressed="false">大跌</button>
   </div>
+  <h2 id="h-q">畫質</h2>
+  <div class="seg" role="group" aria-labelledby="h-q">
+    <button type="button" data-q="high" aria-pressed="false">高 (陰影角落與光暈)</button>
+    <button type="button" data-q="mid" aria-pressed="false">中 (光暈)</button>
+    <button type="button" data-q="low" aria-pressed="false">省電</button>
+  </div>
   <h2 id="h-time">時間</h2>
   <div class="time-row"><input id="time" type="range" min="8" max="22" step="0.25" value="14.5" aria-labelledby="h-time"><output id="timeOut" for="time">14:30</output></div>
   <label class="check"><input id="allLabels" type="checkbox"> 顯示漲跌最大的 12 家店的標籤</label>

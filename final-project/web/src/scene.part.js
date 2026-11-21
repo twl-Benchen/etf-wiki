@@ -3,6 +3,11 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ---------------- helpers ---------------- */
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -71,6 +76,13 @@ Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, n
 sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.05;
 scene.add(sun, sun.target);
 const city = new THREE.Group(); scene.add(city);
+// 天空：場景裡的漸層球 (開了後製效果之後畫布不透明，CSS 的天空看不到)
+const SKY = new THREE.Mesh(new THREE.SphereGeometry(600, 24, 12), new THREE.ShaderMaterial({
+  uniforms: { top: { value: new THREE.Color('#5ea6e2') }, bot: { value: new THREE.Color('#d4e9f6') } }, side: THREE.BackSide, depthWrite: false, fog: false,
+  vertexShader: 'varying vec3 vP; void main() { vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform vec3 top; uniform vec3 bot; varying vec3 vP; void main() { float h = clamp(vP.y * 1.8 + 0.08, 0.0, 1.0); gl_FragColor = vec4(mix(bot, top, h), 1.0);\n#include <colorspace_fragment>\n}',
+}));
+SKY.renderOrder = -10; SKY.frustumCulled = false; scene.add(SKY);
 
 /* ---------------- textures (全部用 canvas 畫，不用外部圖檔) ---------------- */
 function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
@@ -705,7 +717,7 @@ function walkToStore(name, { card = false, fast = true } = {}) {
   walkToPoint(x, z, { face: storeFace(c), label: name, fast, then: () => { if (card) openCard(name); } });
 }
 function teleport(x, z, yaw) {
-  ME.x = x; ME.z = z; ME.y = 0; ME.vy = 0; if (yaw != null) { ME.yaw = yaw; ME.face = yaw; } ME.auto = null; onArrive = null; showWalkChip(null);
+  ME.x = x; ME.z = z; ME.y = 0; ME.vy = 0; if (yaw != null) { ME.yaw = yaw; ME.face = yaw; } ME.auto = null; onArrive = null; showWalkChip(null); npcT = 0;
 }
 function teleportStore(name, card = true) { const c = CO[name]; if (!c || !c.front) return; const [x, z] = doorOf(c); teleport(x, z, storeFace(c)); ME.pitch = ME.view === 'fp' ? 0.28 : 0.12; if (card) openCard(name); }
 function goPlaza() { teleport(START.x, START.z, START.yaw); ME.pitch = 0.16; }
@@ -788,6 +800,7 @@ function setDayTime(h, wet) {
   else { top = mixHex(SKYC.dusk[0], SKYC.day[0], (dl - 0.35) / 0.65); bot = mixHex(SKYC.dusk[1], SKYC.day[1], (dl - 0.35) / 0.65); }
   if (wet) { top = mixHex(top, SKYC.storm[0], 0.4 * dl + 0.15); bot = mixHex(bot, SKYC.storm[1], 0.4 * dl + 0.15); }
   document.getElementById('sky').style.background = `linear-gradient(180deg, ${top} 0%, ${bot} 100%)`;
+  SKY.material.uniforms.top.value.set(top); SKY.material.uniforms.bot.value.set(bot);
   scene.fog.color.set(bot); scene.fog.near = wet ? 45 : 70; scene.fog.far = wet ? 230 : 330;
   const az = (h - 6) / 12 * Math.PI; SUNDIR.set(Math.cos(az) * 0.8, Math.max(0.12, Math.sin(az)), 0.55).normalize();
   sun.color.set(mixHex('#ffffff', '#ffb070', 1 - clamp((dl - 0.15) / 0.5, 0, 1)));
@@ -798,6 +811,7 @@ function setDayTime(h, wet) {
   MAT.lampHead.emissiveIntensity = NIGHT > 0.45 ? 2.4 : 0;
   for (const v of CARS) v.g.userData.hl.emissiveIntensity = NIGHT > 0.45 ? 2.5 : 0;
   renderer.toneMappingExposure = 1.0 + 0.18 * NIGHT;
+  if (FX.bloom) { FX.bloom.strength = 0.12 + 0.95 * NIGHT; FX.bloom.threshold = lerp(1.3, 0.72, NIGHT); }
   for (const b of Object.values(B)) lightStore(b); for (const b of BF) lightStore(b);
 }
 const SUNDIR = new THREE.Vector3(0.5, 0.8, 0.4);
@@ -823,6 +837,31 @@ function screenChart(title, S, upto, maxV, up, down, muted) {
     g.font = `700 44px ${FONT}`; g.textAlign = 'right'; g.fillText(s.d.slice(0, 7).replace('-', '/'), W - 40, 60);
   }
   SCREEN.tex.needsUpdate = true;
+}
+
+/* ---------------- 畫面效果：環境遮蔽 (GTAO) 與光暈 (bloom)；畫質可在設定裡調整 ---------------- */
+const FX = { q: 'low', composer: null, bloom: null, ao: null };
+function setQuality(q) {
+  FX.q = q; try { localStorage.setItem('etfcity.quality', q); } catch (e) {}
+  document.querySelectorAll('[data-q]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.q === q)));
+  if (q === 'low') { FX.composer = null; renderer.setPixelRatio(Math.min(devicePixelRatio, isDesk() ? 1.5 : 1.25)); return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, isDesk() ? (q === 'high' ? 1.5 : 2) : 1.5));
+  const W = innerWidth, H = innerHeight, c = new EffectComposer(renderer); c.setPixelRatio(renderer.getPixelRatio()); c.setSize(W, H);
+  c.addPass(new RenderPass(scene, camera));
+  FX.ao = null;
+  if (q === 'high') {
+    const ao = new GTAOPass(scene, camera, W, H); ao.output = GTAOPass.OUTPUT.Default; ao.blendIntensity = 0.85;
+    ao.updateGtaoMaterial({ radius: 1.1, distanceExponent: 1.4, thickness: 2.0, scale: 1.25, samples: 12 });
+    ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+    c.addPass(ao); FX.ao = ao;
+  }
+  FX.bloom = new UnrealBloomPass(new THREE.Vector2(W / 2, H / 2), 0.3, 0.45, 1.2); c.addPass(FX.bloom);
+  c.addPass(new OutputPass());
+  FX.composer = c; FX.bloom.strength = 0.12 + 0.95 * NIGHT; FX.bloom.threshold = lerp(1.3, 0.72, NIGHT);
+}
+function renderFrame(dt) {
+  SKY.position.copy(camera.position);
+  if (FX.composer) FX.composer.render(dt); else renderer.render(scene, camera);
 }
 
 /* ---------------- 鏡頭 ---------------- */
@@ -857,6 +896,7 @@ function layoutView() {
   camera.aspect = W / H;
   camera.setViewOffset(W, H, isDesk() ? 196 : 0, isDesk() ? 0 : Math.round(H * (mini ? 0.05 : 0.2)), W, H);
   camera.updateProjectionMatrix(); renderer.setSize(W, H);
+  if (FX.composer) { FX.composer.setSize(W, H); }
 }
 
 /* ---------------- 操作：鍵盤、滑鼠拖曳轉頭、點擊走路、手機搖桿 ---------------- */
