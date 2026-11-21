@@ -185,7 +185,7 @@ const overview = () => fitNames(ALL, { maxZoom: 0.95 });
 /* ================= agent: tools ================= */
 const reEsc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const KB = (CITY.kb || []).map(d => ({ ...d, keys: new RegExp([d.title, ...(d.aliases || [])].filter(Boolean).map(reEsc).join('|'), 'i'), lines: ETF_KEYS.filter(k => d.text.includes(k)).slice(0, 3) }));
-const KB_KEYS = /什麼是|是什麼|什麼意思|怎麼算|如何計算|收益平準金|折價|溢價|淨值|除息|填息|配息|內扣|費用|經理費|手續費|證交稅|稅|市值型|高股息型|高股息(跟|和|與|還是)|成分股調整|換股|追蹤誤差|申購|買回|槓桿|反向|債券|殖利率|零股|下市|清算|風險|主動式|被動式/;
+const KB_KEYS = /成本|交易成本|代號|代碼|第六碼|什麼是|是什麼|什麼意思|怎麼算|如何計算|收益平準金|折價|溢價|淨值|除息|填息|配息|內扣|費用|經理費|手續費|證交稅|稅|市值型|高股息型|高股息(跟|和|與|還是)|成分股調整|換股|追蹤誤差|申購|買回|槓桿|反向|債券|殖利率|零股|下市|清算|風險|主動式|被動式/;
 function firstSection(md, limit = 420) {
   const out = []; let n = 0;
   for (let ln of md.split('\n')) {
@@ -263,8 +263,17 @@ const TOOLS = {
     return { total, top, covered_pct: cp, rest_pct: r1(100 - cp), note: '只計各檔前十大成分股', _share: share };
   },
   search_knowledge({ query }) {
-    const qa = bigrams(query.replace(/什麼是|是什麼|什麼意思|為什麼|怎麼|如何|請問|可以|嗎|呢|多少|哪些/g, ' '));
-    const sc = KB.map(d => ({ d, s: cosine(qa, bigrams(d.title + d.title + d.summary + d.text)) + (d.keys.test(query) ? 0.5 : 0) })).sort((a, b) => b.s - a.s);
+    // 和後端 rag.py 相同的規則：內容相似度，加上標題或別名出現在問題裡的加分 (太短或太常見的詞不加分)
+    const strip = query.replace(/什麼是|是什麼|什麼意思|為什麼|怎麼|如何|請問|可以|嗎|呢|多少|哪些|？|\?/g, ' ').trim() || query;
+    const qa = bigrams(strip), low = query.toLowerCase(), qs = strip.toLowerCase().replace(/\s/g, '');
+    const sc = KB.map(d => {
+      const all = [d.title.replace('什麼是 ', ''), ...(d.aliases || [])].filter(Boolean);
+      const names = all.filter(x => x.length >= 2 && !/^etfs?$/i.test(x));
+      const hit = names.filter(x => low.includes(x.toLowerCase()));
+      let bonus = hit.length ? Math.min(0.4, 0.1 + 0.05 * Math.max(...hit.map(x => x.length))) : 0;
+      if (all.some(x => x.toLowerCase().replace(/\s/g, '') === qs)) bonus += 0.25;
+      return { d, s: cosine(qa, bigrams(d.title + d.title + d.summary + d.text)) + bonus };
+    }).sort((a, b) => b.s - a.s);
     const top = sc[0];
     if (!top || top.s < 0.2) return { hit: false, score: top ? r2(top.s) : 0 };
     return { hit: true, title: top.d.title, score: r2(Math.min(0.99, top.s)), _text: firstSection(top.d.text), _raw: top.d.text, _doc: top.d, second: sc[1] ? sc[1].d.title : null };
@@ -332,7 +341,7 @@ function planner(q0) {
   else if (has(/總覽|全部|回到|重置|重來|整個城市|全城|看全部/)) intent = 'overview';
   else if (has(/今天|今日|大盤|市場|怎麼了|發生|新聞|日報|為什麼|下雨|煙火|港區|園區|金融區|科技區|行情/)) intent = 'market';
   else if (has(/什麼是|是什麼|意思|差在哪|差別/)) intent = 'kb';
-  else intent = 'help';
+  else intent = TOOLS.search_knowledge({ query: q }).hit ? 'kb' : 'help';
   return { intent, E, q };
 }
 

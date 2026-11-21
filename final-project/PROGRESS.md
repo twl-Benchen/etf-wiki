@@ -1,6 +1,6 @@
 # 進度紀錄 (接手的人先讀這份)
 
-更新時間：2026-11-17
+更新時間：2026-11-21
 
 ## 怎麼接手
 1. 讀 `CLAUDE.md` (規則) 和這份檔案。
@@ -20,17 +20,6 @@
   - `scene.py` 依工具結果產生畫面動作與建議追問
   - `agent.py` 主流程；`llm.py` Groq (aisuite 或 HTTP) 與 mock
 
-## 下一步 (依序)
-見檔案最下方的清單 (每次更新)。
-
-## 重要限制與已知問題
-- 這個開發環境連不到 Groq、證交所、Yahoo、Hugging Face，所以：
-  - LLM 路徑 (`llm_plan`、LLM Writer) **還沒有用真的模型跑過**，只用 mock 測過流程。第一次接上 Groq 時要跑 `scripts/check_groq.py`。
-  - 價格資料還是初始資料，要靠 GitHub Actions (`.github/workflows/update-data.yml`) 或本機執行 `scripts/fetch_*.py` 更新。
-- 前十大持股是初始資料，`data/holdings.json` 的 `as_of` 是空的，更新後要填日期與來源。
-- 配息資料 (`data/dividends.json`) 還沒有，`get_dividends` 會回覆「尚未整理」。
-
-## 待辦清單
 ### 已完成 (2026-11-17 第二段)
 - [x] 知識庫 32 篇 (`data/kb/`，16 篇匯入自 etf-wiki，16 篇自編；自編的 `status: 待核對`)
 - [x] RAG (`rag.py`，字元 n-gram TF-IDF + FAISS；可用環境變數換成語意向量)

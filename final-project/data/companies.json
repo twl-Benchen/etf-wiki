@@ -45,11 +45,6 @@
    "market": "TWSE",
    "industry": "半導體業"
   },
-  "中華電": {
-   "code": "2412",
-   "market": "TWSE",
-   "industry": "通信網路業"
-  },
   "長榮": {
    "code": "2603",
    "market": "TWSE",
@@ -75,50 +70,45 @@
    "market": "TWSE",
    "industry": "金融保險業"
   },
-  "長榮航": {
-   "code": "2618",
-   "market": "TWSE",
-   "industry": "航運業"
-  },
-  "陽明": {
-   "code": "2609",
-   "market": "TWSE",
-   "industry": "航運業"
-  },
   "日月光投控": {
    "code": "3711",
    "market": "TWSE",
    "industry": "半導體業"
   },
-  "世界": {
-   "code": "5347",
-   "market": "TPEx",
-   "industry": "半導體業"
+  "南亞": {
+   "code": "1303",
+   "market": "TWSE",
+   "industry": "塑膠工業"
   },
-  "元大金": {
-   "code": "2885",
+  "兆豐金": {
+   "code": "2886",
    "market": "TWSE",
    "industry": "金融保險業"
   },
-  "上海商銀": {
-   "code": "5876",
+  "永豐金": {
+   "code": "2890",
    "market": "TWSE",
    "industry": "金融保險業"
   },
-  "群聯": {
-   "code": "8299",
-   "market": "TPEx",
-   "industry": "半導體業"
-  },
-  "力成": {
-   "code": "6239",
+  "緯創": {
+   "code": "3231",
    "market": "TWSE",
-   "industry": "半導體業"
+   "industry": "電腦及週邊設備業"
   },
-  "瑞儀": {
-   "code": "6176",
+  "統一": {
+   "code": "1216",
    "market": "TWSE",
-   "industry": "光電業"
+   "industry": "食品工業"
+  },
+  "台新新光金": {
+   "code": "2887",
+   "market": "TWSE",
+   "industry": "金融保險業"
+  },
+  "凱基金": {
+   "code": "2883",
+   "market": "TWSE",
+   "industry": "金融保險業"
   }
  }
 }

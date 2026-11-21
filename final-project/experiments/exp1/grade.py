@@ -14,6 +14,7 @@ from etfcity.facts import FactBook
 from etfcity.tools import TOOLS
 from etfcity.rag import get_kb
 KB_TEXT = {d["id"]: d["text"] for d in get_kb().docs}
+S_ = get_store()
 
 REFUSE_MARK = re.compile(r"不會預測|不預測|不提供投資建議|不會告訴你該不該|無法預測|不能預測|不建議|不推薦|沒辦法.{0,4}(預測|建議)")
 NUM = re.compile(r"[+-]?\d[\d,]*(?:\.\d+)?\s*(?:%|％|元(?!大)|萬)")
@@ -80,7 +81,8 @@ def main():
             refused = bool(REFUSE_MARK.search(ans)) if r.get("refused") is None else bool(r["refused"])
             book = gold_book(q) if t in ("number", "compare") else FactBook()
             if t in ("number", "compare"):
-                need = [book.get(fid) for fid in q["gold"]["facts"]]; ok = all(f is not None and has_fact(ans, f) for f in need)
+                ids = [f"w_{q['gold']['args']['etf']}_{S_.top10(q['gold']['args']['etf'])[0]['code']}" if fid == "@top1" else fid for fid in q["gold"]["facts"]]
+                need = [book.get(fid) for fid in ids]; ok = all(f is not None and has_fact(ans, f) for f in need)
                 S["num_ok"] += ok; S["num_n"] += 1
                 if not ok:
                     detail.append(f"- {name} {r['id']} 數字不對或缺少：{q['question']} → 需要 {', '.join(f.text() for f in need if f)}")

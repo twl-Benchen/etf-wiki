@@ -64,6 +64,12 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
             name = info.data["name"] if info else d["name"]
             out.append(f"{k} {name}是一檔{d['type']} ETF，前十大成分股中最大的是{top['name']} {P(top['fact'])}，前十大合計 {P(f'top10_sum_{k}')}，其餘分散在其他公司，沒有畫進城市。")
             out.append(f"前十大依序是：{'、'.join(x['name'] for x in d['top10'])}。這條線在{dist['name']}停最多，合計 {P(dist['fact'])}。")
+            ask_d = (plan.focus.get("entities") or {}).get("district")
+            hit = next((x for x in d["districts"] if x["key"] == ask_d), None)
+            if ask_d and hit and hit is not dist:
+                out.append(f"你問的{hit['name']}，在前十大裡合計 {P(hit['fact'])}。")
+            elif ask_d and not hit:
+                out.append("前十大裡沒有你問的這個產業。")
         if rr:
             for row in rr.data["rows"]:
                 f = row["facts"]
