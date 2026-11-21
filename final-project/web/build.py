@@ -14,3 +14,12 @@ for marker in ("__CITY__", "__DATA_PART__", "__API_PART__", "__HIST__"):
     assert marker not in html, marker
 open(os.path.join(W, "index.html"), "w", encoding="utf-8").write(html)
 print("index.html", len(html.encode()), "bytes")
+
+# 實驗二用的表格介面與測試頁
+compact = json.dumps(city, ensure_ascii=False, separators=(",", ":"))
+open(os.path.join(W, "table.html"), "w", encoding="utf-8").write(rd("table.html").replace("__CITY__", compact))
+tasks = os.path.join(W, "..", "experiments", "exp2", "tasks.json")
+if os.path.exists(tasks):
+    st = json.dumps(json.load(open(tasks, encoding="utf-8")), ensure_ascii=False)
+    open(os.path.join(W, "study.html"), "w", encoding="utf-8").write(rd("study.html").replace("__STUDY__", st))
+print("table.html, study.html")

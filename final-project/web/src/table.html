@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ETF 持股表格</title>
+<style>
+/* 實驗二的對照介面：一般 App 常見的表格呈現，資料和城市版完全相同 */
+:root { --bg: #f5f7fa; --panel: #ffffff; --ink: #18222f; --muted: #5f6b7a; --hair: #dde3ea; --head: #eef2f6; --accent: #1f6fd6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f151e; --panel: #172030; --ink: #e6ebf2; --muted: #9aa6b5; --hair: #2a3546; --head: #1d2838; --accent: #6aa8ff; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0f151e; --panel: #172030; --ink: #e6ebf2; --muted: #9aa6b5; --hair: #2a3546; --head: #1d2838; --accent: #6aa8ff; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+.note { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-top: 16px; }
+.card { background: var(--panel); border: 1px solid var(--hair); border-radius: 10px; padding: 12px 14px; }
+.card h2 { font-size: 15px; margin: 0 0 8px; display: flex; gap: 8px; align-items: baseline; }
+.card h2 span { font-weight: 400; color: var(--muted); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 5px 6px; border-bottom: 1px solid var(--hair); text-align: left; }
+th { background: var(--head); font-weight: 600; }
+td.num, th.num { text-align: right; }
+tfoot td { font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ETF 前十大成分股</h1>
+  <p class="note" id="meta"></p>
+  <div class="grid" id="grid"></div>
+</main>
+<script>
+const CITY = __CITY__;
+const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const m = CITY.holdings_meta || {};
+document.getElementById('meta').textContent = `資料：各檔 ETF 的前十大成分股與權重 (${m.as_of ? '資料日 ' + m.as_of : '初始資料'})。產業依證交所產業分類。`;
+const grid = document.getElementById('grid');
+for (const [k, e] of Object.entries(CITY.etfs)) {
+  const rows = CITY.holdings[k], sum = rows.reduce((a, t) => a + t.weight, 0);
+  const card = document.createElement('section'); card.className = 'card';
+  card.innerHTML = `<h2>${esc(k)} ${esc(e.name)} <span>${esc(e.type)}</span></h2>
+    <table><thead><tr><th>#</th><th>公司</th><th>代號</th><th>產業</th><th class="num">權重</th></tr></thead>
+    <tbody>${rows.map((t, i) => `<tr><td>${i + 1}</td><td>${esc(t.name)}</td><td>${esc(t.code)}</td><td>${esc((CITY.companies[t.name] || {}).industry || '')}</td><td class="num">${t.weight.toFixed(2)}%</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td></td><td colspan="3">前十大合計</td><td class="num">${sum.toFixed(2)}%</td></tr></tfoot></table>`;
+  grid.appendChild(card);
+}
+</script>
+</body>
+</html>

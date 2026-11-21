@@ -40,19 +40,29 @@
 - [x] `scripts/build_site_data.py` 產生 `web/data/city.json`
 - [x] 測試 33 個全過 (`cd backend && python -m pytest -q`)
 
-### 進行中：前端 `web/` (做到一半)
-- `web/src/` 有四個片段，**還沒有 build.py，也還沒測過**：
-  - `chat_head.part.html` (原型的 CSS/HTML，未修改)
-  - `data.part.js` (新：從 city.json 讀資料、依產業自動配置大樓、新增民生工業區)
-  - `scene.part.js` (原型場景，資料區塊換成 `__DATA_PART__` 佔位，支援真實行情 `real`)
-  - `chat_ui.part.js` (原型對話 UI，已改成讀 CITY 資料、知識庫用 city.json 的 kb；裡面有 `__API_PART__` 佔位)
+### 已完成 (2026-11-21)
+- [x] 專案搬到 etf-wiki repo 的 `final-project/` (第十週作業評分後再搬出去，見 docs/deploy.md 第 6 節)
+- [x] 前端 `web/`：`python web/build.py` 由 `web/src/` 的片段組成 `index.html`、`table.html`、`study.html`
+  - 城市改成讀 `web/data/city.json`，大樓依產業自動配置 (5 檔 ETF、24 家公司)
+  - 連上後端時，問答交給 LLM Agent (`api.part.js` 的 `askApi`)，畫面動作由 `runScene` 執行；連不上時用瀏覽器內的規則版
+  - 「我的持股」對話框：手動輸入，或上傳截圖並在畫面上塗黑個資後送去辨識
+  - 測試：`web/tests/run.py shot|qa`
+- [x] 實驗一：題庫 60 題、`run.py`、`grade.py`；`C_rule` 流程檢查全過 (只是流程檢查，見 experiments/README.md)
+- [x] 實驗二：`make_tasks.py` 產生 8 題 (答案由工具計算)、`web/table.html` 對照介面、`web/study.html` 測試頁、`analyze.py`
+- [x] 實驗三：README、標準答案範本、看圖模型與傳統 OCR 兩種辨識腳本、評分程式
+- [x] `docs/deploy.md`：本機、Groq、HF Space、GitHub Pages、資料更新、搬 repo
 
 ## 待辦清單 (依序)
-1. 寫 `web/src/api.part.js` 取代 `__API_PART__`，至少要有：`let online=false`、`initApi()` (讀 `?api=` 網址參數或 localStorage 的後端網址，打 `/api/health`)、`connectApi()`、`askApi(q, typing)` (POST `/api/ask`，用 `addBot` 顯示回答與 trace，回傳 true；失敗回傳 false 改走規則版)、`runScene(actions)` (把後端的 focus_etfs / fly_to / mark_companies / show_portfolio / replay / set_time / reset 對應到現有的 setFocus、fitNames、setLabels、setRings、setMine、startReplay、applyTime、resetCity)。replay 的 series 格式是 `{d, inv, val, ch}`，ch 是百分比 (原型是小數)，要換算。
-2. `chat_head.part.html`：設定面板加 `<button id="scn-real" data-scn="real">真實</button>` (chat_ui 有引用)、後端網址輸入框、持股輸入/截圖上傳對話框 (上傳前在 canvas 上讓使用者塗黑姓名帳號)；拿掉「原型｜規則模擬」「至 2025/5/29」字樣。
-3. 寫 `web/build.py`：讀 `web/data/city.json` 取代 `data.part.js` 裡的 `__CITY__`，把 `__DATA_PART__`、`__API_PART__` 換掉，組成 `web/index.html`。測試沿用 `/home/claude/etf-city/test.py` 的做法 (Playwright + swiftshader，three.js 從本地 vendor 讀)。
-4. 截圖檢查五個 ETF 的城市配置 (00919 新增群聯、力成、瑞儀，民生工業區目前沒有公司會被刪掉)。
-5. GitHub repo `twl-Benchen/etf-metropolis` 建好後推上去，開 GitHub Pages (web/)、跑一次 Actions 更新資料。
-6. 用 Groq 金鑰跑 `scripts/check_groq.py`，依結果調整 Planner / Writer prompt。
-7. 實驗：`experiments/` 還沒寫。實驗一題庫 60 題 (觀念、數字、比較、拒答各 15)，標準答案由 tools 計算；四組設定用 `Agent(mode=...)` 與 `writer_model`。實驗二、三寫問卷與標註表格。
-8. 配息資料 (`data/dividends.json`) 與前十大持股更新 (`holdings.json` 的 `as_of`)。
+1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。
+2. **需要使用者**：建 HF Space 部署後端 (docs/deploy.md 第 3 節)，把網址填進城市設定。
+3. 在能連網的電腦跑 `scripts/fetch_prices.py` 與 `scripts/fetch_daily.py`，更新價格與當日行情；之後重跑 `build_site_data.py`、`web/build.py`。
+4. 更新前十大持股 (`data/holdings.json`，填 `as_of` 與來源)，並整理配息資料 `data/dividends.json` (格式：`{"dividends": {"0056": [{"date": "YYYY-MM-DD", "amount": 0.0}]}}`)。
+5. 跑實驗一 A、B、C、D，產生 `experiments/exp1/report.md`。
+6. 實驗二：找受試者；實驗三：收截圖並標註。
+7. 期末報告與 demo 腳本。
+8. 城市加分項 (看時間)：ETF 換股的路線改道 (需要歷史持股)、月營收吊車、外資巴士、圖像生成的外牆貼圖。
+
+## 已知問題
+- 這個開發環境連不到 Groq、證交所、Yahoo、Hugging Face，所以 LLM 路徑和抓資料腳本都還沒有實際跑過。
+- 知識庫中自編的 16 篇標示「待核對」，期末前要對照來源檢查。
+- 城市在手機上可以用，但標籤較擠；實驗二建議用電腦做。

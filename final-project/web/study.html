@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>介面測試</title>
+<style>
+/* 實驗二測試頁：左邊是要測的介面，右邊是題目。同一位受試者兩種介面都用，順序依編號交錯。 */
+:root { --bg: #eef1f5; --panel: #ffffff; --ink: #18222f; --muted: #5f6b7a; --hair: #d9e0e8; --accent: #1f6fd6; --ok: #12905a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0d131b; --panel: #172030; --ink: #e6ebf2; --muted: #9aa6b5; --hair: #2a3546; --accent: #6aa8ff; --ok: #3fd391; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg: #0d131b; --panel: #172030; --ink: #e6ebf2; --muted: #9aa6b5; --hair: #2a3546; --accent: #6aa8ff; --ok: #3fd391; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif; }
+.wrap { display: grid; grid-template-columns: 1fr 360px; height: 100%; }
+iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+aside { background: var(--panel); border-left: 1px solid var(--hair); padding: 18px; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+h1 { font-size: 18px; margin: 0; }
+p, li { font-size: 14px; line-height: 1.7; }
+.muted { color: var(--muted); font-size: 13px; }
+.opt { display: block; width: 100%; text-align: left; padding: 10px 12px; margin: 6px 0; border: 1px solid var(--hair); border-radius: 10px; background: var(--panel); color: var(--ink); font: 14px inherit; font-family: inherit; cursor: pointer; }
+.opt[aria-pressed="true"] { border-color: var(--accent); outline: 2px solid var(--accent); }
+button.go { border: 0; background: var(--accent); color: #fff; border-radius: 10px; padding: 11px 16px; font: 700 14px inherit; font-family: inherit; cursor: pointer; }
+button.go:disabled { opacity: .45; cursor: default; }
+input[type=text] { width: 100%; padding: 9px 10px; border: 1px solid var(--hair); border-radius: 8px; background: var(--panel); color: var(--ink); font: 14px inherit; font-family: inherit; }
+.likert { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 4px 0 10px; }
+.likert label { text-align: center; font-size: 12px; border: 1px solid var(--hair); border-radius: 8px; padding: 6px 0; cursor: pointer; }
+.likert input { display: block; margin: 0 auto 2px; }
+.bar { height: 6px; background: var(--hair); border-radius: 3px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.full { grid-column: 1 / -1; max-width: 640px; margin: 40px auto; background: var(--panel); border: 1px solid var(--hair); border-radius: 14px; padding: 24px; height: auto; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; grid-template-rows: 55% 45%; } aside { border-left: 0; border-top: 1px solid var(--hair); } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const STUDY = {"data_note": "前十大持股 初始資料；價格到 2025-05-29", "tasks": [{"id": "t1", "question": "小明持有 0050 30 萬元、0056 10 萬元、00878 20 萬元。他實際持有最多的是哪一家公司？", "answer": "台積電", "options": ["聯電", "台積電", "聯詠", "聯發科"], "note": ""}, {"id": "t2", "question": "同上 (0050 30 萬元、0056 10 萬元、00878 20 萬元)，他實際持有第二多的是哪一家公司？", "answer": "聯發科", "options": ["聯電", "聯詠", "台積電", "聯發科"], "note": ""}, {"id": "t3", "question": "0050、0056、00878 三檔中，哪兩檔的前十大重疊權重最高？", "answer": "0056 和 00878", "options": ["0056 和 00878", "0050 和 0056", "0050 和 00878"], "note": ""}, {"id": "t4", "question": "城市裡的 5 檔 ETF 中，有幾檔的前十大有聯發科？", "answer": "5 檔", "options": ["1 檔", "5 檔", "2 檔", "3 檔"], "note": ""}, {"id": "t5", "question": "00919 的第一大持股是哪一家？", "answer": "聯電", "options": ["中信金", "聯發科", "長榮", "聯電"], "note": ""}, {"id": "t6", "question": "0050 和 006208 的前十大持股是否幾乎相同？", "answer": "幾乎相同", "options": ["幾乎相同", "差很多", "完全沒有重疊"], "note": ""}, {"id": "t7", "question": "小華持有 00878 與 00919 各 20 萬元。他的錢 (以前十大估算) 最集中在哪個產業？", "answer": "半導體園區", "options": ["半導體園區", "電子科技區", "金融區", "航運港區"], "note": ""}, {"id": "t8", "question": "下列哪一家公司，同時在 0056 和 00919 的前十大裡？", "answer": "長榮", "options": ["台達電", "台積電", "長榮", "鴻海"], "note": ""}], "likert": ["我覺得這個介面容易看懂持股的組成。", "我覺得這個介面能幫我比較兩檔 ETF。", "我有信心我的答案是正確的。", "我願意再使用這個介面。"]};
+const IFACE = { table: { name: '表格', url: 'table.html', hint: '這是一般 App 常見的表格。可以捲動查看各檔 ETF 的前十大成分股。' },
+                city: { name: '城市', url: 'index.html', hint: '這是 ETF 都會。可以點大樓、車站，或在右邊的對話框發問。也可以用右上角的「我的持股」。' } };
+const S = { id: '', order: [], ci: 0, ti: 0, t0: 0, rows: [], likert: [] };
+const app = document.getElementById('app');
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const save = () => { try { localStorage.setItem('etfcity.study.' + S.id, JSON.stringify(S)); } catch (e) {} };
+
+function start() {
+  app.innerHTML = `<div class="full"><h1>ETF 介面測試</h1>
+    <p>這個測試比較兩種看 ETF 持股的介面。你會用兩種介面各回答 ${STUDY.tasks.length} 題選擇題，每用完一種介面再填 ${STUDY.likert.length} 題感受。全程大約 15 分鐘。</p>
+    <ul><li>系統會記錄你的答案和每題花的時間，不會記錄姓名。</li><li>不用追求最快，照平常的速度就好。</li><li>題目只是在看介面好不好用，不是投資測驗。</li></ul>
+    <p class="muted">${esc(STUDY.data_note)}</p>
+    <label>受試者編號 (由研究者提供，例如 P01)<input type="text" id="pid" autocomplete="off"></label>
+    <p><button class="go" id="go" disabled>開始</button></p></div>`;
+  const pid = document.getElementById('pid'), go = document.getElementById('go');
+  pid.oninput = () => go.disabled = !pid.value.trim();
+  go.onclick = () => {
+    S.id = pid.value.trim(); const n = parseInt(S.id.replace(/\D/g, ''), 10) || 0;
+    S.order = n % 2 ? ['table', 'city'] : ['city', 'table'];   // 奇數先表格，偶數先城市，平衡順序效果
+    S.ci = 0; intro();
+  };
+}
+function intro() {
+  const k = S.order[S.ci], f = IFACE[k];
+  app.innerHTML = `<iframe src="${f.url}" title="${f.name}介面"></iframe><aside><h1>第 ${S.ci + 1} 部分：${f.name}介面</h1><p>${f.hint}</p><p>先花一分鐘熟悉左邊的介面，準備好再按開始，開始後會計時。</p><button class="go" id="go">開始作答</button></aside>`;
+  document.getElementById('go').onclick = () => { S.ti = 0; task(); };
+}
+function task() {
+  const k = S.order[S.ci], t = STUDY.tasks[S.ti], aside = app.querySelector('aside'); let pick = null;
+  aside.innerHTML = `<div class="bar"><i style="width:${S.ti / STUDY.tasks.length * 100}%"></i></div><p class="muted">${IFACE[k].name}介面｜第 ${S.ti + 1} / ${STUDY.tasks.length} 題</p>
+    <h1>${esc(t.question)}</h1><div>${t.options.map(o => `<button class="opt" aria-pressed="false">${esc(o)}</button>`).join('')}<button class="opt" aria-pressed="false">不知道</button></div>
+    <button class="go" id="next" disabled>下一題</button>`;
+  aside.querySelectorAll('.opt').forEach(b => b.onclick = () => { aside.querySelectorAll('.opt').forEach(x => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); pick = b.textContent; document.getElementById('next').disabled = false; });
+  S.t0 = performance.now();
+  document.getElementById('next').onclick = () => {
+    S.rows.push({ participant: S.id, condition: k, order: S.ci + 1, task: t.id, answer: pick, correct: pick === t.answer ? 1 : 0, seconds: ((performance.now() - S.t0) / 1000).toFixed(1) });
+    save(); S.ti++;
+    if (S.ti < STUDY.tasks.length) task(); else likert();
+  };
+}
+function likert() {
+  const k = S.order[S.ci], aside = app.querySelector('aside');
+  aside.innerHTML = `<h1>${IFACE[k].name}介面的感受</h1><p class="muted">1 是非常不同意，5 是非常同意。</p>` +
+    STUDY.likert.map((q, i) => `<p>${esc(q)}</p><div class="likert">${[1, 2, 3, 4, 5].map(v => `<label><input type="radio" name="l${i}" value="${v}">${v}</label>`).join('')}</div>`).join('') +
+    `<label>其他想法 (選填)<input type="text" id="cm"></label><button class="go" id="next" disabled>送出</button>`;
+  const check = () => document.getElementById('next').disabled = STUDY.likert.some((_, i) => !aside.querySelector(`input[name=l${i}]:checked`));
+  aside.querySelectorAll('input[type=radio]').forEach(r => r.onchange = check);
+  document.getElementById('next').onclick = () => {
+    S.likert.push({ participant: S.id, condition: k, ...Object.fromEntries(STUDY.likert.map((_, i) => [`q${i + 1}`, aside.querySelector(`input[name=l${i}]:checked`).value])), comment: document.getElementById('cm').value });
+    save(); S.ci++;
+    if (S.ci < S.order.length) intro(); else done();
+  };
+}
+function csv(rows) { const ks = Object.keys(rows[0]); return [ks.join(','), ...rows.map(r => ks.map(k => `"${String(r[k] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n'); }
+function download(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/csv' })); a.download = name; a.click(); }
+function done() {
+  app.innerHTML = `<div class="full"><h1>完成，謝謝你</h1><p>請把下面兩個檔案交給研究者 (研究者也可以自己按)。</p>
+    <p><button class="go" id="d1">下載作答紀錄</button> <button class="go" id="d2">下載感受問卷</button></p></div>`;
+  document.getElementById('d1').onclick = () => download(`exp2_${S.id}_tasks.csv`, csv(S.rows));
+  document.getElementById('d2').onclick = () => download(`exp2_${S.id}_likert.csv`, csv(S.likert));
+}
+start();
+</script>
+</body>
+</html>

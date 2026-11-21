@@ -7,3 +7,5 @@ web/tests/vendor/
 web/tests/_test.html
 data/kb_index/
 *.log
+experiments/exp3/images/
+experiments/exp2/data/*.csv
