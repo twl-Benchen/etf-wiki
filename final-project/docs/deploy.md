@@ -48,7 +48,10 @@ python web/build.py                 # 產生 index.html、table.html、study.htm
 
 ## 5. 資料更新
 
-- 歷史價格：`python scripts/fetch_prices.py` (yfinance)
+- 一次全部更新：`python scripts/update_all.py` (當日行情、歷史價格、配息、前端資料、網頁、後端測試)
+- 歷史價格：`python scripts/fetch_prices.py`，優先用 FinMind (資料來自證交所，已依分割還原)，失敗時改用 Yahoo Finance
+- 配息：`python scripts/fetch_dividends.py` (FinMind 除權息結果表)，寫出 `data/dividends.json`
+- FinMind 金鑰：到 FinMind 官網註冊後取得，設成環境變數 `FINMIND_TOKEN` (例如 `export FINMIND_TOKEN=...`；Colab 放在 Secrets；GitHub Actions 放在 repo 的 Secrets)。不要寫進程式或 commit。沒有金鑰也能抓，但每小時額度較少
 - 當日行情：`python scripts/fetch_daily.py` (證交所與櫃買 OpenAPI)，寫出 `data/daily.json` 後，城市的「真實」行情按鈕才會出現
 - 跑完記得 `python scripts/build_site_data.py && python web/build.py`
 

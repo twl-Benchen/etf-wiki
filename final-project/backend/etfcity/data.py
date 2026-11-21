@@ -32,7 +32,8 @@ class DataStore:
                         if c > 0:
                             ds.append(r["date"]); cs.append(c)
                 self.prices[k] = (ds, cs)
-        self.dividends: dict = self._json("dividends.json", {}).get("dividends", {})
+        dv = self._json("dividends.json", {}); self.dividends: dict = dv.get("dividends", {})
+        self.dividend_source = dv.get("source", "投信配息公告")
         self.prev = self._load_prev()
         self.daily = self._load_daily()
         self.price_source = self._json("prices/_meta.json", {}).get("source", "ETF 歷史收盤價")

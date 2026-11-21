@@ -106,8 +106,8 @@ def get_dividends(etf: str, year: int | None = None, s: DataStore | None = None)
     if not rows:
         return ToolResult("get_dividends", {"etf": etf, "year": year}, ok=False, error="配息資料還沒有整理好，目前只提供價格報酬 (未含息)。",
                           data={"freq": s.etfs[etf].get("dividend_freq"), "months": s.etfs[etf].get("dividend_months")})
-    facts = [Fact(f"div_{etf}_{r['date'].replace('-', '')}", r["amount"], "price", f"{etf} 於 {r['date']} 除息的每單位配息", "投信配息公告") for r in rows]
-    return ToolResult("get_dividends", {"etf": etf, "year": year}, facts=facts, sources=["投信配息公告"],
+    facts = [Fact(f"div_{etf}_{r['date'].replace('-', '')}", r["amount"], "price", f"{etf} 於 {r['date']} 除息的每單位配息", s.dividend_source) for r in rows]
+    return ToolResult("get_dividends", {"etf": etf, "year": year}, facts=facts, sources=[s.dividend_source],
                       data={"rows": [{"date": r["date"], "fact": f"div_{etf}_{r['date'].replace('-', '')}"} for r in rows]})
 
 

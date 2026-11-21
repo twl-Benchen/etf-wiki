@@ -51,19 +51,25 @@
   - 0056 原本 2007-12 的 4 筆也保留下來
   - `fetch_daily.py` 加上重試 (證交所偶爾會中途切斷連線)
   - 0050、006208、0056、00878、00919 當日漲跌與價格檔一致
+- [x] 接上 FinMind (金鑰放環境變數 `FINMIND_TOKEN`，共用工具 `scripts/finmind.py`，每小時 600 次，一次完整更新約用 15 次)
+  - 歷史價格改成以 FinMind 為主 (資料來自證交所)，失敗時才用 Yahoo。分割倍數直接查 FinMind 的分割表 (0050：2025-06-18 恢復交易，4 倍)
+  - 和 Yahoo 相比修正了：2008-10 到 2009-03 的錯誤價格、颱風假與停牌日的假價格、漏掉的週六補行交易日、006208/00878/00919 上市前的假價格 (發行價)
+  - 配息 `scripts/fetch_dividends.py` → `data/dividends.json` (5 檔共 123 筆，`amount` 是當時每單位配息，`amount_adj` 依分割換算成和價格檔同一基準)。和 Yahoo 核對：Yahoo 的 0050 在 2014 年以前沒有除以 4、2022-08-02 多一筆，006208 有一筆日期錯誤，其餘一致
+  - `get_dividends` 工具現在有資料了，來源標示改成依 `dividends.json`
+  - `update_all.py`、GitHub Actions (要在 repo Secrets 加 `FINMIND_TOKEN`)、Colab 筆記本、`docs/deploy.md` 都已加上 FinMind
 
 ## 待辦清單 (依序)
 1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。
 2. **需要使用者**：建 HF Space 部署後端 (docs/deploy.md 第 3 節)，把網址填進城市設定。
 3. ~~跑 `python scripts/update_all.py`~~ (2026-11-21 完成，之後要更新資料再跑一次即可)
-4. 前十大持股與投信官網核對；整理配息資料 `data/dividends.json` (格式：`{"dividends": {"0056": [{"date": "YYYY-MM-DD", "amount": 0.0}]}}`)。
+4. 前十大持股與投信官網核對 (配息資料已完成)。另外：規則版 Planner、模板 Writer、前端離線版還沒有接 `get_dividends` (問「0056 去年配多少」目前會被導到知識庫)；接的時候注意 0050 分割前的配息是舊單位，要說明或用 `amount_adj`。
 5. 跑實驗一 A、B、C、D，產生 `experiments/exp1/report.md`。
 6. 實驗二：找受試者；實驗三：收截圖並標註。
 7. 期末報告與 demo 腳本。
 8. 城市加分項 (看時間)：ETF 換股的路線改道 (需要歷史持股)、月營收吊車、外資巴士、圖像生成的外牆貼圖。
 
 ## 已知問題
-- 開發環境 2026-11-21 起可以連證交所、櫃買、Yahoo、Groq (Groq 還沒有金鑰，所以 LLM 路徑還沒實際跑過)。
-- 0050 在 2008-10 到 2009-03 的價格有幾天單日漲跌超過 10% (例如 2009-02-19 +16.5%)，當時漲跌幅限制是 7%，應該是 Yahoo 原始資料的錯誤；舊檔案也一樣。只影響從那段期間開始算的報酬，期末前可以和證交所歷史資料核對。
+- 開發環境 2026-11-21 起可以連證交所、櫃買、Yahoo、FinMind、Groq (Groq 還沒有金鑰，所以 LLM 路徑還沒實際跑過)。
+- 價格改用 FinMind 後，Yahoo 在 2008 到 2009 年的錯誤價格已經修正。沒有設定 `FINMIND_TOKEN` 而且 FinMind 額度用完時，會退回 Yahoo，這時候那段期間的價格會不準 (log 的 `source` 會寫 yahoo)。
 - 知識庫自編文件：`income-equalization`、`split` 已對照來源改寫 (status: 已核對)；其餘標示「待核對」的 9 篇期末前要對照來源檢查 (`grep -l '待核對' data/kb/*.md`)。
 - 城市在手機上可以用，但標籤較擠；實驗二建議用電腦做。
