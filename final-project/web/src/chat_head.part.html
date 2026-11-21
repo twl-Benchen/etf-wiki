@@ -123,6 +123,7 @@ details.trace[open] summary::before { content: "▾"; }
 #walkbar { position: fixed; z-index: 5; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(46px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 #miniCv { width: 170px; height: 170px; border-radius: 12px; border: 1px solid var(--hair); box-shadow: 0 6px 18px rgba(0,0,0,.2); cursor: pointer; display: block; }
 .tools { display: flex; gap: 6px; padding: 6px; }
+#rideBtn[aria-pressed="true"] { background: #18b3a0; color: #fff; border-color: #18b3a0; }
 #near { position: fixed; z-index: 5; left: calc(50% - 196px); transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); border: 1px solid var(--hair); background: var(--panel); color: var(--ink); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-radius: 999px; padding: 8px 14px; font: 14px var(--font-body); cursor: pointer; display: flex; gap: 8px; align-items: baseline; box-shadow: 0 6px 18px rgba(0,0,0,.2); white-space: nowrap; }
 #near .k { font-size: 12px; color: var(--muted); }
@@ -267,6 +268,7 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
   <canvas id="miniCv" width="340" height="340" aria-label="小地圖，點一下打開導覽圖"></canvas>
   <div class="tools panel">
     <button type="button" class="icon-btn" id="viewBtn">眼睛視角</button>
+    <button type="button" class="icon-btn" id="rideBtn" aria-pressed="false">滑板車</button>
     <button type="button" class="icon-btn" id="mapBtn">導覽圖</button>
     <button type="button" class="icon-btn" id="homeBtn">回到廣場</button>
   </div>

@@ -544,18 +544,38 @@ const WALK_MESH = people(WALKERS.length);
 
 /* ---------------- 車流：機車與汽車 (靠右行駛，遇到人會停) ---------------- */
 const CARS = [];
+function wheelGeo(r, w) { const g = new THREE.CylinderGeometry(r, r, w, 16); g.rotateZ(Math.PI / 2); return g; }
+const WHEEL = new THREE.MeshLambertMaterial({ color: 0x1b1d20 }), HUB = new THREE.MeshLambertMaterial({ color: 0xc9ced3 }), GLASS = new THREE.MeshLambertMaterial({ color: 0x2b3b4a });
 function vehicle(kind, color) {
-  const g = new THREE.Group(), m = new THREE.MeshLambertMaterial({ color });
-  if (kind === 'car') {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.7, 4.1), m); b.position.y = 0.6; g.add(b);
-    const cab = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 2.1), new THREE.MeshLambertMaterial({ color: 0x2c3a47 })); cab.position.set(0, 1.2, -0.2); g.add(cab);
-  } else {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.5, 1.5), m); b.position.y = 0.45; g.add(b);
-    const rider = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.62, 0.3), new THREE.MeshLambertMaterial({ color: SHIRTS[Math.floor(Math.random() * SHIRTS.length)] })); rider.position.set(0, 1.18, -0.15); g.add(rider);
-    const helm = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), new THREE.MeshLambertMaterial({ color: 0xfafafa })); helm.position.set(0, 1.62, -0.12); g.add(helm);
+  const g = new THREE.Group(), m = new THREE.MeshLambertMaterial({ color }), dark = new THREE.MeshLambertMaterial({ color: 0x2a2d31 });
+  const add = (geo, mat, x, y, z, rx = 0) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.rotation.x = rx; g.add(o); return o; };
+  const wheels = [];
+  if (kind === 'car') {   // 小客車：車身、車廂玻璃、四個輪子、車燈
+    add(new THREE.BoxGeometry(1.78, 0.55, 4.1), m, 0, 0.62, 0);
+    add(new THREE.BoxGeometry(1.7, 0.18, 4.0), dark, 0, 0.3, 0);
+    add(new THREE.BoxGeometry(1.56, 0.56, 2.0), GLASS, 0, 1.17, -0.25);
+    add(new THREE.BoxGeometry(1.6, 0.08, 2.05), m, 0, 1.47, -0.25);
+    for (const x of [-0.8, 0.8]) add(new THREE.BoxGeometry(0.06, 0.5, 1.7), m, x, 1.17, -0.25);
+    for (const [x, z] of [[-0.82, 1.3], [0.82, 1.3], [-0.82, -1.3], [0.82, -1.3]]) { wheels.push(add(wheelGeo(0.34, 0.24), WHEEL, x, 0.34, z)); add(wheelGeo(0.16, 0.26), HUB, x, 0.34, z); }
+    for (const x of [-0.62, 0.62]) add(new THREE.BoxGeometry(0.34, 0.12, 0.05), new THREE.MeshBasicMaterial({ color: 0x9e1b1b }), x, 0.72, -2.06);
+  } else {   // 機車：前擋板、腳踏板、座墊、後車殼、兩個輪子、龍頭，加上騎士
+    wheels.push(add(wheelGeo(0.23, 0.11), WHEEL, 0, 0.23, 0.62)); wheels.push(add(wheelGeo(0.23, 0.11), WHEEL, 0, 0.23, -0.6));
+    add(wheelGeo(0.1, 0.13), HUB, 0, 0.23, 0.62); add(wheelGeo(0.1, 0.13), HUB, 0, 0.23, -0.6);
+    add(new THREE.BoxGeometry(0.32, 0.08, 0.5), dark, 0, 0.3, 0.02);
+    add(new THREE.BoxGeometry(0.36, 0.36, 0.66), m, 0, 0.55, -0.4);
+    add(new THREE.BoxGeometry(0.34, 0.1, 0.6), dark, 0, 0.78, -0.36);
+    add(new THREE.BoxGeometry(0.36, 0.62, 0.12), m, 0, 0.62, 0.42, -0.28);
+    add(new THREE.BoxGeometry(0.24, 0.12, 0.34), m, 0, 0.42, 0.58);
+    add(new THREE.BoxGeometry(0.06, 0.36, 0.06), dark, 0, 0.98, 0.5, -0.2);
+    add(new THREE.BoxGeometry(0.62, 0.05, 0.05), dark, 0, 1.13, 0.46);
+    const shirt = new THREE.MeshLambertMaterial({ color: SHIRTS[Math.floor(Math.random() * SHIRTS.length)] }), pants = new THREE.MeshLambertMaterial({ color: 0x2c3542 }), skin = new THREE.MeshLambertMaterial({ color: 0xf0c8a8 });
+    add(new THREE.BoxGeometry(0.4, 0.52, 0.24), shirt, 0, 1.12, -0.24, 0.12);
+    for (const x of [-0.12, 0.12]) { add(new THREE.BoxGeometry(0.14, 0.13, 0.42), pants, x, 0.86, -0.1); add(new THREE.BoxGeometry(0.13, 0.42, 0.14), pants, x, 0.6, 0.12); add(new THREE.BoxGeometry(0.11, 0.11, 0.46), shirt, x * 2.1, 1.18, 0.12, -0.35); add(new THREE.BoxGeometry(0.09, 0.09, 0.09), skin, x * 2.4, 1.12, 0.42); }
+    add(new THREE.SphereGeometry(0.19, 14, 10), new THREE.MeshLambertMaterial({ color: [0xfafafa, 0xe53935, 0x1e88e5, 0x212121][Math.floor(Math.random() * 4)] }), 0, 1.55, -0.2);
+    add(new THREE.BoxGeometry(0.26, 0.08, 0.05), GLASS, 0, 1.52, -0.02);
   }
-  const hl = new THREE.Mesh(new THREE.BoxGeometry(kind === 'car' ? 1.4 : 0.2, 0.12, 0.05), new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xfff4c0, emissiveIntensity: 0 }));
-  hl.position.set(0, kind === 'car' ? 0.68 : 0.7, kind === 'car' ? 2.06 : 0.78); g.add(hl); g.userData.hl = hl.material;
+  const hl = new THREE.Mesh(new THREE.BoxGeometry(kind === 'car' ? 1.4 : 0.16, 0.12, 0.05), new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xfff4c0, emissiveIntensity: 0 }));
+  hl.position.set(0, kind === 'car' ? 0.68 : 0.62, kind === 'car' ? 2.06 : 0.49); g.add(hl); g.userData.hl = hl.material; g.userData.wheels = wheels;
   g.traverse(o => { if (o.isMesh) o.castShadow = true; }); city.add(g); return g;
 }
 {
@@ -622,9 +642,27 @@ function makeAvatar() {
   const arms = [limb(0.31, 1.38, 0.13, 0.56, hoodie, false), limb(-0.31, 1.38, 0.13, 0.56, hoodie, false)];
   scene.add(g); return { g, legs, arms, head };
 }
-const AV = makeAvatar();
+const AV = makeAvatar(); AV.g.rotation.order = 'YXZ';
+// 電動滑板車 (按 F 上下車)
+function makeKick() {
+  const g = new THREE.Group(), M_ = c => new THREE.MeshLambertMaterial({ color: c });
+  const deck = M_(0x2b2f36), teal = M_(0x18b3a0), metal = M_(0xb8bec4);
+  const add = (geo, mat, x, y, z, rx = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.x = rx; m.castShadow = true; g.add(m); return m; };
+  add(new THREE.BoxGeometry(0.2, 0.05, 0.86), deck, 0, 0.12, -0.02);
+  add(new THREE.BoxGeometry(0.205, 0.012, 0.62), teal, 0, 0.152, -0.04);
+  add(new THREE.BoxGeometry(0.16, 0.03, 0.24), deck, 0, 0.23, -0.5, 0.25);
+  const wheels = [add(wheelGeo(0.1, 0.05), WHEEL, 0, 0.1, 0.46), add(wheelGeo(0.1, 0.05), WHEEL, 0, 0.1, -0.46)];
+  add(wheelGeo(0.045, 0.06), metal, 0, 0.1, 0.46); add(wheelGeo(0.045, 0.06), metal, 0, 0.1, -0.46);
+  add(new THREE.CylinderGeometry(0.026, 0.026, 1.02, 10), metal, 0, 0.62, 0.43, -0.12);
+  add(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 10), teal, 0, 0.22, 0.46, -0.12);
+  const bar = add(new THREE.CylinderGeometry(0.02, 0.02, 0.52, 10), metal, 0, 1.12, 0.37); bar.rotation.z = Math.PI / 2;
+  for (const x of [-0.24, 0.24]) { const gr = add(new THREE.CylinderGeometry(0.03, 0.03, 0.12, 10), deck, x, 1.12, 0.37); gr.rotation.z = Math.PI / 2; }
+  const lamp = add(new THREE.BoxGeometry(0.1, 0.06, 0.04), new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xfff4c0, emissiveIntensity: 0.6 }), 0, 0.95, 0.49);
+  g.rotation.order = 'YXZ'; g.visible = false; scene.add(g); return { g, wheels, lamp };
+}
+const KICK = makeKick();
 const START = { x: 0, z: RR - L.front - 7.5, yaw: 0 };
-const ME = { x: START.x, z: START.z, y: 0, vy: 0, yaw: 0, pitch: 0.16, face: 0, speed: 0, phase: 0, view: 'tp', dist: isDesk() ? 5.2 : 6.4, blend: 1, lastDrag: -10, auto: null };
+const ME = { x: START.x, z: START.z, y: 0, vy: 0, yaw: 0, pitch: 0.16, face: 0, speed: 0, phase: 0, ride: false, v: 0, turn: 0, lean: 0, view: 'tp', dist: isDesk() ? 5.2 : 6.4, blend: 1, lastDrag: -10, auto: null };
 const keys = new Set(), JOY = { x: 0, y: 0, on: false };
 
 function inPlaza(x, z) { return x > PL.x0 + 0.4 && x < PL.x1 - 0.4 && z > PL.z0 + 0.5 && z < PL.z1 + 1; }
@@ -794,11 +832,12 @@ function camBlocked(x, y, z) {
 }
 function updateCamera(dt) {
   const look = [Math.sin(ME.yaw), Math.cos(ME.yaw)], right = [-Math.cos(ME.yaw), Math.sin(ME.yaw)];
-  const eye = _a.set(ME.x, ME.y + 1.62, ME.z);
+  const rideUp = ME.ride ? 0.15 : 0, eye = _a.set(ME.x, ME.y + 1.62 + rideUp, ME.z);
   // 眼睛視角
-  const fpPos = eye.clone(), cp = Math.cos(ME.pitch), fpLook = _b.set(ME.x + look[0] * cp * 10, ME.y + 1.62 + Math.sin(ME.pitch) * 10, ME.z + look[1] * cp * 10).clone();
+  const fpPos = eye.clone(), cp = Math.cos(ME.pitch), fpLook = _b.set(ME.x + look[0] * cp * 10, ME.y + 1.62 + rideUp + Math.sin(ME.pitch) * 10, ME.z + look[1] * cp * 10).clone();
   // 背後視角：鏡頭在角色後上方、偏右肩，撞到牆會拉近
-  const elev = clamp(0.24 - ME.pitch * 0.9, -0.25, 1.05), d = ME.dist;
+  const elev = clamp(0.24 - ME.pitch * 0.9, -0.25, 1.05), d = ME.dist + (ME.ride ? 1.3 : 0);
+  const fov = 66 + (ME.ride ? clamp((ME.speed - 8) / 16, 0, 1) * 12 : 0); if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
   const T = new THREE.Vector3(ME.x + right[0] * 0.5, ME.y + 1.55, ME.z + right[1] * 0.5);
   const want = new THREE.Vector3(T.x - look[0] * Math.cos(elev) * d, T.y + Math.sin(elev) * d + 0.25, T.z - look[1] * Math.cos(elev) * d);
   let f = 1; for (let s = 0.08; s <= 1.0001; s += 0.06) { const px = lerp(T.x, want.x, s), py = lerp(T.y, want.y, s), pz = lerp(T.z, want.z, s); if (camBlocked(px, py, pz)) { f = Math.max(0.12, s - 0.1); break; } }
@@ -826,6 +865,7 @@ addEventListener('keydown', e => {
   if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift', ' '].includes(k)) { keys.add(k); if (k === ' ' || k.startsWith('arrow')) e.preventDefault(); }
   if (k === ' ' && ME.y <= 0.001) ME.vy = 4.6;
   if (k === 'v') setView(ME.view === 'tp' ? 'fp' : 'tp');
+  if (k === 'f') setRide(!ME.ride);
   if (k === 'm') toggleMap();
   if ((k === 'e' || k === 'enter') && NEAR) openCard(NEAR);
 });
@@ -878,6 +918,10 @@ function hoverPick(e) {
     const end = e => { if (e.pointerId !== id) return; id = null; JOY.on = false; JOY.x = JOY.y = 0; knob.style.transform = ''; };
     joy.addEventListener('pointerup', end); joy.addEventListener('pointercancel', end);
   }
+}
+function setRide(on) {
+  ME.ride = on; ME.v = on ? Math.min(ME.speed, 6) : 0; KICK.g.visible = on;
+  const b = document.getElementById('rideBtn'); if (b) { b.textContent = on ? '下車' : '滑板車'; b.setAttribute('aria-pressed', String(on)); }
 }
 function setView(v) {
   ME.view = v; const b = document.getElementById('viewBtn');
@@ -1000,24 +1044,51 @@ function worldUpdate(dt, T) {
     if (dist < Math.max(0.6, A.v * dt * 1.2)) { A.i++; if (A.i >= A.pts.length) finishAuto(false); }
     else { vx = dx / dist; vz = dz / dist; spd = A.v; }
     if (ME.auto) { A.stuck += dt; if (A.stuck > 0.6) { if (Math.hypot(ME.x - A.last[0], ME.z - A.last[1]) < 0.3) finishAuto(true); else { A.stuck = 0; A.last = [ME.x, ME.z]; } } }
+  } else if (ME.ride) {
+    // 滑板車：往前加速、往後煞車；方向 (相對鏡頭) 決定要轉去哪，轉向速度有上限，所以會畫弧線
+    const boost = keys.has('shift') || (JOY.on && inputLen > 0.92), vmax = boost ? 24 : 15;
+    const dx = look[0] * Math.max(fi, 0) + right[0] * si, dz = look[1] * Math.max(fi, 0) + right[1] * si;
+    let turn = 0;
+    if (Math.hypot(dx, dz) > 0.05) {
+      let df = Math.atan2(dx, dz) - ME.face; df = Math.atan2(Math.sin(df), Math.cos(df));
+      const rate = clamp(3.6 - ME.v * 0.08, 1.6, 3.6); turn = clamp(df, -rate * dt, rate * dt); ME.face += turn;
+      ME.v = Math.min(vmax, ME.v + (boost ? 12 : 9) * dt * Math.max(0.3, Math.cos(df)));
+    } else ME.v = Math.max(0, ME.v - 3.5 * dt);
+    if (fi < -0.05) ME.v = Math.max(0, ME.v - 18 * dt);
+    if (ME.v > vmax) ME.v = Math.max(vmax, ME.v - 10 * dt);
+    ME.turn = dt ? turn / dt : 0;
+    if (ME.v > 0.05) { vx = Math.sin(ME.face); vz = Math.cos(ME.face); spd = ME.v; }
   } else if (inputLen > 0.05) {
     const n = Math.min(1, inputLen); vx = (look[0] * fi + right[0] * si) / inputLen; vz = (look[1] * fi + right[1] * si) / inputLen;
     spd = (keys.has('shift') || (JOY.on && inputLen > 0.92) ? 9 : 4.4) * n;
   }
   if (spd > 0) {
-    moveBy(vx * spd * dt, vz * spd * dt);
-    const fa = Math.atan2(vx, vz); let df = fa - ME.face; df = Math.atan2(Math.sin(df), Math.cos(df)); ME.face += df * Math.min(1, dt * 12);
+    // 速度快時分段移動，避免穿過細的柱子
+    const steps = Math.max(1, Math.ceil(spd * dt / 0.3)); let hit = false;
+    for (let k = 0; k < steps; k++) if (!moveBy(vx * spd * dt / steps, vz * spd * dt / steps)) hit = true;
+    if (hit && ME.ride && !ME.auto) ME.v *= 0.4;
+    if (!ME.ride || ME.auto) { const fa = Math.atan2(vx, vz); let df = fa - ME.face; df = Math.atan2(Math.sin(df), Math.cos(df)); ME.face += df * Math.min(1, dt * (ME.ride ? 8 : 12)); }
     // 背後視角：一陣子沒拖曳時，鏡頭慢慢轉到角色背後
-    if (ME.view === 'tp' && T - ME.lastDrag > 1.5 && (ME.auto || fi > 0.1)) { let dy = ME.face - ME.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); ME.yaw += dy * Math.min(1, dt * (ME.auto ? 4 : 1.6)); }
+    if (ME.view === 'tp' && T - ME.lastDrag > 1.5 && (ME.auto || fi > 0.1 || (ME.ride && ME.v > 2))) { let dy = ME.face - ME.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); ME.yaw += dy * Math.min(1, dt * (ME.auto ? 4 : ME.ride ? 2.6 : 1.6)); }
   }
-  if (ME.view === 'fp' && !ME.auto) ME.face = ME.yaw;
+  if (ME.view === 'fp' && !ME.auto && !ME.ride) ME.face = ME.yaw;
+  if (ME.view === 'fp' && ME.ride && !ME.auto && T - ME.lastDrag > 0.8) { let dy = ME.face - ME.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); ME.yaw += dy * Math.min(1, dt * 5); }
   ME.speed += (spd - ME.speed) * Math.min(1, dt * 10);
   ME.vy -= 13 * dt; ME.y = Math.max(0, ME.y + ME.vy * dt); if (ME.y === 0) ME.vy = Math.max(0, ME.vy);
   // 角色動畫
-  ME.phase += dt * (2 + ME.speed * 1.5);
+  ME.phase += dt * (2 + (ME.ride ? 0 : ME.speed) * 1.5);
   const sw = Math.min(1, ME.speed / 4) * (ME.speed > 6 ? 0.9 : 0.6), sn = Math.sin(ME.phase);
-  AV.legs[0].rotation.x = sn * sw; AV.legs[1].rotation.x = -sn * sw; AV.arms[0].rotation.x = -sn * sw * 0.9; AV.arms[1].rotation.x = sn * sw * 0.9;
-  AV.g.position.set(ME.x, ME.y + Math.abs(Math.cos(ME.phase)) * 0.05 * Math.min(1, ME.speed / 3), ME.z); AV.g.rotation.y = ME.face;
+  if (ME.ride) {   // 站在踏板上，手握龍頭，轉彎時身體傾斜
+    const lean = clamp(-(ME.auto ? 0 : ME.turn) * ME.v * 0.03, -0.38, 0.38); ME.lean += (lean - ME.lean) * Math.min(1, dt * 6);
+    AV.legs[0].rotation.x = 0.16; AV.legs[1].rotation.x = -0.12; AV.arms[0].rotation.x = AV.arms[1].rotation.x = -0.74;
+    AV.g.position.set(ME.x, ME.y + 0.15, ME.z); AV.g.rotation.set(0.1, ME.face, ME.lean);
+    KICK.g.position.set(ME.x, ME.y, ME.z); KICK.g.rotation.set(0, ME.face, ME.lean * 0.8);
+    for (const w of KICK.wheels) w.rotation.x += ME.speed * dt / 0.1;
+    KICK.lamp.material.emissiveIntensity = 0.4 + 2 * NIGHT;
+  } else {
+    AV.legs[0].rotation.x = sn * sw; AV.legs[1].rotation.x = -sn * sw; AV.arms[0].rotation.x = -sn * sw * 0.9; AV.arms[1].rotation.x = sn * sw * 0.9;
+    AV.g.position.set(ME.x, ME.y + Math.abs(Math.cos(ME.phase)) * 0.05 * Math.min(1, ME.speed / 3), ME.z); AV.g.rotation.set(0, ME.face, 0);
+  }
   updateCamera(dt);
   // 影子跟著角色
   sun.position.set(ME.x + SUNDIR.x * 120, SUNDIR.y * 120, ME.z + SUNDIR.z * 120); sun.target.position.set(ME.x, 0, ME.z);
@@ -1046,6 +1117,7 @@ function worldUpdate(dt, T) {
     for (const o of CARS) if (o !== v && o.dir === v.dir && Math.abs(o.off - v.off) < 1.2) { const ahead = modP((o.s - v.s) * v.dir); if (ahead < 6.5) want = Math.min(want, ahead < 4.5 ? 0 : o.v); }
     v.v += (want - v.v) * Math.min(1, dt * (want < v.v ? 5 : 1.2)); v.s = modP(v.s + v.dir * v.v * dt);
     const p = ringPt(v.s, v.off), ahead = ringPt(v.s + v.dir * 2, v.off); v.g.position.set(p.x, 0, p.z); v.g.rotation.y = Math.atan2(ahead.x - p.x, ahead.z - p.z);
+    for (const w of v.g.userData.wheels) w.rotation.x += v.v * dt / (v.kind === 'car' ? 0.34 : 0.23);
   }
   // 路人
   {

@@ -671,6 +671,7 @@ $('allLabels').addEventListener('change', e => { allLabels = e.target.checked; r
 
 /* ---------- 走路工具列、提示、對話框收合 ---------- */
 $('viewBtn').onclick = () => setView(ME.view === 'tp' ? 'fp' : 'tp');
+$('rideBtn').onclick = () => setRide(!ME.ride);
 $('mapBtn').onclick = () => toggleMap();
 $('mapClose').onclick = () => toggleMap(false);
 $('homeBtn').onclick = () => { closeCard(); goPlaza(); };
@@ -678,7 +679,7 @@ $('walkSkip').onclick = () => finishAuto(true);
 $('near').onclick = () => { if (NEAR) openCard(NEAR); };
 $('chatMini').onclick = () => { const c = $('chat'), m = c.classList.toggle('mini'); $('chatMini').textContent = m ? '展開' : '收合'; $('chatMini').setAttribute('aria-expanded', String(!m)); setTimeout(layoutView, 280); };
 if (TOUCH) $('joy').hidden = false;
-$('tip').textContent = TOUCH ? '左下搖桿走路・拖曳轉頭・點店家走過去' : 'WASD 走路・拖曳轉頭・Shift 跑步・空白鍵跳・V 切換視角・M 導覽圖・點店家走過去';
+$('tip').textContent = TOUCH ? '左下搖桿走路・拖曳轉頭・點店家走過去・右上可以騎滑板車' : 'WASD 走路・拖曳轉頭・Shift 跑步 (加速)・F 滑板車・V 切換視角・M 導覽圖・點店家走過去';
 
 /* ---------- loop ---------- */
 const clock = new THREE.Clock();
@@ -697,7 +698,7 @@ applyScenario(REAL ? 'real' : 'mixed');
 resetCity();
 setView('tp');
 addBot(ROLE.guide, '歡迎來到 ETF 都會商店街。每家店是一家上市公司 (市值前 100 大)，同產業的店在同一條街，<b>店面越寬，市值越大</b>。地上彩色的<b>導引線</b>是 ETF，跟著線走會經過它的前十大成分股，櫥窗上的貼紙寫著哪幾檔 ETF 持有這家店。今天的漲跌決定店的樣子：跑馬燈紅色是漲、綠色是跌，大漲的店掛彩帶，大跌的店鐵捲門拉下一半。' +
-  (TOUCH ? '用左下的搖桿走路，拖曳畫面轉頭，點店家會自動走過去。' : '用 WASD 走路、拖曳畫面轉頭，按 V 切換背後視角和眼睛視角，按 M 看導覽圖，點店家會自動走過去。') +
+  (TOUCH ? '用左下的搖桿走路，拖曳畫面轉頭，點店家會自動走過去；店很多，可以按右上的「滑板車」移動得快一點。' : '用 WASD 走路、拖曳畫面轉頭，按 V 切換背後視角和眼睛視角，按 M 看導覽圖，點店家會自動走過去；店很多，可以按 F 騎滑板車 (Shift 加速)。') +
   `<div class="lg">${Object.entries(ETFS).map(([k, e]) => `<span style="--c:${e.color}">${k} ${e.name}</span>`).join('')}</div>`,
   '本系統只說明資料，不提供投資建議，也不預測漲跌。報酬是價格報酬 (未含息)，持股只計前十大。');
 setChips(START_CHIPS);
@@ -706,8 +707,12 @@ initApi();
 window.__ready = true;
 const _v = new THREE.Vector3();
 window.__city = { get online() { return online; }, connectApi, runScene, ask, planner, extract, TOOLS, numberCheck, get busy() { return busy; }, get replaying() { return !!replay; }, fastReplay() { if (replay) replay.step = 0.001; },
-  walkTo: n => walkToStore(n, { card: false, fast: true }), teleport: n => teleportStore(n, false), card: n => openCard(n), view: v => setView(v), map: o => toggleMap(o), home: () => goPlaza(), me: () => ({ x: ME.x, z: ME.z, yaw: ME.yaw, view: ME.view, auto: !!ME.auto }),
+  walkTo: n => walkToStore(n, { card: false, fast: true }), teleport: n => teleportStore(n, false), card: n => openCard(n), view: v => setView(v), map: o => toggleMap(o), home: () => goPlaza(), me: () => ({ x: ME.x, z: ME.z, yaw: ME.yaw, view: ME.view, auto: !!ME.auto, ride: ME.ride, v: ME.v }),
   info() { return { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, tex: renderer.info.memory.textures }; },
+  ride: on => setRide(on),
+  sim(n, dt = 1 / 60) { for (let i = 0; i < n; i++) worldUpdate(dt, clock.elapsedTime + i * dt); return { v: ME.v, x: ME.x, z: ME.z }; },   // 測試用：固定時間步長
+  carAt(i) { const c = CARS[i]; return { x: c.g.position.x, z: c.g.position.z, kind: c.kind, yaw: c.g.rotation.y }; },
+  place(x, z, yaw) { teleport(x, z, yaw); },
   look(yaw, pitch) { ME.yaw = yaw; if (pitch != null) ME.pitch = pitch; ME.lastDrag = performance.now() / 1000; },
   screenOf(n) { const c = CO[n]; _v.set(c.front[0], 4, c.front[1]).project(camera); return [(_v.x + 1) / 2 * innerWidth, (1 - _v.y) / 2 * innerHeight]; } };
 tick();
