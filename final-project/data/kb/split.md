@@ -2,7 +2,7 @@
 title: ETF 分割
 summary: 把一個單位拆成多個單位，股價等比例降低，投資人的資產總額不變。
 aliases: [分割, 一拆四, 拆分, 受益權單位分割, 0050分割]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

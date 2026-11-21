@@ -2,7 +2,7 @@
 title: 市值型與高股息型 ETF
 summary: 市值型依公司市值決定權重，高股息型依殖利率等條件選股，兩者的成分股和報酬來源不同。
 aliases: [市值型, 高股息, 高股息型, 高息, 大盤型, 市值型跟高股息]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

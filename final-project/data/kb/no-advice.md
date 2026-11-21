@@ -2,7 +2,7 @@
 title: 本系統不做的事
 summary: 不預測漲跌、不推薦標的、不提供買賣建議，只說明可以查證的資料。
 aliases: [投資建議, 預測, 明牌, 推薦, 免責]
-source_name: 專案自編 (本系統的定義與算法)
+source_name: 專案自編的系統說明
 source_urls: []
 status: 系統說明
 ---

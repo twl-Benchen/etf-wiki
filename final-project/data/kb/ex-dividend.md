@@ -2,7 +2,7 @@
 title: 除息與填息
 summary: 除息當天股價會扣掉配息金額，之後漲回除息前的價格叫填息。
 aliases: [除息, 填息, 貼息, 除息日, 填息天數]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

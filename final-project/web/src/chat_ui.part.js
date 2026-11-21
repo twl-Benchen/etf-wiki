@@ -252,7 +252,7 @@ const TOOLS = {
     const mn = chs.reduce((a, b) => b.ch < a.ch ? b : a), mx = chs.reduce((a, b) => b.ch > a.ch ? b : a);
     return { etf, monthly, start: rows[0][0], end: H.last[0], n: rows.length, invested: inv, value: Math.round(val), ret: r2((val / inv - 1) * 100),
       worst, max_drop: { d: mn.d, ch: r2(mn.ch * 100) }, max_gain: { d: mx.d, ch: r2(mx.ch * 100) }, effects: { rain_below: -4, fireworks_above: 5 },
-      basis: '每月第一個交易日收盤價買進，可買零股，價格報酬未含配息與手續費', _series: series };
+      basis: '每月第一個交易日收盤價買進，可買零股，價格報酬未含息與手續費', _series: series };
   },
   lookthrough({ amounts }) {
     const ex = {}, from = {}; let total = 0, covered = 0;
@@ -430,7 +430,7 @@ const HANDLERS = {
       write([eh]) {
         const L = eh.etfs;
         if (L.length === 1) return `${n}站只有 ${L[0].etf} 經過，權重 <b>${L[0].weight.toFixed(2)}%</b>，是它的第 ${L[0].rank} 大持股。`;
-        return `${n}站是${cn(L.length)}條線的轉乘站：${L.map(x => `${x.etf} <b>${x.weight.toFixed(2)}%</b>`).join('、')}。這${cn(L.length)}檔都持有${n}，同時買的話，等於在這站重複買了好幾次。`;
+        return `${n}站是${cn(L.length)}條線的轉乘站：${L.map(x => `${x.etf} <b>${x.weight.toFixed(2)}%</b>`).join('、')}。這${cn(L.length)}檔的前十大都有${n}，同時買的話，等於在這站重複買了好幾次。`;
       },
       src: '資料：前十大成分股權重',
       follow: (eh) => eh.etfs.length >= 2 ? [`${eh.etfs[0].etf} 跟 ${eh.etfs[eh.etfs.length - 1].etf} 差在哪？`, `${n}今天怎麼了？`] : [`${eh.etfs[0].etf} 前十大是哪些？`, `${n}今天怎麼了？`],
@@ -473,7 +473,7 @@ const HANDLERS = {
       act([h1]) { setMine(null); setFocus(new Set([k])); setRings([]); setLabels(h1.top10.slice(0, 5).map(x => [x.name, 'w:' + k])); fitNames(h1.top10.map(x => x.name), { maxZoom: 1.3 }); },
       write([h1, r]) {
         const t = h1.top10[0], bd = Object.entries(h1.by_district).sort((x, y) => y[1] - x[1])[0];
-        return `${k} ${h1.name}是一條${h1.type}線，前十大經過${cn(h1.top10.length)}站，最大站是${t.name} <b>${t.w.toFixed(2)}%</b>，前十大合計 <b>${h1.top10_sum.toFixed(2)}%</b>，其餘分散在其他公司，沒有畫進城市。這條線在${bd[0]}停最多，合計 <b>${bd[1].toFixed(2)}%</b>。過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含配息)。`;
+        return `${k} ${h1.name}是一條${h1.type}線，前十大經過${cn(h1.top10.length)}站，最大站是${t.name} <b>${t.w.toFixed(2)}%</b>，前十大合計 <b>${h1.top10_sum.toFixed(2)}%</b>，其餘分散在其他公司，沒有畫進城市。這條線在${bd[0]}停最多，合計 <b>${bd[1].toFixed(2)}%</b>。過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含息)。`;
       },
       src: '資料：前十大成分股權重、ETF 歷史收盤價',
       follow: (h1) => [`每月 5000 買 ${k}，從 2020 到現在會怎樣？`, `${k} 跟 ${k === '00878' ? '0056' : '00878'} 差在哪？`, `${h1.top10[0].name}今天怎麼了？`],
@@ -493,15 +493,15 @@ const HANDLERS = {
         let h = '';
         const late = s.start !== `${clamp(y, 2020, 2025)}-01`;
         h += y < 2020 || late ? `${late ? k + ' ' : ''}資料從 ${ymText(s.start)} 才開始，所以從那個月起算：` : `從 ${ymText(s.start)} 開始，`;
-        h += `每月第一個交易日買 <b>${money(s.monthly)} 元</b>的 ${k}，共買 ${s.n} 次，總共投入 <b>${money(s.invested)} 元</b>。到 ${ymText(s.end)}，市值約 <b>${money(s.value)} 元</b>，價格報酬 <b class="${cls(s.ret)}">${fmtPct(s.ret)}</b> (未含配息)。`;
+        h += `每月第一個交易日買 <b>${money(s.monthly)} 元</b>的 ${k}，共買 ${s.n} 次，總共投入 <b>${money(s.invested)} 元</b>。到 ${ymText(s.end)}，市值約 <b>${money(s.value)} 元</b>，價格報酬 <b class="${cls(s.ret)}">${fmtPct(s.ret)}</b> (未含息)。`;
         h += s.worst.pnl < 0 ? `最難熬的是 ${ymText(s.worst.d)}，帳面 <b class="down">${fmtPct(s.worst.pnl)}</b>。` : '整段期間，每個月初的帳面都沒有虧損。';
         h += `單月跌最多是 ${ymText(s.max_drop.d)} (<b class="down">${fmtPct(s.max_drop.ch)}</b>)${s.max_drop.ch <= s.effects.rain_below ? '，回放到那個月時城市下了一場大雨' : ''}；`;
         h += `漲最多是 ${ymText(s.max_gain.d)} (<b class="up">${fmtPct(s.max_gain.ch)}</b>)${s.max_gain.ch >= s.effects.fireworks_above ? '，那個月頂樓放了煙火' : ''}。`;
         return h;
       },
-      src: '資料：ETF 歷史收盤價，每月第一個交易日買進，可買零股，未含配息與手續費',
+      src: '資料：ETF 歷史收盤價，每月第一個交易日買進，可買零股，未含息與手續費',
       follow: () => [k === '0050' ? '換成 00878 呢？' : '換成 0050 呢？', `${k} 前十大是哪些？`, '回到全城'],
-      ctx: { etf: k, monthly, start },
+      ctx: { etf: k, monthly, start: `${clamp(y, 2000, 2030)}-01` },
     };
   },
   mine({ E }) {
@@ -521,7 +521,7 @@ const HANDLERS = {
         h += `前十大成分股只涵蓋你 <b>${L.covered_pct.toFixed(1)}%</b> 的錢，其餘 <b>${L.rest_pct.toFixed(1)}%</b> 分散在其他公司，沒有畫進城市。金色框越高，代表你在那棟樓持有越多。`;
         return h;
       },
-      src: '資料：前十大成分股權重。正式版可上傳持股截圖，由視覺模型讀出金額，確認後才計算。',
+      src: '資料：前十大成分股權重，結果為估計值。也可以按右上角「我的持股」輸入金額或上傳截圖。',
       follow: () => ['改成 0050 20萬、00878 40萬', '聯發科站有哪些線經過？', '回到全城'],
     };
   },
@@ -546,7 +546,7 @@ const HANDLERS = {
       act() { if (k) { setMine(null); setRings([]); setFocus(new Set([k])); } },
       write([r]) {
         let h = '我不會預測漲跌，也不會告訴你該不該買，這是這個系統刻意設下的規則。';
-        if (r) h += `我能給你的是過去的資料：${k} 過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含配息)，過去的表現不代表未來。`;
+        if (r) h += `我能給你的是過去的資料：${k} 過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含息)，過去的表現不代表未來。`;
         return h + '想知道長期持有是什麼感覺，可以用回放，看城市怎麼走過每一次下跌。';
       },
       src: '規則：不預測、不推薦，只說明資料',
@@ -826,6 +826,7 @@ addBot(ROLE.guide, '歡迎來到 ETF 都會。這座城市把 ETF 畫成捷運�
   `<div class="lg">${Object.entries(ETFS).map(([k, e]) => `<span style="--c:${e.color}">${k} ${e.name}</span>`).join('')}</div>`,
   '本系統只說明資料，不提供投資建議，也不預測漲跌。報酬是價格報酬 (未含息)，持股只計前十大。');
 setChips(START_CHIPS);
+$('dataNote').textContent = `成分股為前十大 (${CITY.holdings_meta && CITY.holdings_meta.as_of ? '資料日 ' + CITY.holdings_meta.as_of : '初始資料'})；ETF 價格到 ${Object.values(CITY.prices_as_of || {})[0] || ''}，報酬為價格報酬 (未含息)。` + (REAL ? `個股漲跌為 ${CITY.daily.date} 收盤行情。` : '個股今日漲跌目前是示意行情。');
 initApi();
 window.__ready = true;
 window.__city = { get online() { return online; }, connectApi, runScene, ask, planner, extract, TOOLS, numberCheck, get busy() { return busy; }, get replaying() { return !!replay; }, fastReplay() { if (replay) replay.step = 0.001; }, screenOf(n, y = 6) { const c = CO[n]; _v.set(c.pos[0], y, c.pos[1]).project(camera); return [(_v.x + 1) / 2 * innerWidth, (1 - _v.y) / 2 * innerHeight]; } };

@@ -2,7 +2,7 @@
 title: 定期定額
 summary: 每隔固定時間投入固定金額，分散進場時間點，但不保證獲利。
 aliases: [定期定額, 定時定額, DCA, 每月扣款, 存股]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://investoredu.twse.com.tw/]
 status: 待核對
 ---

@@ -2,7 +2,7 @@
 title: 規模與流動性
 summary: ETF 規模太小可能下市，成交量太低則不容易用合理的價格買賣。
 aliases: [規模, 流動性, 成交量, 下市, 清算, 受益人數]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

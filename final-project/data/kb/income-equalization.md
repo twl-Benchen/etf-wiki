@@ -2,7 +2,7 @@
 title: 收益平準金
 summary: ETF 配息時用來避免配息被新資金稀釋的機制，配息有一部分可能來自投資人自己的本金。
 aliases: [收益平準金, 平準金, 配息來源, 配息組成]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

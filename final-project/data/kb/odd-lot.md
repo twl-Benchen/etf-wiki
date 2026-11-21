@@ -2,7 +2,7 @@
 title: 零股交易
 summary: 不足一張 (一千單位) 的交易，讓小額資金也能買 ETF。
 aliases: [零股, 零股交易, 盤中零股, 一張, 小額]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://investoredu.twse.com.tw/]
 status: 待核對
 ---

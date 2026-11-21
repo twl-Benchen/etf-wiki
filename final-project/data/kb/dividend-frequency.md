@@ -2,7 +2,7 @@
 title: 配息頻率
 summary: ETF 可以年配、半年配、季配或月配，配息頻率不影響總報酬。
 aliases: [配息頻率, 月配, 季配, 半年配, 年配, 月配息]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

@@ -2,7 +2,7 @@
 title: 報酬的算法
 summary: 本系統的區間報酬與年化報酬怎麼算，以及價格報酬和總報酬的差別。
 aliases: [報酬率, 價格報酬, 年化報酬, 含息, 未含息, 總報酬, 還原]
-source_name: 專案自編 (本系統的定義與算法)
+source_name: 專案自編的系統說明
 source_urls: []
 status: 系統說明
 ---

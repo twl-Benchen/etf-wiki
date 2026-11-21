@@ -2,7 +2,7 @@
 title: 城市怎麼看
 summary: ETF 都會的畫面說明：行政區、大樓、捷運路線、轉乘站各代表什麼。
 aliases: [城市, 怎麼看, 大樓, 捷運, 轉乘站, 行政區, 煙火, 下雨, 鷹架, 金色框]
-source_name: 專案自編 (本系統的定義與算法)
+source_name: 專案自編的系統說明
 source_urls: []
 status: 系統說明
 ---

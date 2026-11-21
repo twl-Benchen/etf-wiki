@@ -2,7 +2,7 @@
 title: 槓桿型與反向型 ETF
 summary: 追蹤指數單日報酬的倍數或反向，適合短期交易，不適合長期持有。
 aliases: [槓桿, 反向, 正2, 反1, 槓桿型, 反向型, 槓反]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

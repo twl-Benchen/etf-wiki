@@ -2,7 +2,7 @@
 title: 債券 ETF
 summary: 持有一籃子債券的 ETF，價格主要受利率影響。
 aliases: [債券ETF, 債券, 美債, 公司債, 存續期間]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

@@ -2,7 +2,7 @@
 title: 成分股定期審核與調整
 summary: ETF 追蹤的指數會定期審核並更換成分股，ETF 也會跟著換股。
 aliases: [成分股調整, 換股, 定期審核, 汰換, 納入, 剔除, 指數調整]
-source_name: 專案自編 (延伸閱讀見連結，內容待核對)
+source_name: 專案自編，待核對
 source_urls: [https://www.twse.com.tw/zh/ETFortune/index]
 status: 待核對
 ---

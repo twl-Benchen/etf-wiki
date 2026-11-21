@@ -2,7 +2,7 @@
 title: 持股重疊與分散
 summary: 兩檔 ETF 持有相同的公司越多，同時持有的分散效果越小。
 aliases: [重疊, 持股重疊, 重複持有, 分散, 重疊權重, 共同持股, 轉乘站]
-source_name: 專案自編 (本系統的定義與算法)
+source_name: 專案自編的系統說明
 source_urls: []
 status: 系統說明
 ---

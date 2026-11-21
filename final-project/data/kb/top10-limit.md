@@ -2,7 +2,7 @@
 title: 前十大成分股的限制
 summary: 只看前十大成分股無法代表整檔 ETF，重疊和穿透持股都是估計值。
 aliases: [前十大, 完整持股, 成分股, 持股明細, 估計值]
-source_name: 專案自編 (本系統的定義與算法)
+source_name: 專案自編的系統說明
 source_urls: []
 status: 系統說明
 ---

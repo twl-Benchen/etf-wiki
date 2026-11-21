@@ -63,7 +63,7 @@ button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px 
 .icon-btn { border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 9px; height: 32px; padding: 0 10px; font: 500 12.5px var(--font-body); cursor: pointer; }
 #settings { position: fixed; z-index: 6; top: calc(66px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); width: 280px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 #settings h2 { margin: 0; font-size: 12px; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; }
-.seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--chip); padding: 3px; border-radius: 10px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--chip); padding: 3px; border-radius: 10px; }
 .seg button { border: 0; background: transparent; color: var(--ink); font: 500 12.5px var(--font-body); padding: 6px 2px; border-radius: 8px; cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--panel-solid); box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 700; }
 .time-row { display: flex; align-items: center; gap: 10px; }
@@ -121,6 +121,22 @@ details.trace[open] summary::before { content: "▾"; }
 
 .lg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
 .lg span::before { content: ""; display: inline-block; width: 14px; height: 4px; border-radius: 2px; background: var(--c); margin-right: 6px; vertical-align: middle; }
+.api-row { display: flex; gap: 6px; }
+.api-row input { flex: 1; min-width: 0; border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 8px; padding: 6px 8px; font: 12.5px var(--font-body); }
+#chat header > div { display: flex; flex-direction: column; gap: 2px; }
+dialog#pf { border: 1px solid var(--hair); border-radius: 14px; padding: 0; background: var(--panel-solid); color: var(--ink); width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 40px); }
+dialog#pf::backdrop { background: rgba(0,0,0,.45); }
+.pf-in { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.pf-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+#pf table { width: 100%; border-collapse: collapse; }
+#pf td { padding: 3px 4px; }
+#pf select, #pf input[type=number] { width: 100%; border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 8px; padding: 7px 8px; font: 13.5px var(--font-body); }
+.pf-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.icon-btn.file { display: inline-flex; align-items: center; }
+.icon-btn:disabled { opacity: .45; cursor: default; }
+#pfCanvas { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--hair); touch-action: none; cursor: crosshair; }
+button.link { border: 0; background: none; color: var(--focus); font: inherit; cursor: pointer; padding: 0 4px; }
+button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink); border-radius: 10px; padding: 10px 16px; font: 700 14px var(--font-body); cursor: pointer; }
 @media (max-width: 760px) {
   #chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
   .chipq { flex: none; white-space: nowrap; }
@@ -142,13 +158,14 @@ details.trace[open] summary::before { content: "▾"; }
 <div id="stage" aria-label="ETF 都會 3D 城市"></div>
 
 <div id="brand" class="panel">
-  <div><h1>ETF 都會</h1><div class="sub">原型｜Agent 回應為規則模擬</div></div>
+  <div><h1>ETF 都會</h1><div class="sub" id="modeTxt">離線示範｜瀏覽器內的規則版 Agent</div></div>
   <span id="status" class="pill"><i></i><span>收盤</span></span>
   <button id="setBtn" class="icon-btn" type="button" aria-expanded="false" aria-controls="settings">城市設定</button>
 </div>
 <div id="settings" class="panel" hidden>
-  <h2 id="h-scn">今日行情 (示意)</h2>
+  <h2 id="h-scn">今日行情</h2>
   <div class="seg" role="group" aria-labelledby="h-scn">
+    <button type="button" id="scn-real" data-scn="real" aria-pressed="false">真實</button>
     <button type="button" id="scn-mixed" data-scn="mixed" aria-pressed="true">震盪</button>
     <button type="button" id="scn-up" data-scn="up" aria-pressed="false">大漲</button>
     <button type="button" id="scn-flat" data-scn="flat" aria-pressed="false">平盤</button>
@@ -157,7 +174,10 @@ details.trace[open] summary::before { content: "▾"; }
   <h2 id="h-time">時間</h2>
   <div class="time-row"><input id="time" type="range" min="8" max="22" step="0.25" value="14.5" aria-labelledby="h-time"><output id="timeOut" for="time">14:30</output></div>
   <label class="check"><input id="allLabels" type="checkbox"> 顯示所有大樓標籤</label>
-  <div class="note">成分股權重、ETF 價格為真實歷史資料 (至 2025/5/29)。個股今日漲跌是示意行情。</div>
+  <div class="note" id="dataNote"></div>
+  <h2>後端 (LLM Agent)</h2>
+  <div class="api-row"><input id="apiUrl" placeholder="https://你的-space.hf.space" aria-label="後端網址"><button type="button" class="icon-btn" id="apiGo">連線</button></div>
+  <div class="note" id="apiState"></div>
 </div>
 
 <div id="hud" class="panel" hidden aria-live="polite">
@@ -168,7 +188,7 @@ details.trace[open] summary::before { content: "▾"; }
 </div>
 
 <section id="chat" class="panel" aria-label="問城市">
-  <header><b>問城市</b><span>點大樓或車站也能直接問</span></header>
+  <header><div><b>問城市</b><span>點大樓或車站也能直接問</span></div><button type="button" class="icon-btn" id="pfBtn">我的持股</button></header>
   <div id="log" aria-live="polite"></div>
   <div id="chips"></div>
   <form id="ask" autocomplete="off">
@@ -176,6 +196,20 @@ details.trace[open] summary::before { content: "▾"; }
     <button id="send" type="submit">問</button>
   </form>
 </section>
+<dialog id="pf" aria-labelledby="pfTitle">
+  <form method="dialog" class="pf-in" onsubmit="return false">
+    <div class="pf-head"><b id="pfTitle">我的持股</b><button type="button" class="icon-btn" id="pfClose">關閉</button></div>
+    <p class="note">輸入每檔 ETF 的金額，或上傳券商 App 的庫存截圖讓模型讀取 (需要連上後端)。上傳後請先在圖上拖曳，把姓名、帳號塗黑；送出的是塗黑後的圖，伺服器不會存檔。</p>
+    <table><tbody id="pfRows"></tbody></table>
+    <div class="pf-actions"><button type="button" class="icon-btn" id="pfAdd">新增一列</button>
+      <label class="icon-btn file">上傳截圖<input type="file" id="pfFile" accept="image/*" hidden></label>
+      <button type="button" class="icon-btn" id="pfParse" disabled>辨識截圖</button></div>
+    <p class="note" id="pfMaskHint" hidden>在圖上拖曳可以塗黑。<button type="button" class="link" id="pfUndo">復原一格</button></p>
+    <canvas id="pfCanvas" hidden></canvas>
+    <p class="note" id="pfNote"></p>
+    <button type="button" id="pfGo" class="primary">計算穿透持股</button>
+  </form>
+</dialog>
 <div id="tip">拖曳旋轉・滾輪縮放・點大樓直接問</div>
 
 <script type="importmap">

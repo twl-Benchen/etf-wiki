@@ -1,0 +1,1915 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ETF 都會</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@900&display=swap">
+<style>
+/* Layout: full-bleed 3D city; conversation dock on the right (bottom sheet on phones) drives the camera; small brand chip top-left */
+:root {
+  --bg: #0d1522;
+  --panel: rgba(248, 250, 252, 0.9);
+  --panel-solid: #f8fafc;
+  --ink: #142030;
+  --muted: #5a6879;
+  --hair: rgba(20, 32, 48, 0.12);
+  --chip: #e9eef5;
+  --bubble: #1f6fd6;
+  --bubble-ink: #ffffff;
+  --focus: #1f6fd6;
+  --up: #d63a3a;
+  --down: #12905a;
+  --gold: #b88407;
+  --code-bg: #eef2f7;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-head: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --panel: rgba(15, 21, 30, 0.9); --panel-solid: #0f151e; --ink: #e6ebf2; --muted: #98a5b5;
+    --hair: rgba(230, 235, 242, 0.14); --chip: #1c2633; --bubble: #3b82f6; --focus: #6aa8ff;
+    --up: #ff6b6b; --down: #3fd391; --gold: #f0c24a; --code-bg: #18212d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --panel: rgba(15, 21, 30, 0.9); --panel-solid: #0f151e; --ink: #e6ebf2; --muted: #98a5b5;
+  --hair: rgba(230, 235, 242, 0.14); --chip: #1c2633; --bubble: #3b82f6; --focus: #6aa8ff;
+  --up: #ff6b6b; --down: #3fd391; --gold: #f0c24a; --code-bg: #18212d;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow: hidden; }
+#sky { position: fixed; inset: 0; }
+#stage { position: fixed; inset: 0; touch-action: none; }
+#stage canvas { display: block; }
+.panel {
+  background: var(--panel); color: var(--ink);
+  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid var(--hair); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+.up { color: var(--up); } .down { color: var(--down); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* brand chip + settings */
+#brand { position: fixed; z-index: 5; top: calc(14px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; }
+#brand h1 { margin: 0; font-family: var(--font-head); font-weight: 900; font-size: 22px; letter-spacing: 1px; }
+#brand .sub { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--chip); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.pill.live i { background: var(--up); }
+.icon-btn { border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 9px; height: 32px; padding: 0 10px; font: 500 12.5px var(--font-body); cursor: pointer; }
+#settings { position: fixed; z-index: 6; top: calc(66px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); width: 280px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+#settings h2 { margin: 0; font-size: 12px; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: var(--chip); padding: 3px; border-radius: 10px; }
+.seg button { border: 0; background: transparent; color: var(--ink); font: 500 12.5px var(--font-body); padding: 6px 2px; border-radius: 8px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--panel-solid); box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 700; }
+.time-row { display: flex; align-items: center; gap: 10px; }
+.time-row input { flex: 1; accent-color: var(--focus); }
+.time-row output { font: 700 14px var(--font-body); font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.note { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+
+/* replay HUD */
+#hud { position: fixed; z-index: 5; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(calc(-50% - 200px)); width: 330px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+#hud .row { display: flex; justify-content: space-between; align-items: baseline; font-variant-numeric: tabular-nums; }
+#hud .date { font: 700 20px var(--font-body); }
+#hud .val { font: 700 18px var(--font-body); }
+#hud canvas { width: 100%; height: 54px; display: block; }
+#hud .legend { display: flex; gap: 12px; font-size: 11.5px; color: var(--muted); }
+#hud .legend span::before { content: ""; display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; background: currentColor; }
+
+/* chat dock */
+#chat { position: fixed; z-index: 5; top: calc(14px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: 384px; display: flex; flex-direction: column; overflow: hidden; }
+#chat header { padding: 12px 16px 10px; border-bottom: 1px solid var(--hair); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#chat header b { font-size: 14px; }
+#chat header span { font-size: 11.5px; color: var(--muted); }
+#log { flex: 1; overflow-y: auto; padding: 14px 14px 6px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+.msg { max-width: 92%; display: flex; flex-direction: column; gap: 4px; }
+.msg.user { align-self: flex-end; }
+.msg.user .body { background: var(--bubble); color: var(--bubble-ink); border-radius: 14px 14px 4px 14px; padding: 8px 12px; font-size: 14px; line-height: 1.55; }
+.msg.bot { align-self: flex-start; }
+.msg.bot .who { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.msg.bot .who i { width: 18px; height: 18px; border-radius: 6px; display: inline-grid; place-items: center; font-style: normal; font-size: 11px; color: #fff; background: #435369; }
+.msg.bot .body { background: var(--panel-solid); border: 1px solid var(--hair); border-radius: 4px 14px 14px 14px; padding: 10px 12px; font-size: 14px; line-height: 1.7; }
+.msg.bot .body b { font-variant-numeric: tabular-nums; }
+.msg .src { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+details.trace { font-size: 12px; color: var(--muted); }
+details.trace summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 2px 0; }
+details.trace summary::-webkit-details-marker { display: none; }
+details.trace summary::before { content: "▸"; font-size: 10px; }
+details.trace[open] summary::before { content: "▾"; }
+.trace .step { margin-top: 6px; }
+.trace .step b { color: var(--ink); font-weight: 700; }
+.trace pre { margin: 4px 0 0; background: var(--code-bg); border-radius: 8px; padding: 8px 10px; font: 11.5px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-all; color: var(--ink); max-height: 180px; overflow: auto; }
+.ok { display: inline-block; background: color-mix(in srgb, var(--down) 18%, transparent); color: var(--down); border-radius: 6px; padding: 1px 7px; font-weight: 700; }
+.typing { display: inline-flex; gap: 4px; padding: 12px 14px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+#chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px 4px; }
+.chipq { border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 999px; padding: 6px 11px; font: 13px var(--font-body); cursor: pointer; text-align: left; }
+.chipq:hover { border-color: var(--focus); }
+#ask { display: flex; gap: 8px; padding: 10px 14px 14px; }
+#q { flex: 1; min-width: 0; border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 14px var(--font-body); }
+#send { border: 0; background: var(--bubble); color: var(--bubble-ink); border-radius: 10px; padding: 0 16px; font: 700 14px var(--font-body); cursor: pointer; }
+#send:disabled { opacity: .5; cursor: default; }
+#tip { position: fixed; z-index: 4; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 12px; color: #fff; background: rgba(0,0,0,.38); padding: 5px 11px; border-radius: 999px; pointer-events: none; }
+
+.lg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.lg span::before { content: ""; display: inline-block; width: 14px; height: 4px; border-radius: 2px; background: var(--c); margin-right: 6px; vertical-align: middle; }
+.api-row { display: flex; gap: 6px; }
+.api-row input { flex: 1; min-width: 0; border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 8px; padding: 6px 8px; font: 12.5px var(--font-body); }
+#chat header > div { display: flex; flex-direction: column; gap: 2px; }
+dialog#pf { border: 1px solid var(--hair); border-radius: 14px; padding: 0; background: var(--panel-solid); color: var(--ink); width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 40px); }
+dialog#pf::backdrop { background: rgba(0,0,0,.45); }
+.pf-in { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.pf-head { display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+#pf table { width: 100%; border-collapse: collapse; }
+#pf td { padding: 3px 4px; }
+#pf select, #pf input[type=number] { width: 100%; border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 8px; padding: 7px 8px; font: 13.5px var(--font-body); }
+.pf-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.icon-btn.file { display: inline-flex; align-items: center; }
+.icon-btn:disabled { opacity: .45; cursor: default; }
+#pfCanvas { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--hair); touch-action: none; cursor: crosshair; }
+button.link { border: 0; background: none; color: var(--focus); font: inherit; cursor: pointer; padding: 0 4px; }
+button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink); border-radius: 10px; padding: 10px 16px; font: 700 14px var(--font-body); cursor: pointer; }
+@media (max-width: 760px) {
+  #chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+  .chipq { flex: none; white-space: nowrap; }
+  #ask { padding-top: 6px; }
+  #chat { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 46%; border-radius: 16px 16px 0 0;
+    padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #chat header { display: none; }
+  #hud { left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: auto; transform: none; bottom: auto; top: calc(66px + env(safe-area-inset-top, 0px)); padding: 8px 12px; gap: 3px; }
+  #hud canvas { height: 34px; }
+  #hud .legend { display: none; }
+  #brand .sub { display: none; }
+  #settings { width: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
+  #tip { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { #log { scroll-behavior: auto; } .typing i { animation: none; } }
+</style>
+
+</head>
+<body>
+<div id="sky"></div>
+<div id="stage" aria-label="ETF 都會 3D 城市"></div>
+
+<div id="brand" class="panel">
+  <div><h1>ETF 都會</h1><div class="sub" id="modeTxt">離線示範｜瀏覽器內的規則版 Agent</div></div>
+  <span id="status" class="pill"><i></i><span>收盤</span></span>
+  <button id="setBtn" class="icon-btn" type="button" aria-expanded="false" aria-controls="settings">城市設定</button>
+</div>
+<div id="settings" class="panel" hidden>
+  <h2 id="h-scn">今日行情</h2>
+  <div class="seg" role="group" aria-labelledby="h-scn">
+    <button type="button" id="scn-real" data-scn="real" aria-pressed="false">真實</button>
+    <button type="button" id="scn-mixed" data-scn="mixed" aria-pressed="true">震盪</button>
+    <button type="button" id="scn-up" data-scn="up" aria-pressed="false">大漲</button>
+    <button type="button" id="scn-flat" data-scn="flat" aria-pressed="false">平盤</button>
+    <button type="button" id="scn-down" data-scn="down" aria-pressed="false">大跌</button>
+  </div>
+  <h2 id="h-time">時間</h2>
+  <div class="time-row"><input id="time" type="range" min="8" max="22" step="0.25" value="14.5" aria-labelledby="h-time"><output id="timeOut" for="time">14:30</output></div>
+  <label class="check"><input id="allLabels" type="checkbox"> 顯示所有大樓標籤</label>
+  <div class="note" id="dataNote"></div>
+  <h2>後端 (LLM Agent)</h2>
+  <div class="api-row"><input id="apiUrl" placeholder="https://你的-space.hf.space" aria-label="後端網址"><button type="button" class="icon-btn" id="apiGo">連線</button></div>
+  <div class="note" id="apiState"></div>
+</div>
+
+<div id="hud" class="panel" hidden aria-live="polite">
+  <div class="row"><span class="date" id="hudDate">2020/01</span><span class="note" id="hudTitle">每月定期定額</span></div>
+  <div class="row"><span class="note">投入 <b id="hudIn">0</b></span><span class="val" id="hudVal">0</span></div>
+  <canvas id="hudChart" width="600" height="108"></canvas>
+  <div class="legend"><span style="color:var(--muted)">投入本金</span><span id="hudLeg" style="color:var(--up)">市值</span></div>
+</div>
+
+<section id="chat" class="panel" aria-label="問城市">
+  <header><div><b>問城市</b><span>點大樓或車站也能直接問</span></div><button type="button" class="icon-btn" id="pfBtn">我的持股</button></header>
+  <div id="log" aria-live="polite"></div>
+  <div id="chips"></div>
+  <form id="ask" autocomplete="off">
+    <input id="q" placeholder="例如：0056 跟 00878 差在哪？" aria-label="輸入問題">
+    <button id="send" type="submit">問</button>
+  </form>
+</section>
+<dialog id="pf" aria-labelledby="pfTitle">
+  <form method="dialog" class="pf-in" onsubmit="return false">
+    <div class="pf-head"><b id="pfTitle">我的持股</b><button type="button" class="icon-btn" id="pfClose">關閉</button></div>
+    <p class="note">輸入每檔 ETF 的金額，或上傳券商 App 的庫存截圖讓模型讀取 (需要連上後端)。上傳後請先在圖上拖曳，把姓名、帳號塗黑；送出的是塗黑後的圖，伺服器不會存檔。</p>
+    <table><tbody id="pfRows"></tbody></table>
+    <div class="pf-actions"><button type="button" class="icon-btn" id="pfAdd">新增一列</button>
+      <label class="icon-btn file">上傳截圖<input type="file" id="pfFile" accept="image/*" hidden></label>
+      <button type="button" class="icon-btn" id="pfParse" disabled>辨識截圖</button></div>
+    <p class="note" id="pfMaskHint" hidden>在圖上拖曳可以塗黑。<button type="button" class="link" id="pfUndo">復原一格</button></p>
+    <canvas id="pfCanvas" hidden></canvas>
+    <p class="note" id="pfNote"></p>
+    <button type="button" id="pfGo" class="primary">計算穿透持股</button>
+  </form>
+</dialog>
+<div id="tip">拖曳旋轉・滾輪縮放・點大樓直接問</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+try { await Promise.race([Promise.all([document.fonts.load('700 22px "Noto Sans TC"'), document.fonts.load('900 64px "Noto Serif TC"')]), new Promise(r => setTimeout(r, 2500))]); } catch (e) {}
+
+/* ---------------- data (全部來自 city.json，不寫死在程式裡) ---------------- */
+let CITY = {"etfs":{"0050":{"code":"0050","name":"元大台灣50","type":"市值型","color":"#1f6fd6","issuer":"元大","listing_date":"2003-06-30","index_name":"富時臺灣證券交易所臺灣50指數","dividend_freq":"半年配","dividend_months":[1,7]},"006208":{"code":"006208","name":"富邦台50","type":"市值型","color":"#8a63d2","issuer":"富邦","listing_date":"2012-07-17","index_name":"富時臺灣證券交易所臺灣50指數","dividend_freq":"半年配","dividend_months":[7,11]},"0056":{"code":"0056","name":"元大高股息","type":"高股息","color":"#e47b24","issuer":"元大","listing_date":"2007-12-26","index_name":"臺灣高股息指數","dividend_freq":"季配","dividend_months":[1,4,7,10]},"00878":{"code":"00878","name":"國泰永續高股息","type":"高股息","color":"#17a06c","issuer":"國泰","listing_date":"2020-07-20","index_name":"MSCI臺灣ESG永續高股息精選30指數","dividend_freq":"季配","dividend_months":[2,5,8,11]},"00919":{"code":"00919","name":"群益台灣精選高息","type":"高股息","color":"#d6417f","issuer":"群益","listing_date":"2022-10-20","index_name":"臺灣上市上櫃精選高息指數","dividend_freq":"季配","dividend_months":[3,6,9,12]}},"holdings":{"0050":[{"name":"台積電","code":"2330","weight":55.5},{"name":"聯發科","code":"2454","weight":5.24},{"name":"鴻海","code":"2317","weight":4.4},{"name":"台達電","code":"2308","weight":1.97},{"name":"富邦金","code":"2881","weight":1.75},{"name":"中信金","code":"2891","weight":1.63},{"name":"廣達","code":"2382","weight":1.52},{"name":"國泰金","code":"2882","weight":1.42},{"name":"聯電","code":"2303","weight":1.33},{"name":"中華電","code":"2412","weight":1.24}],"006208":[{"name":"台積電","code":"2330","weight":55.45},{"name":"聯發科","code":"2454","weight":5.19},{"name":"鴻海","code":"2317","weight":4.4},{"name":"台達電","code":"2308","weight":1.96},{"name":"富邦金","code":"2881","weight":1.75},{"name":"中信金","code":"2891","weight":1.63},{"name":"廣達","code":"2382","weight":1.5},{"name":"國泰金","code":"2882","weight":1.42},{"name":"聯電","code":"2303","weight":1.32},{"name":"中華電","code":"2412","weight":1.23}],"0056":[{"name":"長榮","code":"2603","weight":4.37},{"name":"聯詠","code":"3034","weight":4.08},{"name":"聯電","code":"2303","weight":3.73},{"name":"瑞昱","code":"2379","weight":3.49},{"name":"華碩","code":"2357","weight":3.45},{"name":"中信金","code":"2891","weight":3.37},{"name":"聯發科","code":"2454","weight":3.13},{"name":"華南金","code":"2880","weight":3.09},{"name":"長榮航","code":"2618","weight":2.83},{"name":"陽明","code":"2609","weight":2.71}],"00878":[{"name":"聯詠","code":"3034","weight":6.61},{"name":"聯發科","code":"2454","weight":5.36},{"name":"華碩","code":"2357","weight":4.93},{"name":"聯電","code":"2303","weight":4.1},{"name":"瑞昱","code":"2379","weight":3.98},{"name":"日月光投控","code":"3711","weight":3.52},{"name":"中信金","code":"2891","weight":3.46},{"name":"世界","code":"5347","weight":3.34},{"name":"元大金","code":"2885","weight":3.23},{"name":"上海商銀","code":"5876","weight":3.2}],"00919":[{"name":"聯電","code":"2303","weight":10.39},{"name":"長榮","code":"2603","weight":10.38},{"name":"中信金","code":"2891","weight":9.94},{"name":"聯發科","code":"2454","weight":9.56},{"name":"聯詠","code":"3034","weight":8.73},{"name":"長榮航","code":"2618","weight":6.35},{"name":"世界","code":"5347","weight":4.66},{"name":"群聯","code":"8299","weight":2.75},{"name":"力成","code":"6239","weight":2.53},{"name":"瑞儀","code":"6176","weight":2.33}]},"holdings_meta":{"as_of":null,"source":"投信公開的前十大持股 (初始資料，待 scripts/update_holdings 更新)","scope":"top10"},"companies":{"台積電":{"code":"2330","industry":"半導體業","district":"semi"},"聯發科":{"code":"2454","industry":"半導體業","district":"semi"},"鴻海":{"code":"2317","industry":"其他電子業","district":"tech"},"台達電":{"code":"2308","industry":"電子零組件業","district":"tech"},"富邦金":{"code":"2881","industry":"金融保險業","district":"fin"},"中信金":{"code":"2891","industry":"金融保險業","district":"fin"},"廣達":{"code":"2382","industry":"電腦及週邊設備業","district":"tech"},"國泰金":{"code":"2882","industry":"金融保險業","district":"fin"},"聯電":{"code":"2303","industry":"半導體業","district":"semi"},"中華電":{"code":"2412","industry":"通信網路業","district":"tech"},"長榮":{"code":"2603","industry":"航運業","district":"port"},"聯詠":{"code":"3034","industry":"半導體業","district":"semi"},"瑞昱":{"code":"2379","industry":"半導體業","district":"semi"},"華碩":{"code":"2357","industry":"電腦及週邊設備業","district":"tech"},"華南金":{"code":"2880","industry":"金融保險業","district":"fin"},"長榮航":{"code":"2618","industry":"航運業","district":"port"},"陽明":{"code":"2609","industry":"航運業","district":"port"},"日月光投控":{"code":"3711","industry":"半導體業","district":"semi"},"世界":{"code":"5347","industry":"半導體業","district":"semi"},"元大金":{"code":"2885","industry":"金融保險業","district":"fin"},"上海商銀":{"code":"5876","industry":"金融保險業","district":"fin"},"群聯":{"code":"8299","industry":"半導體業","district":"semi"},"力成":{"code":"6239","industry":"半導體業","district":"semi"},"瑞儀":{"code":"6176","industry":"光電業","district":"tech"}},"districts":{"semi":"半導體園區","tech":"電子科技區","fin":"金融區","port":"航運港區","life":"民生工業區"},"daily":{"date":null,"demo":true,"index":{"name":"大盤 (以 0050 前十大估算)","pct":-2.98},"stocks":{"2330":{"name":"台積電","pct":-3.42},"2454":{"name":"聯發科","pct":-3.69},"2317":{"name":"鴻海","pct":-1.57},"2308":{"name":"台達電","pct":-1.65},"2881":{"name":"富邦金","pct":-0.58},"2891":{"name":"中信金","pct":-0.38},"2382":{"name":"廣達","pct":-2.33},"2882":{"name":"國泰金","pct":2.02},"2303":{"name":"聯電","pct":-2.24},"2412":{"name":"中華電","pct":-1.35},"2603":{"name":"長榮","pct":5.87},"3034":{"name":"聯詠","pct":0.26},"2379":{"name":"瑞昱","pct":-0.57},"2357":{"name":"華碩","pct":-0.53},"2880":{"name":"華南金","pct":-1.33},"2618":{"name":"長榮航","pct":3.09},"2609":{"name":"陽明","pct":4.31},"3711":{"name":"日月光投控","pct":0.13},"5347":{"name":"世界","pct":0.48},"2885":{"name":"元大金","pct":2.11},"5876":{"name":"上海商銀","pct":0.78},"8299":{"name":"群聯","pct":0.22},"6239":{"name":"力成","pct":-1.34},"6176":{"name":"瑞儀","pct":-0.04}}},"rules":{"crash_below":-3.0,"boom_above":3.0,"rain_below":-1.2,"replay_rain_below":-4.0,"replay_fireworks_above":5.0},"prices_as_of":{"0050":"2025-05-29","006208":"2025-05-29","0056":"2025-05-29","00878":"2025-05-29","00919":"2025-05-29"},"monthly":{"0050":[["2003-06",37.08],["2003-07",38.05],["2003-08",41.6],["2003-09",45.15],["2003-10",44.16],["2003-11",48.0],["2003-12",46.2],["2004-01",47.3],["2004-02",48.3],["2004-03",51.95],["2004-04",48.7],["2004-05",45.95],["2004-06",45.2],["2004-07",44.91],["2004-08",41.65],["2004-09",45.8],["2004-10",46.3],["2004-11",44.29],["2004-12",45.63],["2005-01",48.3],["2005-02",47.08],["2005-03",48.83],["2005-04",46.75],["2005-05",45.94],["2005-06",45.15],["2005-07",47.58],["2005-08",48.33],["2005-09",47.33],["2005-10",47.69],["2005-11",45.52],["2005-12",48.7],["2006-01",50.55],["2006-02",51.6],["2006-03",52.85],["2006-04",53.1],["2006-05",56.8],["2006-06",53.4],["2006-07",53.05],["2006-08",51.45],["2006-09",54.35],["2006-10",56.75],["2006-11",53.25],["2006-12",56.6],["2007-01",58.45],["2007-02",56.75],["2007-03",56.05],["2007-04",56.7],["2007-05",57.55],["2007-06",60.0],["2007-07",65.6],["2007-08",63.3],["2007-09",65.8],["2007-10",69.35],["2007-11",69.45],["2007-12",61.95],["2008-01",60.01],["2008-02",56.03],["2008-03",59.19],["2008-04",59.86],["2008-05",63.88],["2008-06",62.75],["2008-07",54.81],["2008-08",52.39],["2008-09",51.63],["2008-10",45.22],["2008-11",36.48],["2008-12",32.49],["2009-01",32.87],["2009-02",33.04],["2009-03",31.93],["2009-04",38.58],["2009-05",45.1],["2009-06",47.72],["2009-07",45.45],["2009-08",49.19],["2009-09",50.2],["2009-10",53.65],["2009-11",51.35],["2009-12",53.25],["2010-01",56.5],["2010-02",52.4],["2010-03",52.8],["2010-04",54.75],["2010-05",54.45],["2010-06",49.83],["2010-07",49.36],["2010-08",54.95],["2010-09",53.7],["2010-10",57.75],["2010-11",56.8],["2010-12",58.0],["2011-01",61.45],["2011-02",62.6],["2011-03",59.95],["2011-04",59.85],["2011-05",62.15],["2011-06",62.35],["2011-07",59.7],["2011-08",60.35],["2011-09",55.15],["2011-10",50.3],["2011-11",52.55],["2011-12",50.3],["2012-01",49.06],["2012-02",52.3],["2012-03",55.9],["2012-04",54.7],["2012-05",53.35],["2012-06",49.15],["2012-07",50.6],["2012-08",51.2],["2012-09",53.15],["2012-10",55.0],["2012-11",50.35],["2012-12",53.5],["2013-01",54.4],["2013-02",54.8],["2013-03",55.4],["2013-04",55.0],["2013-05",56.55],["2013-06",56.7],["2013-07",55.6],["2013-08",56.2],["2013-09",56.3],["2013-10",57.15],["2013-11",57.6],["2013-12",57.45],["2014-01",58.55],["2014-02",55.8],["2014-03",57.95],["2014-04",60.6],["2014-05",61.3],["2014-06",63.15],["2014-07",66.55],["2014-08",66.25],["2014-09",69.8],["2014-10",65.5],["2014-11",65.6],["2014-12",66.8],["2015-01",66.55],["2015-02",68.15],["2015-03",70.0],["2015-04",68.65],["2015-05",71.6],["2015-06",70.5],["2015-07",70.05],["2015-08",65.25],["2015-09",61.75],["2015-10",63.6],["2015-11",63.3],["2015-12",62.4],["2016-01",59.55],["2016-02",59.55],["2016-03",61.85],["2016-04",63.9],["2016-05",60.75],["2016-06",63.7],["2016-07",66.25],["2016-08",69.3],["2016-09",69.05],["2016-10",71.45],["2016-11",72.6],["2016-12",72.0],["2017-01",71.9],["2017-02",72.9],["2017-03",72.35],["2017-04",74.65],["2017-05",75.2],["2017-06",76.9],["2017-07",80.45],["2017-08",81.8],["2017-09",83.0],["2017-10",81.5],["2017-11",85.1],["2017-12",82.6],["2018-01",82.6],["2018-02",85.25],["2018-03",81.75],["2018-04",82.25],["2018-05",79.4],["2018-06",81.35],["2018-07",81.05],["2018-08",86.15],["2018-09",86.45],["2018-10",87.35],["2018-11",78.4],["2018-12",78.8],["2019-01",74.05],["2019-02",75.15],["2019-03",76.95],["2019-04",79.85],["2019-05",83.0],["2019-06",78.55],["2019-07",82.65],["2019-08",82.3],["2019-09",81.9],["2019-10",85.95],["2019-11",90.1],["2019-12",92.05],["2020-01",97.65],["2020-02",89.05],["2020-03",87.35],["2020-04",75.9],["2020-05",83.0],["2020-06",84.9],["2020-07",90.5],["2020-08",102.0],["2020-09",103.35],["2020-10",103.05],["2020-11",103.4],["2020-12",114.3],["2021-01",124.35],["2021-02",130.75],["2021-03",133.45],["2021-04",135.75],["2021-05",138.25],["2021-06",137.7],["2021-07",138.3],["2021-08",137.9],["2021-09",141.0],["2021-10",133.95],["2021-11",136.5],["2021-12",140.3],["2022-01",146.4],["2022-02",142.3],["2022-03",140.45],["2022-04",136.95],["2022-05",127.8],["2022-06",129.15],["2022-07",111.55],["2022-08",117.65],["2022-09",115.15],["2022-10",102.2],["2022-11",99.6],["2022-12",118.35],["2023-01",110.75],["2023-02",119.0],["2023-03",119.35],["2023-04",121.0],["2023-05",117.7],["2023-06",125.15],["2023-07",130.7],["2023-08",129.45],["2023-09",125.9],["2023-10",124.25],["2023-11",121.75],["2023-12",131.8],["2024-01",134.9],["2024-02",134.35],["2024-03",142.8],["2024-04",157.4],["2024-05",156.15],["2024-06",169.55],["2024-07",186.6],["2024-08",184.0],["2024-09",180.85],["2024-10",183.6],["2024-11",190.5],["2024-12",191.7],["2025-01",194.05],["2025-02",192.7],["2025-03",188.05],["2025-04",176.3],["2025-05",173.5]],"006208":[["2012-06",30.0],["2012-07",29.95],["2012-08",30.08],["2012-09",31.16],["2012-10",32.23],["2012-11",28.74],["2012-12",30.55],["2013-01",31.02],["2013-02",31.32],["2013-03",31.62],["2013-04",31.26],["2013-05",32.29],["2013-06",32.23],["2013-07",31.75],["2013-08",32.3],["2013-09",32.07],["2013-10",32.5],["2013-11",32.72],["2013-12",32.2],["2014-01",32.89],["2014-02",31.57],["2014-03",33.33],["2014-04",34.4],["2014-05",34.7],["2014-06",36.38],["2014-07",37.84],["2014-08",37.59],["2014-09",39.66],["2014-10",37.55],["2014-11",36.98],["2014-12",37.82],["2015-01",37.54],["2015-02",38.42],["2015-03",39.56],["2015-04",38.8],["2015-05",40.55],["2015-06",39.77],["2015-07",39.51],["2015-08",36.92],["2015-09",35.0],["2015-10",35.79],["2015-11",36.03],["2015-12",35.4],["2016-01",33.89],["2016-02",33.88],["2016-03",34.82],["2016-04",36.23],["2016-05",34.5],["2016-06",36.1],["2016-07",37.51],["2016-08",39.8],["2016-09",39.63],["2016-10",41.32],["2016-11",41.89],["2016-12",41.56],["2017-01",40.7],["2017-02",41.51],["2017-03",42.85],["2017-04",44.05],["2017-05",44.63],["2017-06",45.1],["2017-07",47.14],["2017-08",47.79],["2017-09",49.5],["2017-10",47.78],["2017-11",50.0],["2017-12",46.8],["2018-01",46.73],["2018-02",49.08],["2018-03",47.6],["2018-04",47.98],["2018-05",46.48],["2018-06",47.2],["2018-07",47.55],["2018-08",49.27],["2018-09",49.99],["2018-10",51.05],["2018-11",45.65],["2018-12",43.69],["2019-01",41.17],["2019-02",43.13],["2019-03",44.15],["2019-04",45.73],["2019-05",47.57],["2019-06",44.84],["2019-07",47.18],["2019-08",46.8],["2019-09",46.43],["2019-10",48.42],["2019-11",51.3],["2019-12",50.95],["2020-01",54.1],["2020-02",50.9],["2020-03",50.15],["2020-04",43.54],["2020-05",47.7],["2020-06",48.56],["2020-07",51.75],["2020-08",58.4],["2020-09",58.95],["2020-10",58.9],["2020-11",59.0],["2020-12",64.15],["2021-01",70.0],["2021-02",75.2],["2021-03",76.75],["2021-04",77.9],["2021-05",79.35],["2021-06",79.1],["2021-07",79.6],["2021-08",79.5],["2021-09",80.9],["2021-10",77.45],["2021-11",78.45],["2021-12",79.0],["2022-01",82.35],["2022-02",81.95],["2022-03",80.8],["2022-04",78.95],["2022-05",73.5],["2022-06",74.4],["2022-07",64.45],["2022-08",67.7],["2022-09",66.3],["2022-10",58.7],["2022-11",57.25],["2022-12",66.75],["2023-01",62.6],["2023-02",68.95],["2023-03",69.05],["2023-04",70.05],["2023-05",68.05],["2023-06",72.2],["2023-07",75.6],["2023-08",74.85],["2023-09",72.7],["2023-10",71.8],["2023-11",70.3],["2023-12",75.05],["2024-01",76.9],["2024-02",78.45],["2024-03",83.7],["2024-04",91.85],["2024-05",91.5],["2024-06",99.15],["2024-07",109.4],["2024-08",107.55],["2024-09",105.65],["2024-10",107.5],["2024-11",111.65],["2024-12",111.15],["2025-01",112.8],["2025-02",113.15],["2025-03",110.45],["2025-04",103.75],["2025-05",102.0]],"0056":[["2007-12",25.15],["2008-01",25.7],["2008-02",23.2],["2008-03",24.54],["2008-04",25.26],["2008-05",26.49],["2008-06",25.64],["2008-07",22.29],["2008-08",21.48],["2008-09",21.45],["2008-10",17.62],["2008-11",15.28],["2008-12",13.73],["2009-01",13.49],["2009-02",13.19],["2009-03",13.82],["2009-04",16.76],["2009-05",19.6],["2009-06",20.55],["2009-07",19.62],["2009-08",22.14],["2009-09",21.78],["2009-10",23.1],["2009-11",20.81],["2009-12",21.68],["2010-01",23.5],["2010-02",22.14],["2010-03",22.35],["2010-04",22.97],["2010-05",23.3],["2010-06",21.8],["2010-07",21.9],["2010-08",24.2],["2010-09",24.01],["2010-10",25.39],["2010-11",26.5],["2010-12",27.19],["2011-01",28.09],["2011-02",28.13],["2011-03",27.3],["2011-04",26.3],["2011-05",27.06],["2011-06",27.88],["2011-07",27.9],["2011-08",28.26],["2011-09",25.66],["2011-10",23.59],["2011-11",23.14],["2011-12",22.68],["2012-01",21.88],["2012-02",24.04],["2012-03",25.72],["2012-04",24.55],["2012-05",24.35],["2012-06",22.89],["2012-07",23.67],["2012-08",24.14],["2012-09",24.79],["2012-10",24.98],["2012-11",21.3],["2012-12",22.43],["2013-01",22.95],["2013-02",23.83],["2013-03",23.76],["2013-04",23.15],["2013-05",24.05],["2013-06",24.1],["2013-07",23.69],["2013-08",24.28],["2013-09",23.84],["2013-10",24.23],["2013-11",23.01],["2013-12",22.77],["2014-01",23.09],["2014-02",22.58],["2014-03",23.05],["2014-04",23.78],["2014-05",24.04],["2014-06",24.83],["2014-07",25.39],["2014-08",25.32],["2014-09",26.6],["2014-10",24.65],["2014-11",23.58],["2014-12",23.4],["2015-01",24.15],["2015-02",24.57],["2015-03",25.21],["2015-04",24.78],["2015-05",25.05],["2015-06",24.68],["2015-07",23.84],["2015-08",21.79],["2015-09",20.75],["2015-10",21.33],["2015-11",21.66],["2015-12",21.47],["2016-01",21.48],["2016-02",21.58],["2016-03",22.63],["2016-04",22.28],["2016-05",21.35],["2016-06",22.05],["2016-07",22.8],["2016-08",24.55],["2016-09",24.39],["2016-10",25.05],["2016-11",23.7],["2016-12",23.32],["2017-01",23.12],["2017-02",23.55],["2017-03",24.5],["2017-04",24.91],["2017-05",24.56],["2017-06",24.84],["2017-07",25.75],["2017-08",26.2],["2017-09",26.25],["2017-10",26.15],["2017-11",25.6],["2017-12",24.99],["2018-01",25.13],["2018-02",26.42],["2018-03",25.91],["2018-04",26.02],["2018-05",25.34],["2018-06",26.4],["2018-07",25.61],["2018-08",27.28],["2018-09",27.63],["2018-10",27.32],["2018-11",24.08],["2018-12",24.89],["2019-01",23.83],["2019-02",24.99],["2019-03",26.12],["2019-04",26.51],["2019-05",27.4],["2019-06",25.84],["2019-07",26.95],["2019-08",27.1],["2019-09",27.44],["2019-10",28.18],["2019-11",27.63],["2019-12",27.65],["2020-01",29.09],["2020-02",27.74],["2020-03",27.75],["2020-04",24.52],["2020-05",27.09],["2020-06",28.05],["2020-07",28.79],["2020-08",30.01],["2020-09",30.06],["2020-10",29.45],["2020-11",27.72],["2020-12",29.35],["2021-01",29.94],["2021-02",30.25],["2021-03",31.9],["2021-04",34.61],["2021-05",35.91],["2021-06",35.06],["2021-07",35.0],["2021-08",34.0],["2021-09",33.39],["2021-10",32.26],["2021-11",31.56],["2021-12",32.5],["2022-01",33.42],["2022-02",33.0],["2022-03",33.88],["2022-04",33.55],["2022-05",32.09],["2022-06",31.52],["2022-07",26.81],["2022-08",28.76],["2022-09",28.44],["2022-10",25.67],["2022-11",23.55],["2022-12",25.82],["2023-01",25.49],["2023-02",26.67],["2023-03",27.72],["2023-04",28.47],["2023-05",28.44],["2023-06",30.47],["2023-07",33.24],["2023-08",35.73],["2023-09",35.12],["2023-10",35.74],["2023-11",32.89],["2023-12",35.13],["2024-01",37.17],["2024-02",36.3],["2024-03",37.74],["2024-04",39.59],["2024-05",38.35],["2024-06",40.32],["2024-07",41.35],["2024-08",39.15],["2024-09",39.06],["2024-10",38.57],["2024-11",37.34],["2024-12",37.02],["2025-01",36.7],["2025-02",35.45],["2025-03",36.53],["2025-04",35.26],["2025-05",32.64]],"00878":[["2020-07",15.0],["2020-08",14.98],["2020-09",14.85],["2020-10",14.54],["2020-11",14.42],["2020-12",15.47],["2021-01",16.2],["2021-02",16.45],["2021-03",17.08],["2021-04",18.42],["2021-05",19.02],["2021-06",18.47],["2021-07",18.21],["2021-08",18.44],["2021-09",18.19],["2021-10",18.03],["2021-11",18.32],["2021-12",18.55],["2022-01",19.1],["2022-02",19.29],["2022-03",19.29],["2022-04",19.34],["2022-05",18.75],["2022-06",17.9],["2022-07",16.39],["2022-08",16.94],["2022-09",16.85],["2022-10",15.87],["2022-11",15.79],["2022-12",16.68],["2023-01",16.18],["2023-02",17.0],["2023-03",17.03],["2023-04",17.35],["2023-05",17.68],["2023-06",18.25],["2023-07",19.52],["2023-08",21.87],["2023-09",20.88],["2023-10",20.76],["2023-11",19.61],["2023-12",20.51],["2024-01",21.56],["2024-02",21.71],["2024-03",22.03],["2024-04",22.6],["2024-05",22.22],["2024-06",23.25],["2024-07",23.88],["2024-08",23.36],["2024-09",22.9],["2024-10",22.7],["2024-11",22.77],["2024-12",22.05],["2025-01",22.07],["2025-02",22.15],["2025-03",22.26],["2025-04",21.38],["2025-05",20.53]],"00919":[["2022-10",15.0],["2022-11",14.9],["2022-12",17.01],["2023-01",16.53],["2023-02",17.44],["2023-03",18.48],["2023-04",18.79],["2023-05",18.48],["2023-06",19.13],["2023-07",19.82],["2023-08",20.79],["2023-09",20.55],["2023-10",20.96],["2023-11",20.42],["2023-12",21.87],["2024-01",22.21],["2024-02",22.23],["2024-03",24.25],["2024-04",25.04],["2024-05",24.57],["2024-06",25.83],["2024-07",26.14],["2024-08",24.64],["2024-09",24.83],["2024-10",23.67],["2024-11",23.22],["2024-12",23.42],["2025-01",23.3],["2025-02",22.98],["2025-03",23.79],["2025-04",22.64],["2025-05",21.33]]},"last":{"0050":["2025-05-29",179.75],"006208":["2025-05-29",105.45],"0056":["2025-05-29",34.08],"00878":["2025-05-29",20.43],"00919":["2025-05-29",22.18]},"returns":{"0050":{"1m":{"ret":7.12,"from":"2025-04-29","to":"2025-05-29","ann":null},"3m":{"ret":-6.62,"from":"2025-02-27","to":"2025-05-29","ann":null},"6m":{"ret":-3.77,"from":"2024-11-28","to":"2025-05-29","ann":null},"1y":{"ret":5.21,"from":"2024-05-29","to":"2025-05-29","ann":null},"3y":{"ret":39.83,"from":"2022-05-30","to":"2025-05-29","ann":11.83},"5y":{"ret":112.85,"from":"2020-05-29","to":"2025-05-29","ann":16.31},"ytd":{"ret":-8.17,"from":"2024-12-31","to":"2025-05-29","ann":null},"max":{"ret":384.76,"from":"2003-06-30","to":"2025-05-29","ann":7.47}},"006208":{"1m":{"ret":6.84,"from":"2025-04-29","to":"2025-05-29","ann":null},"3m":{"ret":-6.81,"from":"2025-02-27","to":"2025-05-29","ann":null},"6m":{"ret":-2.63,"from":"2024-11-28","to":"2025-05-29","ann":null},"1y":{"ret":5.4,"from":"2024-05-29","to":"2025-05-29","ann":null},"3y":{"ret":42.6,"from":"2022-05-30","to":"2025-05-29","ann":12.57},"5y":{"ret":118.64,"from":"2020-05-29","to":"2025-05-29","ann":16.94},"ytd":{"ret":-7.58,"from":"2024-12-31","to":"2025-05-29","ann":null},"max":{"ret":251.5,"from":"2012-06-22","to":"2025-05-29","ann":10.21}},"0056":{"1m":{"ret":5.38,"from":"2025-04-29","to":"2025-05-29","ann":null},"3m":{"ret":-7.16,"from":"2025-02-27","to":"2025-05-29","ann":null},"6m":{"ret":-6.63,"from":"2024-11-28","to":"2025-05-29","ann":null},"1y":{"ret":-16.04,"from":"2024-05-29","to":"2025-05-29","ann":null},"3y":{"ret":8.43,"from":"2022-05-30","to":"2025-05-29","ann":2.74},"5y":{"ret":22.33,"from":"2020-05-29","to":"2025-05-29","ann":4.11},"ytd":{"ret":-7.09,"from":"2024-12-31","to":"2025-05-29","ann":null},"max":{"ret":35.51,"from":"2007-12-26","to":"2025-05-29","ann":1.76}},"00878":{"1m":{"ret":0.69,"from":"2025-04-29","to":"2025-05-29","ann":null},"3m":{"ret":-8.79,"from":"2025-02-27","to":"2025-05-29","ann":null},"6m":{"ret":-6.03,"from":"2024-11-28","to":"2025-05-29","ann":null},"1y":{"ret":-12.43,"from":"2024-05-29","to":"2025-05-29","ann":null},"3y":{"ret":14.39,"from":"2022-05-30","to":"2025-05-29","ann":4.59},"ytd":{"ret":-7.89,"from":"2024-12-31","to":"2025-05-29","ann":null},"max":{"ret":36.2,"from":"2020-07-10","to":"2025-05-29","ann":6.53}},"00919":{"1m":{"ret":4.97,"from":"2025-04-29","to":"2025-05-29","ann":null},"3m":{"ret":-7.54,"from":"2025-02-27","to":"2025-05-29","ann":null},"6m":{"ret":-3.52,"from":"2024-11-28","to":"2025-05-29","ann":null},"1y":{"ret":-14.49,"from":"2024-05-29","to":"2025-05-29","ann":null},"ytd":{"ret":-5.13,"from":"2024-12-31","to":"2025-05-29","ann":null},"max":{"ret":47.87,"from":"2022-10-13","to":"2025-05-29","ann":16.06}}},"period_names":{"1m":"近一個月","3m":"近三個月","6m":"近半年","1y":"近一年","3y":"近三年","5y":"近五年","ytd":"今年以來","max":"上市以來"},"kb":[{"id":"bond-etf","title":"債券 ETF","summary":"持有一籃子債券的 ETF，價格主要受利率影響。","aliases":["債券ETF","債券","美債","公司債","存續期間"],"text":"# 債券 ETF\n\n## 一句話解釋\n\n債券 ETF 持有的是一籃子債券，收益主要來自債券利息，價格主要受利率影響。\n\n## 白話說明\n\n- 利率上升時，舊債券的價格會下跌；利率下降時，價格會上漲。\n- 存續期間越長 (通常是到期日越遠)，價格對利率變動越敏感。\n- 台灣常見的債券 ETF 多半投資海外債券，還要考慮匯率的影響。\n- 債券 ETF 的波動通常比股票 ETF 小，但不是保本商品。\n\n## 本系統的範圍\n\n城市裡目前只有台灣的股票型 ETF，沒有債券 ETF。","source":" (來源：專案自編，待核對)"},{"id":"city-guide","title":"城市怎麼看","summary":"ETF 都會的畫面說明：行政區、大樓、捷運路線、轉乘站各代表什麼。","aliases":["城市","怎麼看","大樓","捷運","轉乘站","行政區","煙火","下雨","鷹架","金色框"],"text":"# 城市怎麼看\n\n## 對應關係\n\n- 行政區是產業：半導體園區、電子科技區、金融區、航運港區、民生工業區。\n- 大樓是公司。樓高依這家公司在各檔 ETF 前十大中的最高權重，各檔的權重用標籤分開顯示。\n- 捷運路線是 ETF，車站是它的前十大成分股。\n- 兩條以上的路線都停的車站是轉乘站，代表這些 ETF 的前十大都有這家公司。\n- 大樓外觀是當天漲跌：漲越多窗戶越亮，大漲時頂樓放煙火；大跌時外牆龜裂、搭起鷹架。\n- 天氣是大盤：大盤下跌比較多時城市會下雨。\n- 金色框是你的持股穿透結果：框越高，代表你實際持有這家公司越多。\n\n## 怎麼操作\n\n可以直接打字發問，也可以點大樓或車站。回答的同時，畫面會移到相關的地方。","source":" (來源：專案自編的系統說明)"},{"id":"dca","title":"定期定額","summary":"每隔固定時間投入固定金額，分散進場時間點，但不保證獲利。","aliases":["定期定額","定時定額","DCA","每月扣款","存股"],"text":"# 定期定額\n\n## 一句話解釋\n\n定期定額是每隔固定時間 (例如每個月) 投入固定金額買進。\n\n## 白話說明\n\n- 因為每次金額固定，價格低的時候買到比較多單位，價格高的時候買到比較少，長期下來成本會被平均。\n- 它解決的是「不知道什麼時候進場」的問題，不需要預測高低點。\n- 它不保證賺錢。如果標的長期下跌，定期定額一樣會虧損，只是虧損的過程比較平緩。\n- 中途帳面出現虧損是正常的，能不能持續扣款往往比挑選進場時間更重要。\n\n## 本系統的算法\n\n回放功能假設每個月第一個交易日，用當天收盤價買進固定金額，可以買零股，不計手續費，報酬是價格報酬 (未含息)。\n\n## 常見誤解\n\n- 以為定期定額一定比單筆投入好。市場長期上漲時，早點單筆投入的報酬通常比較高，定期定額的優點是心理上比較容易執行。","source":" (來源：專案自編，待核對)"},{"id":"dividend-frequency","title":"配息頻率","summary":"ETF 可以年配、半年配、季配或月配，配息頻率不影響總報酬。","aliases":["配息頻率","月配","季配","半年配","年配","月配息"],"text":"# 配息頻率\n\n## 一句話解釋\n\n配息頻率是 ETF 多久發一次配息，常見的有年配、半年配、季配和月配。\n\n## 白話說明\n\n- 配息頻率寫在公開說明書裡，每檔 ETF 不同，例如市值型常見半年配，高股息型常見季配或月配。\n- 配息次數多不代表賺得多。同樣的收益，分成十二次或兩次發，總額是一樣的。\n- 配息頻率高的好處是現金流比較平均；缺點是配出去的錢不會留在基金裡繼續複利，再投入時也可能有交易成本。\n- 單筆配息金額較大時，可能需要負擔二代健保補充保費，實際規定以主管機關公告為準。\n\n## 常見誤解\n\n- 以為月配息 ETF 的殖利率一定比較高。殖利率要看全年配息總額和股價，和配幾次無關。","source":" (來源：專案自編，待核對)"},{"id":"ex-dividend","title":"除息與填息","summary":"除息當天股價會扣掉配息金額，之後漲回除息前的價格叫填息。","aliases":["除息","填息","貼息","除息日","填息天數"],"text":"# 除息與填息\n\n## 一句話解釋\n\n除息是把配息發給投資人，股價同步扣掉配息金額；之後股價漲回除息前的水準叫填息。\n\n## 白話說明\n\n- 除息日當天，ETF 的參考價會扣掉每單位配息，所以股價看起來下跌，但投資人另外拿到現金，資產總額沒有因為除息而改變。\n- 填息：除息後股價回到除息前一天的收盤價。沒有漲回去叫貼息，這時拿到的配息有一部分是自己的本金。\n- 要在除息日的前一個交易日收盤前持有，才能參加這次配息。\n- 只看股價走勢會低估配息多的 ETF，比較不同 ETF 時應該看含息的總報酬。\n\n## 本系統的限制\n\n目前的報酬都是價格報酬 (未含息)，配息多的 ETF 實際的總報酬會比顯示的數字高。\n\n## 常見誤解\n\n- 以為配息是多出來的錢。配息是從基金資產拿出來的，除息後淨值會等額減少。","source":" (來源：專案自編，待核對)"},{"id":"income-equalization","title":"收益平準金","summary":"ETF 配息時用來避免配息被新資金稀釋的機制，配息有一部分可能來自投資人自己的本金。","aliases":["收益平準金","平準金","配息來源","配息組成"],"text":"# 收益平準金\n\n## 一句話解釋\n\n收益平準金是 ETF 為了讓每單位配息不被新加入的資金稀釋而設計的機制。\n\n## 白話說明\n\n- 新投資人申購 ETF 時，申購價裡有一部分是基金已經賺到、但還沒配出去的收益。這部分會先記在收益平準金，配息時再一起分配。\n- 如果沒有這個機制，除息前有大量資金湧入，同樣的收益要分給更多單位，原本投資人的每單位配息就會被稀釋。\n- 配息裡如果有一部分來自收益平準金，等於拿回自己申購時付的錢，不完全是成分股發的股利或賺到的價差。\n- 投信會公布每次配息的「配息組成」，可以看到股利所得、資本利得、收益平準金各占多少。\n\n## 常見誤解\n\n- 以為配息多就代表 ETF 賺得多。配息的來源不只一種，要搭配配息組成和含息的總報酬一起看。\n- 以為收益平準金一定不好。它的目的是維持配息穩定，重點是投資人要知道配息從哪裡來。\n\n## 在城市裡\n\n台灣的高股息 ETF (例如 0056、00878、00919) 多半採用這個機制。","source":" (來源：專案自編，待核對)"},{"id":"index-rebalance","title":"成分股定期審核與調整","summary":"ETF 追蹤的指數會定期審核並更換成分股，ETF 也會跟著換股。","aliases":["成分股調整","換股","定期審核","汰換","納入","剔除","指數調整"],"text":"# 成分股定期審核與調整\n\n## 一句話解釋\n\n指數公司會依規則定期檢查成分股，把不符合條件的換掉，ETF 再跟著調整持股。\n\n## 白話說明\n\n- 每檔 ETF 追蹤的指數都有自己的選股規則和審核時間，例如每季或每半年審核一次，實際日期以指數編製規則為準。\n- 市值型指數的成分股通常變動不大；高股息指數依殖利率選股，每次審核可能換掉比較多檔。\n- 換股會產生交易成本，也可能讓 ETF 短時間內大量買賣特定股票。\n- 想知道一檔 ETF 現在持有什麼，要看投信公布的最新持股，不是指數剛成立時的名單。\n\n## 在城市裡\n\nETF 換股就像捷運路線改道：新的車站開通，舊的車站停駛。要做出這個效果需要保留不同日期的成分股資料。","source":" (來源：專案自編，待核對)"},{"id":"leveraged-inverse","title":"槓桿型與反向型 ETF","summary":"追蹤指數單日報酬的倍數或反向，適合短期交易，不適合長期持有。","aliases":["槓桿","反向","正2","反1","槓桿型","反向型","槓反"],"text":"# 槓桿型與反向型 ETF\n\n## 一句話解釋\n\n槓桿型 ETF 追求指數「單日」報酬的倍數，反向型 ETF 追求指數「單日」報酬的相反。\n\n## 白話說明\n\n- 重點是單日。這類 ETF 每天都會重新調整部位，所以持有超過一天，累積報酬不會剛好等於指數累積報酬的倍數。\n- 市場來回震盪時，就算指數最後回到原點，槓桿型和反向型 ETF 的淨值也可能下跌。\n- 它們用期貨等衍生性商品達到槓桿或反向的效果，成本比一般 ETF 高。\n- 這類商品是給熟悉風險的人做短期操作用的，券商會要求投資人具備一定條件才能交易。\n\n## 本系統的範圍\n\n城市裡目前只有一般的股票型 ETF，沒有槓桿型和反向型。","source":" (來源：專案自編，待核對)"},{"id":"market-cap-vs-high-dividend","title":"市值型與高股息型 ETF","summary":"市值型依公司市值決定權重，高股息型依殖利率等條件選股，兩者的成分股和報酬來源不同。","aliases":["市值型","高股息","高股息型","高息","大盤型","市值型跟高股息"],"text":"# 市值型與高股息型 ETF\n\n## 一句話解釋\n\n市值型 ETF 依公司市值大小決定成分股和權重；高股息型 ETF 依殖利率等條件選股。\n\n## 白話說明\n\n- 市值型 (例如 0050、006208)：追蹤的指數挑選市值最大的公司，市值越大權重越高，所以台積電在前十大中的權重特別高，整體表現很接近大盤。\n- 高股息型 (例如 0056、00878、00919)：指數依預估或過去的殖利率、配息穩定度等條件選股，成分股比較分散，配息通常比較多。\n- 報酬來源不同：市值型主要來自股價成長；高股息型有比較多的報酬來自配息，所以只看股價會低估它，要看含息的總報酬。\n- 兩種沒有絕對的好壞，差別在投資人想要的是現金流還是長期成長，以及能不能接受持股集中在少數大型公司。\n\n## 常見誤解\n\n- 以為高股息 ETF 比較安全。它一樣是股票，大盤下跌時也會跌。\n- 以為同時買一檔市值型和一檔高股息型就完全分散。兩者的成分股仍可能重疊，可以用前十大重疊權重來看。\n\n## 在城市裡\n\n把 0050 和 0056 兩條線同時顯示，可以看到它們走的路大部分不同。","source":" (來源：專案自編，待核對)"},{"id":"no-advice","title":"本系統不做的事","summary":"不預測漲跌、不推薦標的、不提供買賣建議，只說明可以查證的資料。","aliases":["投資建議","預測","明牌","推薦","免責"],"text":"# 本系統不做的事\n\n## 原則\n\n- 不預測股價或大盤的漲跌。\n- 不推薦買哪一檔，也不說哪一檔比較好。\n- 不建議買進或賣出的時間，不鼓勵借錢或使用槓桿投資。\n\n## 會做的事\n\n- 說明 ETF 的觀念和名詞。\n- 用程式計算過去的報酬、成分股重疊、定期定額的歷史結果、持股穿透。\n- 每個數字都附上資料來源和日期。\n\n## 提醒\n\n過去的績效不代表未來的表現。投資前請閱讀公開說明書，並依自己的狀況判斷。","source":" (來源：專案自編的系統說明)"},{"id":"odd-lot","title":"零股交易","summary":"不足一張 (一千單位) 的交易，讓小額資金也能買 ETF。","aliases":["零股","零股交易","盤中零股","一張","小額"],"text":"# 零股交易\n\n## 一句話解釋\n\nETF 一張是一千個單位，不足一張的買賣就是零股交易。\n\n## 白話說明\n\n- 零股讓投資人可以用比較少的錢買 ETF，定期定額多半就是買零股。\n- 盤中和盤後都可以交易零股，撮合方式和整張的交易不同，成交速度可能比較慢。\n- 零股的成交量通常比整張少，冷門的 ETF 可能有比較大的買賣價差。\n- 手續費依券商規定計算，很多券商有最低手續費，金額太小時手續費的比例會偏高。\n\n## 本系統的算法\n\n定期定額回放假設可以買零股，而且不計手續費。","source":" (來源：專案自編，待核對)"},{"id":"overlap","title":"持股重疊與分散","summary":"兩檔 ETF 持有相同的公司越多，同時持有的分散效果越小。","aliases":["重疊","持股重疊","重複持有","分散","重疊權重","共同持股","轉乘站"],"text":"# 持股重疊與分散\n\n## 一句話解釋\n\n持股重疊是兩檔 ETF 都持有同一家公司。重疊越多，同時買兩檔的分散效果越小。\n\n## 本系統的算法\n\n- 共同持股家數：兩檔 ETF 的前十大成分股中，相同的公司有幾家。\n- 重疊權重：每家共同持股取兩檔中比較小的權重，全部加起來。例如某公司在甲 ETF 占 5%、在乙 ETF 占 3%，這家公司的重疊權重算 3%。\n- 這兩個數字的意義不同：家數多但權重都很小，重疊其實有限；家數少但有一家權重很高，重疊可能很大。\n- 目前只有前十大成分股的資料，所以結果是「前十大」的重疊，不是完整持股的重疊。\n\n## 穿透持股\n\n把每檔 ETF 的投入金額乘上成分股權重再加總，可以估計自己實際持有各家公司的比例。很多人以為買了好幾檔 ETF 就已經分散，拆開來看才發現大部分的錢集中在同一家公司。\n\n## 在城市裡\n\n兩條捷運線都停的車站叫轉乘站，就是共同持股。","source":" (來源：專案自編的系統說明)"},{"id":"return-calc","title":"報酬的算法","summary":"本系統的區間報酬與年化報酬怎麼算，以及價格報酬和總報酬的差別。","aliases":["報酬率","價格報酬","年化報酬","含息","未含息","總報酬","還原"],"text":"# 報酬的算法\n\n## 一句話解釋\n\n本系統目前顯示的都是價格報酬，也就是只看股價變化，沒有把配息加回來。\n\n## 本系統的算法\n\n- 區間報酬：期末收盤價除以期初收盤價再減一。期初如果不是交易日，取之前最近的一個交易日。\n- 年化報酬：把一年以上的累積報酬換算成平均每年的複利報酬。\n- 所有數字都由程式依價格資料計算，語言模型只負責說明，回答中的數字是用編號填入的。\n\n## 價格報酬和總報酬\n\n- 總報酬是把配息加回去之後的報酬，比價格報酬高。\n- 配息越多的 ETF，兩者的差距越大，所以用價格報酬比較高股息型和市值型 ETF，會低估高股息型。\n- 等配息資料整理完成後，系統才會提供含息的報酬。\n\n## 股票分割\n\nETF 分割 (例如一拆四) 會讓股價變成原來的幾分之一，但持有的單位數變多，資產不變。計算報酬前，價格要先換算成同一個基準。","source":" (來源：專案自編的系統說明)"},{"id":"size-liquidity","title":"規模與流動性","summary":"ETF 規模太小可能下市，成交量太低則不容易用合理的價格買賣。","aliases":["規模","流動性","成交量","下市","清算","受益人數"],"text":"# 規模與流動性\n\n## 一句話解釋\n\n規模是 ETF 管理的資產總額，流動性是容不容易用合理的價格買賣。\n\n## 白話說明\n\n- 規模太小的 ETF，固定成本分攤到每單位比較高，也可能因為規模低於門檻而清算下市。下市時投資人會依當時的淨值拿回資金，不會歸零。\n- 流動性不好的 ETF，買賣價差比較大，市價也比較容易偏離淨值，出現折溢價。\n- 受益人數可以當作參考，但人數多不代表適合自己。\n- 造市商會持續報出買價和賣價，協助維持流動性。","source":" (來源：專案自編，待核對)"},{"id":"split","title":"ETF 分割","summary":"把一個單位拆成多個單位，股價等比例降低，投資人的資產總額不變。","aliases":["分割","一拆四","拆分","受益權單位分割","0050分割"],"text":"# ETF 分割\n\n## 一句話解釋\n\n分割是把一個受益權單位拆成多個，股價等比例下降，投資人持有的單位數等比例增加，總資產不變。\n\n## 白話說明\n\n- 目的是降低每張的價格，讓小額投資人比較容易買整張，也可能提高流動性。\n- 0050 元大台灣50 在 2025 年 6 月進行過一拆四的分割。\n- 分割不是下跌。看歷史走勢時，如果價格資料沒有還原，分割當天會出現很大的落差，這是資料基準不同造成的。\n\n## 本系統的做法\n\n價格資料統一使用同一個基準；如果來源已經是還原後的價格，就不會再另外調整。","source":" (來源：專案自編，待核對)"},{"id":"top10-limit","title":"前十大成分股的限制","summary":"只看前十大成分股無法代表整檔 ETF，重疊和穿透持股都是估計值。","aliases":["前十大","完整持股","成分股","持股明細","估計值"],"text":"# 前十大成分股的限制\n\n## 一句話解釋\n\n本系統目前只有每檔 ETF 的前十大成分股，所以和持股有關的結果都是估計值。\n\n## 白話說明\n\n- 一檔 ETF 可能有幾十檔成分股。市值型 ETF 的前十大權重合計比較高，高股息型比較分散，前十大合計可能不到一半。\n- 兩檔 ETF 在前十大以外也可能持有相同的公司，所以實際的重疊會比「前十大重疊」高。\n- 穿透持股只算得到前十大涵蓋的部分，系統會同時顯示涵蓋了多少比例的資金。\n- 完整的持股明細可以在各投信的網站查到。","source":" (來源：專案自編的系統說明)"},{"id":"wiki-active-vs-passive","title":"主動式與被動式 ETF","summary":"被動式 ETF 追蹤指數，主動式 ETF 由經理人主動選股調整，追求超越績效指標但不保證做到。","aliases":["主動式 ETF","被動式 ETF","主動式","被動式","active ETF","passive ETF","平衡型 ETF","績效指標"],"text":"# 主動式與被動式 ETF\n\n## 一句話解釋\n\n被動式 ETF 以追蹤指數 (代表一群股票整體表現的數字) 為目標；主動式 ETF 由基金經理人依公開說明書的投資目標與策略主動調整投資組合，目標是追求超越績效指標的機會 (來源: s04b)。\n\n## 白話說明\n\n證交所整理的三大差異 (來源: s04a)：\n\n| 面向 | 被動式 ETF | 主動式 ETF |\n|---|---|---|\n| 產品設計理念 | 追蹤某個指數，表現和指數一致 | 經理人做投資決策，追求超越指數、創造收益等特定成果 |\n| 需要的投資專業 | 依指數建立投資組合 | 依靠經理人與研究團隊的判斷，不受單一指數限制 |\n| 風險管理 | 跟著指數定期調整成分股 | 可以依市況調整，例如市況差時提高防禦性 |\n\n- 績效指標 (benchmark，用來比較表現的標準)：主動式 ETF 可以設定績效指標，有設定的話要在公開說明書揭露，並且每月申報淨值與績效指標的累計漲跌 (來源: s04b)。\n- 持股公布：主動式 ETF 沒有追蹤的指數，投資人要到投信網站查持股；持股在每個營業日算完淨值後公布，但經理人隔天就可以調整，所以盤中實際持股可能和公布的不同 (來源: s04b)。\n- 被動式平衡型 ETF：屬於被動式，追蹤的指數同時包含股票和債券，指數規則訂有固定的股債比例 (來源: s04b)。\n\n## 常見誤解\n\n- 以為主動式 ETF 一定比較會賺。證交所強調，主動式 ETF 不保證能超越績效指標、大盤或被動式 ETF，過去績效也不代表未來 (來源: s04b)。\n- 以為兩種一定有一種比較好。證交所表示主動式和被動式沒有絕對優劣，要看投資人自己的目標與風險承受度 (來源: s04b)。\n\n## 例子\n\n假設被動式 ETF 是照食譜做菜，食譜 (指數) 寫什麼就放什麼；主動式 ETF 則像主廚依當天的食材和判斷調整做法，可能做得比食譜好，也可能做得比較差。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-common-misconceptions","title":"新手常見誤解","summary":"總整理頁，連到各頁「常見誤解」段落，每項附一句摘要。","aliases":["常見誤解","迷思","新手誤解","錯誤觀念"],"text":"# 新手常見誤解\n\n## 一句話解釋\n\n這頁整理各頁「常見誤解」段落的重點，詳細說明請點連結 (來源: s02b, s03b, s04b, s05a)。\n\n## 白話說明\n\n以下每一列的正確觀念都來自各頁標註的來源 (來源: s02b, s03b, s04b, s05a)：\n\n| 誤解 | 正確觀念 | 詳見 |\n|---|---|---|\n| 買進之後就不用再付錢 | 持有期間內扣費用會持續從淨值扣除 (來源: s02b) | 內扣費用與費用率 |\n| ETF 是被動投資，不用看買進價格 | 追價買到高溢價，溢價收斂時可能虧損 (來源: s03b) | 折溢價 |\n| 主動式 ETF 一定比較會賺 | 不保證超越績效指標、大盤或被動式 ETF (來源: s04b) | 主動式與被動式 ETF |\n| 配息率高就是賺得多 | 要看總報酬率，價格下跌可能抵消配息 (來源: s05a) | 配息與總報酬 |\n| 月配息 ETF 每個月一定會配 | 實際配不配由投信依基金狀況決定 (來源: s05a) | 配息與總報酬 |","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-creation-redemption","title":"申購買回與套利","summary":"利用初級市場的淨值和次級市場的市價之間的價差來套利，這個機制會把市價拉回淨值附近。","aliases":["套利","申購買回","套利機制","creation","redemption","arbitrage"],"text":"# 申購買回與套利\n\n## 一句話解釋\n\n同一個商品在兩個市場價格不同，就有一買一賣賺價差的套利機會，ETF 靠這個機制讓市價和淨值 (資產真正的價值) 維持接近 (來源: s03a)。\n\n## 白話說明\n\n- 溢價時 (市價高於淨值)：在初級市場用較低的淨值申購 ETF，再到次級市場用較高的市價賣出 (來源: s03a)。\n- 折價時 (市價低於淨值)：在次級市場用較低的市價買進 ETF，再到初級市場用較高的淨值買回，或換回一籃子股票賣掉 (來源: s03a)。\n- 這些交易會讓市價和淨值的差距縮小 (來源: s03a)。\n- 套利不一定有效：流動性不佳、發行額度達到上限時，沒辦法申購買回，折溢價就可能一直存在 (來源: s03a)；標的流動性不足或市場劇烈波動時，修正也會比較慢 (來源: s03b)。\n\n## 例子\n\n假設淨值 100 元、市價 102 元，套利者向投信用 100 元申購，再到市場上用 102 元賣出，賺 2 元價差；大家都這樣做，市場上賣的人變多，市價就會被壓回 100 元附近。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-dividend-and-total-return","title":"配息與總報酬","summary":"配息只是報酬的一部分，ETF 也不保證固定配息，證交所提醒看表現要看總報酬率。","aliases":["配息","配息率","殖利率","總報酬率","總報酬","月配","季配","高股息"],"text":"# 配息與總報酬\n\n## 一句話解釋\n\n證交所提醒，判斷 ETF 表現不能只看配息率，應該以總報酬率 (價格漲跌加上配息的整體報酬) 為原則 (來源: s05a)。\n\n## 白話說明\n\n- ETF 不是固定配息的商品，過去的配息率不代表未來的配息率 (來源: s05a)。\n- ETF 價格的變化，對總報酬率的影響也很大 (來源: s05a)。\n- 所謂月配或季配型 ETF，是投信每月或每季評估基金資產有沒有達到可分配收益的標準，實際配不配息，仍由投信依基金實際績效決定 (來源: s05a)。\n- 證交所也提醒，市場上的 ETF 廣告或推介常以誘人的收益或簡化的風險吸引人，投資人要分辨內容是否真實準確 (來源: s05a)。\n\n## 例子\n\n假設 A 一年配息 8%，但價格跌了 10%，總報酬是負的；B 一年只配 2%，價格漲了 5%，總報酬是正的。只看配息率會以為 A 比較好，看總報酬才知道結果相反。\n\n## 常見誤解\n\n- 以為配息率高就代表賺得多。配息只是報酬的一部分，價格下跌可能抵消甚至超過配息 (來源: s05a)。\n- 以為月配息 ETF 保證每個月都會配。實際配不配由投信依基金狀況決定 (來源: s05a)。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-etf-0050","title":"0050 元大台灣50","summary":"台灣第一檔 ETF，投資台灣上市市值最大的 50 家公司，2025 年改成依規模分級的費率。","aliases":["0050","元大台灣50","台灣50","元大投信","台灣卓越50"],"text":"# 0050 元大台灣50\n\n## 一句話介紹\n\n0050 是元大投信發行的 ETF，投資台灣上市市值最大的 50 家公司 (來源: s02a)。\n\n## 基本資料\n\n- 成立：2003 年 (來源: s02a)。\n- 規模：約 4,469 億元，截至 2025-01 (來源: s02a)。\n- 舊費率：經理費 0.32%、保管費 0.035%，2025-01-24 之前適用 (來源: s02a)。\n- 新費率 (2025-01-24 起) 依規模分段計算，截至 2025-01 (來源: s02a)：\n\n| 規模區間 | 經理費 | 保管費 |\n|---|---|---|\n| 1,000 億元以下 | 0.15% | 0.03% |\n| 逾 1,000 億到 5,000 億元 | 0.10% | 0.03% |\n| 逾 5,000 億到 1 兆元 | 0.08% | 0.03% |\n| 逾 1 兆元 | 0.05% | 0.025% |\n\n- 以 2025-01 的規模估算，新制的經理費約 0.11%、保管費約 0.03% (來源: s02a)。\n- 另一份 2022 年的資料寫 0050 內扣費用率約 0.46%，這是調降前的舊數字，截至 2022-07 (來源: s02b)。\n\n## 和哪些概念有關\n\n- 內扣費用與費用率\n- 指數與追蹤","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-etf-risks","title":"ETF 的風險","summary":"證交所列出的 ETF 主要風險：折溢價、流動性、追蹤誤差、市場、集中度與下市風險。","aliases":["風險","ETF 風險","投資風險","下市","流動性風險","集中度風險"],"text":"# ETF 的風險\n\n## 一句話解釋\n\nETF 分散投資一籃子股票，但不代表沒有風險，證交所列出的主要風險有六種 (來源: s05a)。\n\n## 白話說明\n\n證交所提到的六種風險如下 (來源: s05a)：\n\n| 風險 | 白話意思 | 延伸閱讀 |\n|---|---|---|\n| 折溢價風險 | 用比淨值高很多的價格買進 | 折溢價 |\n| 流動性風險 | 想買賣的時候不容易成交 | 申購買回與套利 |\n| 追蹤誤差 | ETF 表現和指數有落差 | 追蹤誤差 |\n| 市場風險 | 整個市場下跌，ETF 也跟著跌 | |\n| 集中度風險 | 投資集中在少數股票或產業 | |\n| 下市風險 | ETF 終止上市 | |\n\n- 證交所提醒，投資前要詳閱公開說明書，評估自己的需求、目標與風險承受度 (來源: s05a)。\n- 主動式和被動式 ETF 都有折溢價風險，市價和淨值落差大時可能承受價差損失 (來源: s04b)。\n- 在市場情緒高漲時追價，可能在價格偏離基本價值時進場，承擔不必要的溢價風險 (來源: s03b)。\n\n## 例子\n\n假設一檔 ETF 只投資某一個產業，當那個產業整體表現不好時，就算 ETF 裡有幾十家公司，也可能一起下跌，這就是集中度風險。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-etf-ticker-codes","title":"ETF 代碼與簡稱怎麼看","summary":"從基金名稱、證券簡稱和代碼第六碼，可以分辨主動式 ETF (A/D) 和被動式平衡型 ETF (T)。","aliases":["ETF 代碼","證券代碼","第六碼","簡稱","主動","平衡","A","D","T"],"text":"# ETF 代碼與簡稱怎麼看\n\n## 一句話解釋\n\n證交所規定可以用「基金名稱」「證券簡稱」「證券代碼」三個地方分辨主動式 ETF (由經理人主動操作的 ETF) 和被動式平衡型 ETF，截至 2025-01 (來源: s04b)。\n\n## 白話說明\n\n證交所說明的分辨方式如下 (來源: s04b)：\n\n| 類型 | 基金名稱 | 證券簡稱前兩字 | 代碼第六碼 |\n|---|---|---|---|\n| 主動式股票 ETF | 含「主動式」 | 主動 | A |\n| 主動式債券 ETF | 含「主動式」 | 主動 | D |\n| 被動式平衡型 ETF | (無特別規定) | 平衡 | T |\n\n## 例子\n\n假設你看到一檔 ETF 的代碼是六碼、最後一碼是 A，簡稱又以「主動」開頭，就可以判斷它是主動式股票 ETF。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-expense-ratio","title":"內扣費用與費用率","summary":"持有 ETF 期間的經理費、保管費等費用，直接從淨值裡扣除，不會另外寄帳單給你。","aliases":["內扣費用","費用率","經理費","保管費","expense ratio","管理費"],"text":"# 內扣費用與費用率\n\n## 一句話解釋\n\n內扣費用是 ETF 本身要付的經理費、保管費等費用，直接從基金的淨值 (一籃子資產真正的價值) 中扣除 (來源: s02b)。\n\n## 白話說明\n\n- 投資人不會收到內扣費用的帳單，但它每天都從淨值裡扣，所以會讓報酬變少 (來源: s02b)。\n- 費用率以「一年多少 %」表示 (來源: s02b)。\n- 經理費是付給管理基金的投信，保管費是付給保管基金資產的銀行 (來源: s02a)。\n- 有些 ETF 採分級費率：基金規模越大，超過門檻的那部分費率越低，例如 0050 從 2025-01-24 起的新制 (來源: s02a)。\n- 追蹤同一個指數的不同 ETF，費用率可能不一樣，比較時可以把費用率當成一項參考數字 (來源: s02b)。\n\n## 例子\n\n假設兩檔 ETF 追蹤同一個指數，一檔費用率 0.5%、另一檔 0.1%，在其他條件都一樣的情況下，持有越久，兩者扣掉的費用差距就越大。\n\n## 常見誤解\n\n- 以為買進之後就不用再付錢。其實只要持有，內扣費用就會持續從淨值中扣除 (來源: s02b)。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-index-tracking","title":"指數與追蹤","summary":"指數代表一群股票的整體表現，被動式 ETF 依照指數的成分股和比重買進，讓表現貼近指數。","aliases":["指數","追蹤指數","成分股","index","指數化投資"],"text":"# 指數與追蹤\n\n## 一句話解釋\n\n被動式 ETF 的做法是照著某個指數的成分股與比重持有股票，讓 ETF 的表現緊貼指數 (來源: s01a)。\n\n## 白話說明\n\n- 指數的成分股 (被選進指數的那些股票)，就是 ETF 的投資組合 (來源: s01a)。\n- ETF 的重點是追蹤指數，不是打敗指數，所以投信會把持股調整到和指數成分股一致 (來源: s01a)。\n- 追蹤得好的 ETF，表現會很接近指數 (來源: s01a)。\n- 這種以追蹤指數為目標的 ETF 稱為被動式 ETF；另外還有由經理人主動選股的主動式 ETF (不追蹤指數、追求超越績效指標) (來源: s04b)。\n\n## 例子\n\n假設一個指數裡 A 公司占 30%、B 公司占 70%，追蹤它的 ETF 也會盡量把錢依 30% 和 70% 分配到這兩家公司。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-nav","title":"淨值","summary":"ETF 持有的一籃子資產真正值多少錢，是判斷市價合不合理的基準。","aliases":["淨值","NAV","資產淨值","基金淨值","真實價值"],"text":"# 淨值\n\n## 一句話解釋\n\n淨值是 ETF 所持有資產的真實價值，證交所說明 ETF 的合理價格應該以淨值為基礎 (來源: s03a, s03b)。\n\n## 白話說明\n\n- ETF 在市場上的買賣價格叫市價，由買賣雙方的供需決定，不一定等於淨值 (來源: s03a)。\n- 淨值是 ETF 所有持股加起來的總價值 (來源: s02b)。\n- 市價和淨值的差距，就是折溢價 (市價比淨值高或低多少) (來源: s03a)。\n- 證交所提醒，交易前可以先查投信官網上的即時淨值，判斷市價是否合理 (來源: s03b)。\n\n## 例子\n\n假設一個 ETF 裡的股票全部加起來，換算成每一單位值 100 元，這 100 元就是淨值；同一時間市場上有人用 101 元成交，101 元就是市價。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-premium-discount","title":"折溢價","summary":"市價和淨值的落差，市價比較高叫溢價，比較低叫折價。","aliases":["折價","溢價","折溢價","premium","discount","溢價率"],"text":"# 折溢價\n\n## 一句話解釋\n\nETF 的市價高於淨值 (資產真正的價值) 叫溢價，市價低於淨值叫折價 (來源: s03a)。\n\n## 白話說明\n\n- 為什麼會有落差：市價由市場供需決定，需求大於供給時市價會高於淨值，形成溢價；需求小於供給時則形成折價 (來源: s03a)。\n- 證交所 2026 年的參考範圍：流動性好、透明度高的 ETF，折溢價通常在 0.5% 以內；持續超過 3% 已明顯偏離合理區間；達到 5% 以上要格外小心，截至 2026-05 (來源: s03b)。\n- 落差通常會被申購買回的套利 (利用兩邊價差賺錢的交易) 拉回來，但市場供需失衡、短期情緒、海外市場休市、成分股流動性不足時，偏離可能持續一段時間 (來源: s03b)。\n- 追蹤效果好的 ETF，不會有很大的折溢價 (來源: s01a)。\n\n## 例子\n\n假設淨值是 100 元，市價是 103 元，溢價就是 3%；如果市價是 98 元，折價就是 2%。\n\n## 常見誤解\n\n- 以為 ETF 是被動投資工具，就不用看買進價格。證交所提醒，在市場情緒高漲時追價買進高溢價的 ETF，等溢價收斂後，就算資產價格沒有下跌，投資人也可能出現損失，溢價本身就是一種容易被忽略的隱形成本 (來源: s03b)。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-primary-secondary-market","title":"初級市場與次級市場","summary":"初級市場是大額向投信用淨值申購或買回，次級市場是一般人用證券帳戶以市價買賣。","aliases":["初級市場","次級市場","一級市場","二級市場","申購","買回"],"text":"# 初級市場與次級市場\n\n## 一句話解釋\n\nETF 掛牌後有兩種交易管道：次級市場用市價像股票一樣買賣，初級市場則是用淨值 (資產真正的價值) 向發行的投信大額申購或買回 (來源: s03a)。\n\n## 白話說明\n\n- 次級市場：投資人用原本的證券帳戶，以市價下單買賣 ETF，和買賣股票一樣 (來源: s03a)。\n- 初級市場：依淨值向發行公司申購 (拿錢或一籃子股票換 ETF) 或買回 (拿 ETF 換回錢或股票) (來源: s03a)。\n- 初級市場有很高的最低交易單位，例如 0050 的基本單位是 500 張，金額達數千萬元，所以一般投資人通常沒辦法在初級市場套利，主要在次級市場買賣 (來源: s02b)。\n\n## 例子\n\n假設你用手機下單買 1 張 ETF，你是在次級市場跟其他投資人買；只有大型機構一次要買非常大量時，才會直接找投信申購。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-tracking-error","title":"追蹤誤差","summary":"ETF 實際報酬和它追蹤的指數報酬之間的差距，主因是費用和調整持股的成本。","aliases":["追蹤誤差","tracking error","追蹤差異"],"text":"# 追蹤誤差\n\n## 一句話解釋\n\n追蹤誤差是指數的報酬和 ETF 實際報酬之間的差距，兩者幾乎不可能完全一樣 (來源: s02b)。\n\n## 白話說明\n\n造成差距的常見原因 (來源: s02b)：\n\n- 指數只是一個計算出來的數字，不用付錢；ETF 要付經理費等內扣費用 (從淨值裡扣的管理費用) (來源: s02b)。\n- 指數換成分股不用成本，ETF 換股要實際買賣，有交易成本，時間和價格也可能和指數不同 (來源: s02b)。\n- 流動性不好或交易受限制時，ETF 可能沒辦法照指數即時調整 (來源: s02b)。\n- 為了配息而保留現金，也會造成差距 (來源: s02b)。\n\ns02b 提出的一種觀察方式：拿「指數報酬減 ETF 報酬」的差距和費用率比較，差距明顯大於費用率 (例如兩倍以上) 或持續擴大，可能代表追蹤效果不好 (來源: s02b)。\n\n## 例子\n\n假設某年指數漲 10%，追蹤它的 ETF 只漲 9.7%，中間 0.3% 的差距就是追蹤誤差。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-trading-costs","title":"交易成本：手續費與證交稅","summary":"買賣 ETF 時要付券商手續費，賣出時另付證券交易稅，和持有期間的內扣費用是兩回事。","aliases":["手續費","證交稅","證券交易稅","交易稅","交易成本","券商手續費"],"text":"# 交易成本：手續費與證交稅\n\n## 一句話解釋\n\n交易成本是每次買賣 ETF 時才會付的錢，包含券商手續費和賣出時的證券交易稅 (來源: s02b)。\n\n## 白話說明\n\n- 券商手續費：在台灣買和賣各收一次，費率 0.1425%，券商通常會給折扣，截至 2022-07 (來源: s02b)。\n- 證券交易稅 (證交稅)：賣出時由政府收取，台灣股票型 ETF 的稅率是 0.1%，截至 2022-07 (來源: s02b)。\n- 一般股票的證交稅是千分之三 (0.3%)，比 ETF 的 0.1% 高，截至 2025-01 (來源: s06a, s02b)。\n- 以債券為主要投資標的的債券 ETF，從 2017-01-01 到 2026-12-31 暫停徵收證交稅，槓桿型與反向型不適用，期限過後是否延長要以財政部最新公告為準 (來源: s06a)。\n- 交易成本只有在買賣時發生；持有期間另外有內扣費用 (從淨值裡扣的管理費用) (來源: s02b)。\n\n## 例子\n\n假設你一個月內買進又賣出同一檔 ETF 好幾次，每一次都要付手續費，賣出還要付證交稅，買賣越頻繁，交易成本累積得越多。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-twse","title":"臺灣證券交易所","summary":"臺灣的證券交易所，ETF 在這裡掛牌交易，也發布 ETF 相關的投資人提醒。","aliases":["證交所","TWSE","臺灣證交所","台灣證券交易所"],"text":"# 臺灣證券交易所\n\n## 一句話介紹\n\n臺灣證券交易所 (簡稱證交所) 是 ETF 掛牌買賣的交易所，ETF 的正式中文名稱「指數股票型基金」就是證交所的用語 (來源: s01a)。\n\n## 基本資料\n\n- 證交所網站 (www.twse.com.tw) 有 ETF 系列專題報導和「ETF e添富」專欄，說明折溢價等觀念 (來源: s03a, s03b)。\n- ETF 在證交所掛牌，買賣方式和上市股票一樣 (來源: s01a)。\n\n## 和哪些概念有關\n\n- 什麼是 ETF\n- 折溢價","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"},{"id":"wiki-what-is-etf","title":"什麼是 ETF","summary":"ETF 是在交易所像股票一樣買賣、追蹤某個指數的基金，正式名稱是指數股票型基金。","aliases":["ETF","Exchange Traded Fund","指數股票型基金","交易所交易基金"],"text":"# 什麼是 ETF\n\n## 一句話解釋\n\nETF 是 Exchange Traded Fund 的縮寫，意思是在交易所買賣的基金，臺灣證券交易所給它的正式名稱是「指數股票型基金」(來源: s01a)。\n\n## 白話說明\n\n這個正式名稱可以拆成三個詞來看 (來源: s01a)：\n\n- **指數**：ETF 會追蹤某個指數 (代表一群股票整體表現的數字)，目標是貼近指數，不是打敗指數 (來源: s01a)。\n- **股票**：ETF 在交易所掛牌，買賣方式和股票一樣 (來源: s01a)。\n- **基金**：ETF 由投信 (證券投資信託公司，專門管理基金的公司) 發行與管理，把一籃子股票切成很多小單位賣給投資人 (來源: s01a)。\n\n因為是一籃子股票，買一個單位的 ETF，就等於同時持有指數裡所有成分股的一小部分 (來源: s01a)。\n\n## 例子\n\n假設有一個指數由 50 家公司組成，你想自己把 50 家都買齊，需要很多錢；買一個追蹤這個指數的 ETF，用比較少的錢就能一次擁有這 50 家公司的一小部分。","source":" (來源：ETF 入門 Wiki (twl-Benchen/etf-wiki))"}]};
+try {   // 放在網站上時，讀同目錄下較新的資料檔
+  const ctl = new AbortController(); setTimeout(() => ctl.abort(), 1500);
+  const r = await fetch('data/city.json', { cache: 'no-store', signal: ctl.signal });
+  if (r.ok) { const j = await r.json(); if (j && j.etfs && j.holdings) CITY = j; }
+} catch (e) {}
+const ETF_KEYS = Object.keys(CITY.etfs);
+const ETFS = {};
+ETF_KEYS.forEach((k, i) => {
+  const e = CITY.etfs[k], n = ETF_KEYS.length;
+  ETFS[k] = { name: e.name, type: e.type, color: e.color, off: n > 1 ? -1.5 + 3 * i / (n - 1) : 0, w: Object.fromEntries(CITY.holdings[k].map(t => [t.name, t.weight])), info: e };
+});
+const DIST = {
+  semi: { c: [-15.5, -12], s: [25, 20], ground: '#cfd6df' },
+  tech: { c: [15, -12],   s: [24, 20], ground: '#d6d3cb' },
+  fin:  { c: [-15.5, 14],  s: [25, 20], ground: '#ddd5c6' },
+  port: { c: [15, 14],     s: [24, 20], ground: '#c9cfd2' },
+  life: { c: [-46, 14],    s: [25, 20], ground: '#d3d8c9' },
+};
+for (const k of Object.keys(DIST)) DIST[k].name = CITY.districts[k] || k;
+// 幾家公司有手調的外觀；沒列到的公司依產業自動決定
+const STYLE = {
+  台積電: { kind: 'fab', crane: true }, 聯發科: { tint: '#3b6f8f' }, 聯電: { tint: '#5a7f96' }, 聯詠: { tint: '#2f7c80' }, 瑞昱: { tint: '#46698f' }, 日月光投控: { tint: '#4f7a72' }, 世界: { tint: '#5b6f8c' },
+  群聯: { tint: '#3f6a9a' }, 力成: { tint: '#55748a' },
+  鴻海: { accent: '#c8302c' }, 台達電: { accent: '#2d6db5', crane: true }, 廣達: { accent: '#3a6ea8', crane: true }, 華碩: { accent: '#1c2a3a' }, 瑞儀: { accent: '#7a4fa3' },
+  中華電: { kind: 'telecom', sign: '中華電信' }, 台灣大: { kind: 'telecom', sign: '台灣大哥大' }, 遠傳: { kind: 'telecom', sign: '遠傳電信' },
+  富邦金: { stone: '#c9b99a' }, 國泰金: { stone: '#b9b2a3' }, 中信金: { stone: '#a9b3b8' }, 華南金: { stone: '#cdbfa6' }, 元大金: { stone: '#b7a58a' }, 上海商銀: { stone: '#c4b8a6' },
+  長榮: { kind: 'ship', accent: '#2e7d4f', yard: ['#2e7d4f', '#3c9a62', '#c0392b', '#2c5aa0', '#d6a21e'] }, 陽明: { kind: 'ship', accent: '#d7a41c' }, 萬海: { kind: 'ship', accent: '#1f5fae' },
+  長榮航: { kind: 'air', accent: '#2e7d4f', sign: '長榮航空' }, 華航: { kind: 'air', accent: '#b0355a', sign: '中華航空' },
+};
+const PAL = { tint: ['#3b6f8f', '#5a7f96', '#2f7c80', '#46698f', '#4f7a72', '#5b6f8c'], accent: ['#c8302c', '#2d6db5', '#3a6ea8', '#1c2a3a', '#2e7d4f', '#8a5a2b'], stone: ['#c9b99a', '#b9b2a3', '#a9b3b8', '#cdbfa6', '#b7a58a', '#c4b8a6'] };
+const CO = {};
+for (const [n, c] of Object.entries(CITY.companies)) {
+  const st = STYLE[n] || {}, h = hashStr(n);
+  const etfs = ETF_KEYS.filter(k => ETFS[k].w[n] != null); if (!etfs.length) continue;
+  const maxW = Math.max(...etfs.map(k => ETFS[k].w[n]));
+  const kind = st.kind || (c.district === 'fin' ? 'fin' : c.district === 'semi' ? 'glass' : c.industry === '通信網路業' ? 'telecom' : c.industry === '航運業' ? (/航$|航空/.test(n) ? 'air' : 'ship') : 'tech');
+  CO[n] = { name: n, code: c.code, d: c.district, ind: c.industry, kind, etfs, maxW, H: 4 + 5.2 * Math.sqrt(maxW), sign: st.sign || n, crane: !!st.crane,
+    tint: st.tint || PAL.tint[h % 6], accent: st.accent || PAL.accent[h % 6], stone: st.stone || PAL.stone[h % 6], yard: st.yard || ['#d7a41c', '#e3b93a', '#2c5aa0', '#b03a2e', '#5f6b75'] };
+}
+// 自動配置：每個行政區依公司數量排成格子；晶圓廠、貨櫃場、機場占地較大，另外處理
+function layoutDistrict(dk) {
+  const list = Object.values(CO).filter(c => c.d === dk).sort((a, b) => b.maxW - a.maxW); if (!list.length) return;
+  const [W, D] = DIST[dk].s, put = (c, x, z, f) => { c.lot = [x, z]; c.fp = [f, f]; };
+  let rest = list, slots = [];
+  const fab = list.find(c => c.kind === 'fab');
+  if (fab) {
+    put(fab, -3.5, -3.5, 7); rest = list.filter(c => c !== fab);
+    slots = [[5.4, -6.6, 4.4], [10.4, -6.6, 4.2], [5.4, 0, 4.2], [10.4, 0, 4], [5.4, 6.6, 4], [10.4, 6.6, 4], [-10.6, -7.2, 3.6], [-10.6, -1.6, 3.4]];
+  } else if (dk === 'port') {
+    const ships = list.filter(c => c.kind === 'ship'), airs = list.filter(c => c.kind === 'air');
+    const zs = ships.length <= 2 ? [-5, 4.5] : [-6.6, 0, 6.6];
+    ships.slice(0, 3).forEach((c, i) => put(c, -8, zs[i], 4.5));
+    airs.slice(0, 1).forEach(c => put(c, 6, ships.length > 2 ? -4 : 0, 4));
+    rest = list.filter(c => !c.lot); rest.forEach(c => { c.kind = 'tech'; });
+    slots = [[8.5, -7, 3.6], [8.5, 7, 3.6], [3, -7.2, 3.4], [-1, 7.4, 3.4]];
+  }
+  if (!slots.length) {
+    const n = rest.length, cols = n <= 4 ? 2 : n <= 9 ? 3 : 4, rows = Math.ceil(n / cols), cw = (W - 2) / cols, cd = (D - 2) / rows;
+    for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) slots.push([-(W - 2) / 2 + cw * (q + 0.5), -(D - 2) / 2 + cd * (r + 0.5) - 0.6, Math.min(cw - 2.6, cd - 4.2, 6)]);
+  }
+  rest.forEach((c, i) => { const s = slots[i % slots.length]; const f = Math.max(3.2, Math.min(s[2], 3.4 + 0.55 * Math.sqrt(c.maxW))); put(c, s[0], s[1], c.kind === 'telecom' ? Math.min(f, 4) : f); });
+}
+Object.keys(DIST).forEach(layoutDistrict);
+for (const k of Object.keys(DIST)) if (!Object.values(CO).some(c => c.d === k) && k === 'life') delete DIST[k];
+for (const c of Object.values(CO)) c.pos = [DIST[c.d].c[0] + c.lot[0], DIST[c.d].c[1] + c.lot[1]];
+const REAL = !!(CITY.daily && !CITY.daily.demo && CITY.daily.stocks);
+const inDist = (x, z) => Object.values(DIST).some(d => Math.abs(x - d.c[0]) < d.s[0] / 2 + 2 && Math.abs(z - d.c[1]) < d.s[1] / 2 + 2);
+
+
+/* ---------------- helpers ---------------- */
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmtPct = v => (v > 0 ? '+' : '') + v.toFixed(2) + '%';
+const FONT = '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+const css = getComputedStyle(document.documentElement);
+const tok = n => css.getPropertyValue(n).trim();
+const UP = '#e5484d', DOWN = '#20a464';
+
+/* ---------------- scenario ---------------- */
+const SCN = {
+  mixed: { bias: { semi: -3.4, tech: -0.8, fin: 0.7, port: 4.6 }, sd: 0.9, fix: { 台積電: -4.15, 長榮: 7.82, 陽明: 6.35, 長榮航: 3.4, 華南金: 1.1 } },
+  up:    { bias: { semi: 2.7, tech: 2.2, fin: 1.1, port: 1.7 }, sd: 1.0, fix: { 台積電: 3.6, 聯發科: 4.2 } },
+  flat:  { bias: { semi: 0.1, tech: -0.1, fin: 0.15, port: 0 }, sd: 0.5, fix: { 台積電: 0.2 } },
+  down:  { bias: { semi: -3.0, tech: -2.7, fin: -1.5, port: -2.3 }, sd: 0.9, fix: { 台積電: -3.9 } },
+};
+let chg = {}, scenarioNow = 'mixed';
+function genChanges(key) {
+  const out = {};
+  if (key === 'real') { for (const n of Object.keys(CO)) out[n] = CITY.daily.stocks[CO[n].code]?.pct ?? 0; return out; }
+  const s = SCN[key], r = rng(hashStr(key));
+  for (const n of Object.keys(CO)) {
+    const g = Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * Math.PI * r());
+    out[n] = s.fix[n] ?? Math.round(clamp((s.bias[CO[n].d] ?? 0) + g * s.sd, -9.9, 9.9) * 100) / 100;
+  }
+  return out;
+}
+function indexEst() { // weighted by 0050 top-10 weights
+  if (scenarioNow === 'real' && CITY.daily.index && CITY.daily.index.pct != null) return CITY.daily.index.pct;
+  const w = (ETFS['0050'] || ETFS[ETF_KEYS[0]]).w; let a = 0, b = 0;
+  for (const [n, x] of Object.entries(w)) { a += x * chg[n]; b += x; }
+  return a / b;
+}
+const stateOf = c => c >= 3 ? 'boom' : c >= 0.3 ? 'up' : c > -0.3 ? 'flat' : c > -3 ? 'down' : 'crash';
+const LIT = { boom: 0.95, up: 0.8, flat: 0.55, down: 0.3, crash: 0.12 };
+
+/* ---------------- renderer / scene ---------------- */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x9fb4c8, 120, 340);
+const VIEW = 78;
+const aspect0 = innerWidth / innerHeight;
+const camera = new THREE.OrthographicCamera(-VIEW * aspect0 / 2, VIEW * aspect0 / 2, VIEW / 2, -VIEW / 2, 1, 600);
+camera.position.set(78, 66, 86);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(-9, 13, -2);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.screenSpacePanning = false;
+controls.minZoom = 0.7; controls.maxZoom = 5;
+controls.minPolarAngle = 0.35; controls.maxPolarAngle = 1.25;
+controls.zoomSpeed = 0.9;
+camera.zoom = innerWidth < 760 ? 0.66 : 0.84;
+camera.updateProjectionMatrix();
+controls.update();
+
+const hemi = new THREE.HemisphereLight(0xdfeeff, 0x4a4436, 0.8);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.4);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -60, right: 60, top: 60, bottom: -60, near: 1, far: 300 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.03;
+scene.add(sun, sun.target);
+
+/* ---------------- textures ---------------- */
+function canvasTex(cv, srgb = true) {
+  const t = new THREE.CanvasTexture(cv);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+// facade: returns {map, emi}
+function facade(o) {
+  const cols = Math.max(2, o.cols), rows = Math.max(2, o.rows);
+  const cw = 18, rh = 22;
+  const W = Math.min(512, cols * cw), H = Math.min(1024, rows * rh);
+  const sx = W / cols, sy = H / rows;
+  const a = document.createElement('canvas'); a.width = W; a.height = H;
+  const e = document.createElement('canvas'); e.width = W; e.height = H;
+  const g = a.getContext('2d'), ge = e.getContext('2d');
+  const r = rng(o.seed || 7);
+  ge.fillStyle = '#000'; ge.fillRect(0, 0, W, H);
+  if (o.style === 'glass') {
+    const grad = g.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, o.base); grad.addColorStop(1, shade(o.base, -0.25));
+    g.fillStyle = grad; g.fillRect(0, 0, W, H);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      g.fillStyle = `rgba(255,255,255,${0.04 + r() * 0.09})`;
+      g.fillRect(x * sx + 1, y * sy + 1, sx - 2, sy - 2);
+      if (r() < o.lit) { ge.fillStyle = r() < 0.7 ? '#cfe6ff' : '#ffe2a8'; ge.globalAlpha = 0.55 + r() * 0.45; ge.fillRect(x * sx + 1.5, y * sy + 2, sx - 3, sy - 4); }
+    }
+    g.fillStyle = 'rgba(220,235,245,.55)';
+    for (let x = 0; x <= cols; x++) g.fillRect(x * sx - 0.5, 0, 1.2, H);
+    g.fillStyle = 'rgba(30,40,55,.45)';
+    for (let y = 0; y <= rows; y++) g.fillRect(0, y * sy - 1, W, 2);
+  } else if (o.style === 'stone') {
+    g.fillStyle = o.base; g.fillRect(0, 0, W, H);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const wx = x * sx + sx * 0.28, wy = y * sy + sy * 0.18, ww = sx * 0.44, wh = sy * 0.64;
+      g.fillStyle = '#26303a'; g.fillRect(wx, wy, ww, wh);
+      g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(wx, wy, ww, 2);
+      if (r() < o.lit) { ge.fillStyle = '#ffd590'; ge.globalAlpha = 0.6 + r() * 0.4; ge.fillRect(wx + 1, wy + 1, ww - 2, wh - 2); }
+    }
+    g.fillStyle = 'rgba(0,0,0,.12)';
+    for (let x = 0; x <= cols; x++) g.fillRect(x * sx - 1, 0, 2, H);
+  } else if (o.style === 'band') {
+    g.fillStyle = o.base; g.fillRect(0, 0, W, H);
+    for (let y = 0; y < rows; y++) {
+      const by = y * sy + sy * 0.32, bh = sy * 0.48;
+      g.fillStyle = '#2a3746'; g.fillRect(0, by, W, bh);
+      g.fillStyle = 'rgba(160,200,230,.18)'; g.fillRect(0, by, W, bh * 0.4);
+      for (let x = 0; x < cols; x++) {
+        g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(x * sx, by, 1.5, bh);
+        if (r() < o.lit) { ge.fillStyle = r() < 0.5 ? '#fff1cc' : '#d8ecff'; ge.globalAlpha = 0.55 + r() * 0.45; ge.fillRect(x * sx + 1.5, by + 1, sx - 2, bh - 2); }
+      }
+    }
+    if (o.accent) { g.fillStyle = o.accent; g.fillRect(0, H - sy * 0.5, W, sy * 0.5); g.fillRect(0, 0, W, sy * 0.18); }
+  } else if (o.style === 'fab') {
+    g.fillStyle = '#eef1f4'; g.fillRect(0, 0, W, H);
+    g.fillStyle = 'rgba(0,0,0,.08)'; for (let x = 0; x < W; x += 12) g.fillRect(x, 0, 1, H);
+    g.fillStyle = '#1f5fbf'; g.fillRect(0, H * 0.18, W, H * 0.12);
+    g.fillStyle = '#9fc2e8'; g.fillRect(0, H * 0.3, W, H * 0.04);
+    for (let x = 0; x < cols; x++) {
+      g.fillStyle = '#3a4a5a'; g.fillRect(x * sx + 3, H * 0.55, sx - 6, H * 0.12);
+      if (r() < o.lit) { ge.fillStyle = '#e6f2ff'; ge.globalAlpha = 0.8; ge.fillRect(x * sx + 3, H * 0.55, sx - 6, H * 0.12); }
+    }
+  } else { // office
+    g.fillStyle = o.base; g.fillRect(0, 0, W, H);
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const wx = x * sx + 2, wy = y * sy + 4, ww = sx - 4, wh = sy - 8;
+      g.fillStyle = '#3b4652'; g.fillRect(wx, wy, ww, wh);
+      if (r() < o.lit) { ge.fillStyle = r() < 0.6 ? '#ffe0a0' : '#dbe9ff'; ge.globalAlpha = 0.5 + r() * 0.5; ge.fillRect(wx, wy, ww, wh); }
+    }
+  }
+  ge.globalAlpha = 1;
+  if (o.crack) drawCracks(g, ge, W, H, r);
+  return { map: canvasTex(a), emi: canvasTex(e) };
+}
+function drawCracks(g, ge, W, H, r) {
+  for (let k = 0; k < 4; k++) {
+    let x = W * (0.15 + r() * 0.7), y = H * (0.25 + r() * 0.35);
+    const pts = [[x, y]];
+    for (let i = 0; i < 9; i++) { x += (r() - 0.5) * W * 0.18; y += H * (0.03 + r() * 0.05); pts.push([x, y]); }
+    for (const [ctx, col, lw] of [[g, 'rgba(15,12,10,.85)', 3.2], [ge, '#000', 6]]) {
+      ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = 'miter'; ctx.beginPath();
+      pts.forEach(([px, py], i) => i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)); ctx.stroke();
+      ctx.lineWidth = lw * 0.5; ctx.beginPath(); const m = pts[3];
+      ctx.moveTo(m[0], m[1]); ctx.lineTo(m[0] + (r() - 0.5) * 40, m[1] + 30 + r() * 30); ctx.stroke();
+    }
+  }
+  // blackout patch
+  ge.fillStyle = 'rgba(0,0,0,.85)'; ge.fillRect(0, H * (0.3 + r() * 0.3), W, H * 0.22);
+}
+function shade(hex, amt) {
+  const c = new THREE.Color(hex); const hsl = {}; c.getHSL(hsl);
+  c.setHSL(hsl.h, hsl.s, clamp(hsl.l + amt, 0, 1)); return '#' + c.getHexString();
+}
+function textSprite(lines, opt = {}) {
+  const cv = document.createElement('canvas'); const s = 2;
+  const W = (opt.w || 240) * s, Hh = (opt.h || 70) * s; cv.width = W; cv.height = Hh;
+  const t = canvasTex(cv);
+  const mat = new THREE.SpriteMaterial({ map: t, depthTest: opt.depthTest ?? true, transparent: true });
+  const sp = new THREE.Sprite(mat);
+  sp.userData.draw = (ls) => {
+    const g = cv.getContext('2d'); g.clearRect(0, 0, W, Hh);
+    const lh = Hh / ls.length;
+    const bw = Math.min(W, Math.max(...ls.map(l => { g.font = `${l.weight || 700} ${l.size * s}px ${FONT}`; return g.measureText(l.text).width; })) + 24 * s);
+    g.fillStyle = opt.bg || 'rgba(14,20,30,.78)';
+    roundRect(g, (W - bw) / 2, 2 * s, bw, Hh - 4 * s, 10 * s); g.fill();
+    ls.forEach((l, i) => {
+      g.font = `${l.weight || 700} ${l.size * s}px ${FONT}`; g.fillStyle = l.color || '#fff';
+      g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(l.text, W / 2, lh * i + lh / 2 + 1 * s);
+    });
+    t.needsUpdate = true;
+  };
+  sp.userData.draw(lines);
+  sp.scale.set((opt.w || 240) / 34, (opt.h || 70) / 34, 1);
+  sp.renderOrder = 10;
+  return sp;
+}
+function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+
+/* ---------------- materials ---------------- */
+const M = {
+  roof: new THREE.MeshStandardMaterial({ color: 0x8d949b, roughness: 0.9 }),
+  roofDark: new THREE.MeshStandardMaterial({ color: 0x5d646c, roughness: 0.8 }),
+  metal: new THREE.MeshStandardMaterial({ color: 0xb8c0c8, roughness: 0.35, metalness: 0.7 }),
+  white: new THREE.MeshStandardMaterial({ color: 0xf2f4f6, roughness: 0.6 }),
+  concrete: new THREE.MeshStandardMaterial({ color: 0xc7c3ba, roughness: 0.95 }),
+  asphalt: new THREE.MeshStandardMaterial({ color: 0x3a3f46, roughness: 0.95 }),
+  sidewalk: new THREE.MeshStandardMaterial({ color: 0xb9b7b0, roughness: 0.95 }),
+  grass: new THREE.MeshStandardMaterial({ color: 0x7fa36b, roughness: 1 }),
+  tree: new THREE.MeshStandardMaterial({ color: 0x4f8a4c, roughness: 0.9 }),
+  trunk: new THREE.MeshStandardMaterial({ color: 0x6b5139, roughness: 0.9 }),
+  yellow: new THREE.MeshStandardMaterial({ color: 0xf2b705, roughness: 0.6 }),
+  scaffold: new THREE.MeshStandardMaterial({ color: 0xd9822b, roughness: 0.7 }),
+  glassDark: new THREE.MeshStandardMaterial({ color: 0x223040, roughness: 0.2, metalness: 0.6 }),
+  lampOff: new THREE.MeshStandardMaterial({ color: 0xdddddd, emissive: 0xffd48a, emissiveIntensity: 0 }),
+};
+const windowMats = []; // materials whose emissive follows time
+
+/* ---------------- ground, roads, sea ---------------- */
+const city = new THREE.Group(); scene.add(city);
+function addBox(w, h, d, mat, x, y, z, parent = city, cast = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = cast; m.receiveShadow = true; parent.add(m); return m;
+}
+{
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(420, 420), new THREE.MeshStandardMaterial({ color: 0x9aa38f, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.set(-180 + 29, -0.02, 0); ground.scale.set(1, 1, 1);
+  ground.geometry.translate(0, 0, 0); ground.receiveShadow = true;
+  // land only west of coast: shift so its east edge sits at x=29.5
+  ground.position.x = 29.5 - 210; city.add(ground);
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(260, 420), new THREE.MeshStandardMaterial({ color: 0x2f6f8f, roughness: 0.25, metalness: 0.3 }));
+  sea.rotation.x = -Math.PI / 2; sea.position.set(29.5 + 130, -0.35, 0); sea.receiveShadow = true; city.add(sea);
+  addBox(1.2, 1.1, 420, M.concrete, 29.9, -0.1, 0, city, false); // seawall
+  // urban base slab (light concrete) for the whole metro area
+  addBox(150, 0.04, 170, new THREE.MeshStandardMaterial({ color: 0xb4b1a8, roughness: 1 }), -45, 0.0, 0, city, false);
+  // avenues
+  const roadTex = (() => { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 256; const g = cv.getContext('2d'); g.fillStyle = '#3a3f46'; g.fillRect(0, 0, 64, 256); g.fillStyle = '#e8e2c8'; for (let y = 0; y < 256; y += 64) g.fillRect(30, y, 4, 34); g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(3, 0, 2, 256); g.fillRect(59, 0, 2, 256); const t = canvasTex(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
+  const road = (len, w, x, z, rotY) => {
+    const t = roadTex.clone(); t.needsUpdate = true; t.repeat.set(1, len / 8);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, len), new THREE.MeshStandardMaterial({ map: t, roughness: 0.95 }));
+    m.rotation.x = -Math.PI / 2; m.rotation.z = rotY; m.position.set(x, 0.05, z); m.receiveShadow = true; city.add(m);
+  };
+  road(170, 4, 0, 0, 0);                 // N-S avenue
+  road(150, 4, -45.5 + 20, 1, Math.PI / 2); // E-W avenue (x from -100 to 29)
+  road(170, 3, -31, 0, 0);               // west ring
+  road(150, 3, -45.5 + 20, -25, Math.PI / 2); // north ring
+  road(150, 3, -45.5 + 20, 27, Math.PI / 2);  // south ring
+  road(170, 2.6, 28.2, 0, 0);            // coast road
+  // district plates
+  for (const [k, d] of Object.entries(DIST)) {
+    const p = addBox(d.s[0], 0.3, d.s[1], new THREE.MeshStandardMaterial({ color: d.ground, roughness: 0.95 }), d.c[0], 0.15, d.c[1], city, false);
+    p.receiveShadow = true;
+    // painted district name on the plate
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = 128; const g = cv.getContext('2d');
+    g.font = `900 64px "Noto Serif TC", serif`; g.fillStyle = 'rgba(40,46,56,.42)'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(d.name, 256, 66);
+    const lab = new THREE.Mesh(new THREE.PlaneGeometry(10, 2.5), new THREE.MeshBasicMaterial({ map: canvasTex(cv), transparent: true, depthWrite: false }));
+    lab.rotation.x = -Math.PI / 2; lab.position.set(d.c[0] - d.s[0] / 2 + 5.6, 0.32, d.c[1] + d.s[1] / 2 - 1.6); city.add(lab);
+  }
+  // trees + lamps along avenues
+  const treeGeo = mergeGeometries([new THREE.ConeGeometry(0.75, 1.9, 7).translate(0, 2.0, 0)]);
+  const trunkGeo = new THREE.CylinderGeometry(0.1, 0.13, 1.1, 6).translate(0, 0.55, 0);
+  const treePos = [], lampPos = [];
+  for (let z = -60; z <= 60; z += 3.2) { if (Math.abs(z - 1) < 3.5) continue; treePos.push([-2.6, z], [2.6, z]); if (Math.round(z / 3.2) % 2 === 0) lampPos.push([-2.4, z + 1.6], [2.4, z + 1.6]); }
+  for (let x = -80; x <= 26; x += 3.2) { if (Math.abs(x) < 3.5) continue; treePos.push([x, -1.6], [x, 3.6]); if (Math.round(x / 3.2) % 2 === 0) lampPos.push([x + 1.6, -1.4], [x + 1.6, 3.4]); }
+  const tI = new THREE.InstancedMesh(treeGeo, M.tree, treePos.length), trI = new THREE.InstancedMesh(trunkGeo, M.trunk, treePos.length);
+  const mtx = new THREE.Matrix4(), rT = rng(11);
+  treePos.forEach(([x, z], i) => { const s = 0.8 + rT() * 0.45; mtx.makeScale(s, s, s).setPosition(x, 0.3, z); tI.setMatrixAt(i, mtx); trI.setMatrixAt(i, mtx); });
+  tI.castShadow = true; city.add(tI, trI);
+  const poleGeo = new THREE.CylinderGeometry(0.05, 0.06, 2.6, 5).translate(0, 1.3, 0);
+  const bulbGeo = new THREE.SphereGeometry(0.16, 8, 6).translate(0, 2.65, 0);
+  const pI = new THREE.InstancedMesh(poleGeo, M.roofDark, lampPos.length), bI = new THREE.InstancedMesh(bulbGeo, M.lampOff, lampPos.length);
+  lampPos.forEach(([x, z], i) => { mtx.makeTranslation(x, 0.3, z); pI.setMatrixAt(i, mtx); bI.setMatrixAt(i, mtx); });
+  city.add(pI, bI);
+}
+
+/* ---------------- filler buildings (outer city) ---------------- */
+{
+  const r = rng(99);
+  const pal = ['#bcb7ad', '#a9adb3', '#c9c2b3', '#9ea7ae', '#b3a99a', '#d0ccc4', '#8f979f'];
+  const mats = pal.map((c, i) => {
+    const f = facade({ style: 'office', cols: 7, rows: 9, base: c, lit: 0.3, seed: 200 + i });
+    const m = new THREE.MeshStandardMaterial({ map: f.map, emissiveMap: f.emi, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.95 });
+    m.userData.dim = 0.45; windowMats.push(m); return m;
+  });
+  const geo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
+  const buckets = mats.map(() => []);
+  for (let x = -86; x <= 24; x += 5) for (let z = -80; z <= 80; z += 5) {
+    const inCore = x > -34 && x < 29 && z > -28 && z < 30;
+    const onAve = Math.abs(x) < 4.5 || Math.abs(z - 1) < 4.5 || Math.abs(x + 31) < 3 || Math.abs(z + 25) < 3 || Math.abs(z - 27) < 3;
+    if (inCore || onAve || inDist(x, z) || r() < 0.12) continue;
+    const dist = Math.hypot(x + 4, z) / 60;
+    let h = (1.2 + r() * 4.2) * clamp(1.3 - dist * 0.5, 0.5, 1.3);
+    if (z > 29) h = Math.min(h, 1.2 + r() * 1.2);
+    const w = 2.6 + r() * 1.6, d = 2.6 + r() * 1.6;
+    buckets[Math.floor(r() * mats.length)].push([x + (r() - 0.5), z + (r() - 0.5), w, h, d]);
+  }
+  const mtx = new THREE.Matrix4();
+  buckets.forEach((list, i) => {
+    const im = new THREE.InstancedMesh(geo, mats[i], list.length);
+    list.forEach(([x, z, w, h, d], j) => { mtx.makeScale(w, h, d).setPosition(x, 0.05, z); im.setMatrixAt(j, mtx); });
+    im.castShadow = true; im.receiveShadow = true; city.add(im);
+  });
+}
+
+/* ---------------- company buildings ---------------- */
+const B = {}; // per company runtime
+const pickables = [];
+function makeFacadeMats(spec, lit, crack) {
+  const f = facade({ ...spec, lit, crack });
+  const m = new THREE.MeshStandardMaterial({ map: f.map, emissiveMap: f.emi, emissive: 0xffffff, emissiveIntensity: 0.2,
+    roughness: spec.style === 'glass' ? 0.22 : 0.85, metalness: spec.style === 'glass' ? 0.45 : 0.05 });
+  windowMats.push(m); return m;
+}
+function segment(b, w, h, d, y, spec) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [null, null, M.roof, M.roof, null, null]);
+  mesh.position.set(0, y + h / 2, 0); mesh.castShadow = mesh.receiveShadow = true;
+  b.group.add(mesh); b.segs.push({ mesh, spec: { ...spec, cols: Math.round(Math.max(w, d) / 0.9), rows: Math.round(h / (spec.floor || 1.05)) } });
+  mesh.userData.company = b.c.name; pickables.push(mesh);
+  return mesh;
+}
+function applyFacades(b, lit, crack) {
+  for (const s of b.segs) {
+    const mat = makeFacadeMats(s.spec, lit, crack);
+    const old = s.mesh.material[0];
+    if (old) { old.map.dispose(); old.emissiveMap.dispose(); old.dispose(); const i = windowMats.indexOf(old); if (i >= 0) windowMats.splice(i, 1); }
+    s.mesh.material = [mat, mat, s.mesh.material[2], s.mesh.material[3], mat, mat];
+  }
+}
+function roofClutter(b, w, d, y, seed) {
+  const r = rng(seed), geos = [];
+  for (let i = 0; i < 3; i++) geos.push(new THREE.BoxGeometry(0.6 + r() * 0.8, 0.4 + r() * 0.5, 0.6 + r() * 0.8).translate((r() - 0.5) * (w - 1.4), y + 0.3, (r() - 0.5) * (d - 1.4)));
+  geos.push(new THREE.CylinderGeometry(0.35, 0.35, 0.7, 10).translate((r() - 0.5) * (w - 1.2), y + 0.35, (r() - 0.5) * (d - 1.2)));
+  const m = new THREE.Mesh(mergeGeometries(geos), M.metal); m.castShadow = true; b.group.add(m);
+}
+function crownLight(b, w, d, y) {
+  const mat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0xff3333, emissiveIntensity: 1.5 });
+  const geo = mergeGeometries([
+    new THREE.BoxGeometry(w + 0.08, 0.16, 0.16).translate(0, y, d / 2), new THREE.BoxGeometry(w + 0.08, 0.16, 0.16).translate(0, y, -d / 2),
+    new THREE.BoxGeometry(0.16, 0.16, d + 0.08).translate(w / 2, y, 0), new THREE.BoxGeometry(0.16, 0.16, d + 0.08).translate(-w / 2, y, 0)]);
+  const m = new THREE.Mesh(geo, mat); b.group.add(m); b.crown = mat;
+}
+function sign(b, text, w, y, d, color = '#ffffff', bg = 'rgba(20,28,40,.9)') {
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const g = cv.getContext('2d');
+  g.fillStyle = bg; g.fillRect(0, 0, 256, 64); g.font = `700 40px ${FONT}`; g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 34);
+  const mat = new THREE.MeshStandardMaterial({ map: canvasTex(cv), emissive: 0xffffff, emissiveMap: canvasTex(cv), emissiveIntensity: 0.4 });
+  windowMats.push(mat);
+  const sw = Math.min(w * 0.8, 3.6);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(sw, sw / 4), mat);
+  m.position.set(0, y, d / 2 + 0.03); b.group.add(m);
+  const m2 = m.clone(); m2.rotation.y = Math.PI / 2; m2.position.set(d / 2 + 0.03, y, 0); m2.scale.setScalar(Math.min(1, d / w)); b.group.add(m2);
+}
+function scaffold(b, w, d, h) {
+  const geos = [], t = 0.07, step = 1.1;
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1], [0, 1], [0, -1], [1, 0], [-1, 0]]) geos.push(new THREE.BoxGeometry(t, h, t).translate(sx * (w / 2 + 0.35), h / 2, sz * (d / 2 + 0.35)));
+  for (let y = step; y < h; y += step) {
+    geos.push(new THREE.BoxGeometry(w + 0.7, t, t).translate(0, y, d / 2 + 0.35), new THREE.BoxGeometry(w + 0.7, t, t).translate(0, y, -d / 2 - 0.35));
+    geos.push(new THREE.BoxGeometry(t, t, d + 0.7).translate(w / 2 + 0.35, y, 0), new THREE.BoxGeometry(t, t, d + 0.7).translate(-w / 2 - 0.35, y, 0));
+    geos.push(new THREE.BoxGeometry(w + 0.7, 0.04, 0.5).translate(0, y - 0.02, d / 2 + 0.6));
+  }
+  const m = new THREE.Mesh(mergeGeometries(geos), M.scaffold); m.castShadow = true; return m;
+}
+function towerCrane(h) {
+  const g = new THREE.Group(), geos = [];
+  geos.push(new THREE.BoxGeometry(0.5, h, 0.5).translate(0, h / 2, 0));
+  geos.push(new THREE.BoxGeometry(9, 0.35, 0.4).translate(2.5, h + 0.2, 0));
+  geos.push(new THREE.BoxGeometry(1.2, 0.8, 1).translate(-1.8, h - 0.2, 0));
+  geos.push(new THREE.ConeGeometry(0.4, 1.4, 4).translate(0, h + 1, 0));
+  const m = new THREE.Mesh(mergeGeometries(geos), M.yellow); m.castShadow = true; g.add(m);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 0.7), M.glassDark); cab.position.set(0.6, h - 0.4, 0); g.add(cab);
+  const cable = new THREE.Mesh(new THREE.BoxGeometry(0.03, 3, 0.03), M.roofDark); cable.position.set(5.5, h - 1.3, 0); g.add(cable);
+  const load = new THREE.Mesh(new THREE.BoxGeometry(1, 0.4, 0.6), M.scaffold); load.position.set(5.5, h - 2.9, 0); g.add(load);
+  return g;
+}
+
+function buildCompany(c) {
+  const b = { c, group: new THREE.Group(), segs: [], fx: new THREE.Group() };
+  const [w, d] = c.fp, H = c.H;
+  b.group.position.set(c.pos[0], 0.3, c.pos[1]);
+  const seed = hashStr(c.name);
+  if (c.kind === 'fab') {
+    // HQ tower with setbacks + fab hall + exhaust stacks
+    const spec = { style: 'glass', base: '#4a86b8', seed };
+    segment(b, w, H * 0.62, d, 0, spec);
+    segment(b, w * 0.8, H * 0.26, d * 0.8, H * 0.62, { ...spec, seed: seed + 1 });
+    segment(b, w * 0.58, H * 0.12, d * 0.58, H * 0.88, { ...spec, seed: seed + 2 });
+    crownLight(b, w * 0.58, d * 0.58, H + 0.05);
+    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.2, 5, 6), M.metal); sp.position.y = H + 2.5; b.group.add(sp);
+    roofClutter(b, w * 0.58, d * 0.58, H, seed);
+    const fab = new THREE.Group(); fab.position.set(-1.5, 0, 8.6); b.group.add(fab);
+    const fs = { style: 'fab', seed: seed + 9, floor: 3.6 };
+    const hall = new THREE.Mesh(new THREE.BoxGeometry(13, 3.6, 6.5), [null, null, M.white, M.white, null, null]);
+    hall.position.y = 1.8; hall.castShadow = hall.receiveShadow = true; fab.add(hall); hall.userData.company = c.name; pickables.push(hall);
+    b.segs.push({ mesh: hall, spec: { ...fs, cols: 12, rows: 1 } });
+    const stacks = []; for (let i = 0; i < 5; i++) stacks.push(new THREE.CylinderGeometry(0.32, 0.38, 2.6, 12).translate(-5 + i * 2.5, 4.6, -1.6));
+    for (let i = 0; i < 4; i++) stacks.push(new THREE.BoxGeometry(1.6, 0.7, 1.2).translate(-4 + i * 2.7, 3.95, 1.4));
+    const st = new THREE.Mesh(mergeGeometries(stacks), M.metal); st.castShadow = true; fab.add(st);
+    sign(b, c.sign, w, H * 0.62 - 1.2, d);
+  } else if (c.kind === 'glass') {
+    const spec = { style: 'glass', base: c.tint, seed };
+    const r = rng(seed);
+    const s1 = 0.7 + r() * 0.12;
+    segment(b, w, H * s1, d, 0, spec);
+    segment(b, w * 0.78, H * (1 - s1), d * 0.78, H * s1, { ...spec, seed: seed + 1 });
+    // slanted glass cap
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.01, w * 0.55, 1.4, 4, 1), M.glassDark); cap.rotation.y = Math.PI / 4; cap.position.y = H + 0.7; cap.scale.set(1, 1, d / w); cap.castShadow = true; b.group.add(cap);
+    crownLight(b, w * 0.78, d * 0.78, H + 0.04);
+    sign(b, c.name, w, H * s1 - 0.9, d);
+  } else if (c.kind === 'tech') {
+    const spec = { style: 'band', base: '#e4e6e8', accent: c.accent, seed, floor: 1.2 };
+    segment(b, w, H * 0.78, d, 0, spec);
+    segment(b, w * 0.7, H * 0.22, d * 0.85, H * 0.78, { ...spec, seed: seed + 1 });
+    crownLight(b, w * 0.7, d * 0.85, H + 0.04);
+    roofClutter(b, w * 0.7, d * 0.85, H, seed);
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 3, 5), M.metal); ant.position.set(w * 0.2, H + 1.5, 0); b.group.add(ant);
+    sign(b, c.name, w, H * 0.78 - 0.9, d, '#fff', c.accent);
+  } else if (c.kind === 'fin') {
+    const spec = { style: 'stone', base: c.stone, seed, floor: 1.15 };
+    // podium with columns
+    const pod = new THREE.Mesh(new THREE.BoxGeometry(w + 1.6, 1.6, d + 1.6), M.concrete); pod.position.y = 0.8; pod.castShadow = pod.receiveShadow = true; b.group.add(pod); pod.userData.company = c.name; pickables.push(pod);
+    const cols = []; for (let i = 0; i < 6; i++) cols.push(new THREE.CylinderGeometry(0.16, 0.16, 1.5, 10).translate(-(w + 1.2) / 2 + i * (w + 1.2) / 5, 0.8, (d + 1.6) / 2 + 0.25));
+    const cm = new THREE.Mesh(mergeGeometries(cols), M.white); cm.castShadow = true; b.group.add(cm);
+    segment(b, w, H * 0.68, d, 1.6, spec);
+    segment(b, w * 0.78, H * 0.2, d * 0.78, 1.6 + H * 0.68, { ...spec, seed: seed + 1 });
+    const top = 1.6 + H * 0.88;
+    const pyr = new THREE.Mesh(new THREE.ConeGeometry(w * 0.55, 2.4, 4), new THREE.MeshStandardMaterial({ color: 0x6f7c74, roughness: 0.4, metalness: 0.6 }));
+    pyr.rotation.y = Math.PI / 4; pyr.position.y = top + 1.2; pyr.scale.set(1, 1, d / w); pyr.castShadow = true; b.group.add(pyr);
+    crownLight(b, w * 0.78, d * 0.78, top + 0.04);
+    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.1, 2, 6), M.metal); sp.position.y = top + 3.2; b.group.add(sp);
+    sign(b, c.name, w, 1.6 + H * 0.68 - 0.9, d, '#f4e7c8', 'rgba(40,34,26,.92)');
+    b.topY = top + 4;
+  } else if (c.kind === 'telecom') {
+    const spec = { style: 'office', base: '#d9dde0', seed };
+    segment(b, w, H * 0.75, d, 0, spec);
+    crownLight(b, w, d, H * 0.75 + 0.04);
+    const mast = [];
+    mast.push(new THREE.CylinderGeometry(0.12, 0.45, H * 0.9, 4).translate(0, H * 0.75 + H * 0.45, 0));
+    for (let i = 1; i < 6; i++) mast.push(new THREE.BoxGeometry(0.9 - i * 0.1, 0.06, 0.9 - i * 0.1).translate(0, H * 0.75 + i * H * 0.14, 0));
+    const mm = new THREE.Mesh(mergeGeometries(mast), new THREE.MeshStandardMaterial({ color: 0xc9483b, roughness: 0.6 })); mm.castShadow = true; b.group.add(mm);
+    for (let i = 0; i < 3; i++) { const dish = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.2, 0.25, 14), M.white); dish.rotation.z = Math.PI / 2; dish.rotation.y = i * 2.1; dish.position.set(Math.cos(i * 2.1) * 0.4, H * 0.75 + H * 0.55, -Math.sin(i * 2.1) * 0.4); b.group.add(dish); }
+    sign(b, c.sign, w, H * 0.75 - 0.9, d, '#fff', '#1f5fae');
+    b.topY = H * 0.75 + H * 0.9 + 1.5;
+  } else if (c.kind === 'ship') {
+    const spec = { style: 'band', base: '#e9ecee', accent: c.accent, seed, floor: 1.2 };
+    segment(b, w, H * 0.8, d, 0, spec);
+    crownLight(b, w, d, H * 0.8 + 0.04);
+    roofClutter(b, w, d, H * 0.8, seed);
+    sign(b, c.name, w, H * 0.8 - 0.9, d, '#fff', c.accent);
+    // container yard
+    const yard = new THREE.Group(); yard.position.set(7.5, 0, 0); b.group.add(yard);
+    const r = rng(seed + 5), cols = c.yard;
+    const boxGeo = new THREE.BoxGeometry(1.9, 0.75, 0.8);
+    const n = 6 * 4 * 3; const im = new THREE.InstancedMesh(boxGeo, new THREE.MeshStandardMaterial({ roughness: 0.7 }), n);
+    let k = 0; const mtx = new THREE.Matrix4(), col = new THREE.Color();
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { const hgt = 1 + Math.floor(r() * 3); for (let l = 0; l < 3; l++) { if (l >= hgt) { mtx.makeScale(0, 0, 0); } else mtx.makeTranslation(-4 + i * 2.05, 0.38 + l * 0.76, -2 + j * 0.9 + (j > 1 ? 0.6 : 0)); im.setMatrixAt(k, mtx); im.setColorAt(k, col.set(cols[Math.floor(r() * cols.length)])); k++; } }
+    im.castShadow = true; im.receiveShadow = true; yard.add(im);
+    // gantry crane
+    const gg = [new THREE.BoxGeometry(0.3, 6, 0.3).translate(-1, 3, -2.8), new THREE.BoxGeometry(0.3, 6, 0.3).translate(-1, 3, 2.8), new THREE.BoxGeometry(0.3, 6, 0.3).translate(1.2, 3, -2.8), new THREE.BoxGeometry(0.3, 6, 0.3).translate(1.2, 3, 2.8),
+      new THREE.BoxGeometry(2.6, 0.5, 6.2).translate(0.1, 6.1, 0), new THREE.BoxGeometry(9, 0.35, 0.6).translate(4.5, 6.6, 0)];
+    const gm = new THREE.Mesh(mergeGeometries(gg), new THREE.MeshStandardMaterial({ color: c.accent, roughness: 0.6 })); gm.position.set(4.6, 0, 0); gm.castShadow = true; yard.add(gm);
+    b.topY = H * 0.8 + 2.2;
+  } else if (c.kind === 'air') {
+    const spec = { style: 'band', base: '#eef0f1', accent: c.accent, seed, floor: 1.2 };
+    // control tower
+    segment(b, 2.4, H * 0.75, 2.4, 0, { ...spec, cols: 3 });
+    const cab = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.5, 1.6, 8), M.glassDark); cab.position.y = H * 0.75 + 0.8; cab.castShadow = true; b.group.add(cab);
+    const capm = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 0.3, 8), M.white); capm.position.y = H * 0.75 + 1.75; b.group.add(capm);
+    crownLight(b, 2.4, 2.4, H * 0.75 - 0.3);
+    // hangar
+    const hg = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 9, 20, 1, false, 0, Math.PI), M.metal); hg.rotation.z = Math.PI / 2; hg.rotation.y = Math.PI / 2; hg.position.set(0, 0, 7.2); hg.castShadow = true; b.group.add(hg);
+    hg.userData.company = c.name; pickables.push(hg);
+    // airplane
+    const plane = new THREE.Group(); plane.position.set(-4.6, 1.1, 2.5); plane.rotation.y = 0.5;
+    const pm = new THREE.MeshStandardMaterial({ color: 0xf4f6f7, roughness: 0.5 });
+    const fus = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 5, 6, 12), pm); fus.rotation.z = Math.PI / 2; plane.add(fus);
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 6), pm); plane.add(wing);
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.3, 0.1), new THREE.MeshStandardMaterial({ color: c.accent })); tail.position.set(-2.5, 0.7, 0); plane.add(tail);
+    const st = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.08, 2.2), pm); st.position.set(-2.6, 0.2, 0); plane.add(st);
+    plane.traverse(o => { if (o.isMesh) o.castShadow = true; }); b.group.add(plane);
+    sign(b, c.sign, 2.4, H * 0.75 - 0.9, 2.4, '#fff', c.accent);
+    b.topY = H * 0.75 + 2.6;
+  }
+  b.topY = b.topY || H + 1.6;
+  if (c.crane) { const cr = towerCrane(Math.max(b.topY - 1, 9)); cr.position.set(c.kind === 'fab' ? -w / 2 - 1.4 : w / 2 + 1, 0, -d / 2 - 0.8); cr.rotation.y = c.kind === 'fab' ? 0.9 : -0.6; b.group.add(cr); b.crane = cr; }
+  b.label = textSprite([{ text: c.name, size: 22 }, { text: '', size: 20 }], { w: 170, h: 66 });
+  b.label.userData.k = 1.45;
+  b.label.position.set(0, b.topY + 2.2, 0); b.group.add(b.label);
+  b.group.add(b.fx);
+  city.add(b.group);
+  B[c.name] = b;
+}
+Object.values(CO).forEach(buildCompany);
+
+/* ---------------- metro: stations + lines ---------------- */
+const metro = new THREE.Group(); city.add(metro);
+const ST = {};
+for (const c of Object.values(CO)) {
+  const toward = new THREE.Vector2(0 - c.pos[0], 1 - c.pos[1]).normalize();
+  const reach = Math.max(c.fp[0], c.fp[1]) / 2 + 1.5;
+  const p = new THREE.Vector3(c.pos[0] + toward.x * reach, 0.42, c.pos[1] + toward.y * reach);
+  if (c.kind === 'fab') p.set(c.pos[0] + 5.2, 0.42, c.pos[1] + 1.5);
+  if (c.kind === 'ship') p.set(c.pos[0] + 2.3, 0.42, c.pos[1] + (c.lot[1] <= 0 ? 3.4 : -3.4));
+  ST[c.name] = { p, lines: c.etfs.slice(), group: new THREE.Group() };
+}
+function buildStations(visible) {
+  for (let i = pickables.length - 1; i >= 0; i--) if (pickables[i].userData.station) pickables.splice(i, 1);
+  for (const [n, s] of Object.entries(ST)) {
+    metro.remove(s.group); s.group = new THREE.Group(); s.group.position.copy(s.p);
+    const ls = s.lines.filter(l => visible.has(l));
+    if (!ls.length) continue;
+    const transfer = ls.length > 1;
+    const R = transfer ? 1.05 : 0.7;
+    ls.forEach((l, i) => {
+      const a0 = (i / ls.length) * Math.PI * 2, a1 = ((i + 1) / ls.length) * Math.PI * 2;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(R * 0.62, R, 32, 1, a0, a1 - a0), new THREE.MeshBasicMaterial({ color: ETFS[l].color, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; s.group.add(ring);
+    });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(R * 0.62, 24), new THREE.MeshBasicMaterial({ color: 0xffffff })); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.035; s.group.add(disc);
+    // entrance kiosk
+    const k = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(transfer ? 1.1 : 0.8, 0.9, 0.7), M.glassDark); body.position.y = 0.45; k.add(body);
+    ls.forEach((l, i) => { const band = new THREE.Mesh(new THREE.BoxGeometry((transfer ? 1.3 : 1) , 0.12, 0.9), new THREE.MeshStandardMaterial({ color: ETFS[l].color, emissive: ETFS[l].color, emissiveIntensity: 0.35 })); band.position.y = 0.96 + i * 0.13; k.add(band); });
+    k.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.station = n; pickables.push(o); } });
+    s.group.add(k);
+    // pin
+    const pin = textSprite([{ text: transfer ? '轉乘' : 'M', size: 20 }], { w: transfer ? 64 : 44, h: 34, bg: transfer ? 'rgba(255,255,255,.95)' : ETFS[ls[0]].color });
+    if (transfer) pin.userData.draw([{ text: '轉乘', size: 18, color: '#1b2533' }]);
+    pin.position.y = 2.6; pin.scale.multiplyScalar(1.25); s.group.add(pin);
+    metro.add(s.group);
+  }
+}
+const LINES = {};
+function orderStations(names) {
+  const rest = names.slice(); rest.sort((a, b) => ST[a].p.x - ST[b].p.x);
+  const out = [rest.shift()];
+  while (rest.length) { const last = ST[out[out.length - 1]].p; let bi = 0, bd = 1e9; rest.forEach((n, i) => { const d = last.distanceTo(ST[n].p); if (d < bd) { bd = d; bi = i; } }); out.push(rest.splice(bi, 1)[0]); }
+  return out;
+}
+for (const [k, e] of Object.entries(ETFS)) {
+  const order = orderStations(Object.keys(e.w));
+  const pts = order.map(n => ST[n].p.clone().setY(0.44));
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
+  const N = 320, wdt = 0.8, pos = [], idx = [];
+  const sample = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, p = curve.getPoint(t), tg = curve.getTangent(t);
+    const nrm = new THREE.Vector3(-tg.z, 0, tg.x).normalize();
+    const c = p.clone().addScaledVector(nrm, e.off);
+    sample.push(c);
+    pos.push(c.x + nrm.x * wdt / 2, 0.45 + Object.keys(ETFS).indexOf(k) * 0.004, c.z + nrm.z * wdt / 2, c.x - nrm.x * wdt / 2, 0.45 + Object.keys(ETFS).indexOf(k) * 0.004, c.z - nrm.z * wdt / 2);
+    if (i < N) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+  const mat = new THREE.MeshBasicMaterial({ color: e.color, side: THREE.DoubleSide, transparent: true, opacity: 0.95 });
+  const ribbon = new THREE.Mesh(g, mat); metro.add(ribbon);
+  const ghostMat = new THREE.MeshBasicMaterial({ color: e.color, side: THREE.DoubleSide, transparent: true, opacity: 0.42, depthTest: false, depthWrite: false });
+  const ghost = new THREE.Mesh(g, ghostMat); ghost.renderOrder = 5; metro.add(ghost); ribbon.userData.ghost = ghost;
+  const pulses = [];
+  for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false, transparent: true })); s.userData.t = i / 3; metro.add(s); pulses.push(s); }
+  LINES[k] = { ribbon, mat, pulses, sample, order };
+}
+
+/* ---------------- ships, cars ---------------- */
+{
+  const ship = new THREE.Group(); ship.position.set(40, -0.2, 9); ship.rotation.y = -0.15;
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(18, 2.2, 4.4), new THREE.MeshStandardMaterial({ color: 0x23303d, roughness: 0.6 })); hull.position.y = 0.9; ship.add(hull);
+  const red = new THREE.Mesh(new THREE.BoxGeometry(18.05, 0.5, 4.45), new THREE.MeshStandardMaterial({ color: 0xa8322b })); red.position.y = 0.05; ship.add(red);
+  const r = rng(5), cols = ['#2e7d4f', '#3c9a62', '#c0392b', '#2c5aa0', '#d6a21e'];
+  const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1.9, 0.75, 0.9), new THREE.MeshStandardMaterial({ roughness: 0.7 }), 7 * 4 * 2);
+  let k = 0; const mtx = new THREE.Matrix4(), col = new THREE.Color();
+  for (let i = 0; i < 7; i++) for (let j = 0; j < 4; j++) for (let l = 0; l < 2; l++) { mtx.makeTranslation(-7.5 + i * 2.05, 2.4 + l * 0.76, -1.4 + j * 0.95); im.setMatrixAt(k, mtx); im.setColorAt(k++, col.set(cols[Math.floor(r() * 5)])); }
+  ship.add(im);
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 4), M.white); bridge.position.set(7.6, 3.4, 0); ship.add(bridge);
+  ship.traverse(o => { if (o.isMesh) o.castShadow = true; }); city.add(ship);
+}
+const cars = [];
+{
+  const r = rng(77), palette = [0xd9d9d9, 0x2c3e50, 0xc0392b, 0x1f6fd6, 0xf1c40f, 0x7f8c8d];
+  for (let i = 0; i < 26; i++) {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.45, 0.6), new THREE.MeshStandardMaterial({ color: palette[i % palette.length], roughness: 0.4, metalness: 0.3 }));
+    body.position.y = 0.3; const top = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.3, 0.55), M.glassDark); top.position.set(-0.05, 0.65, 0);
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.5), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff2c4, emissiveIntensity: 0 })); hl.position.set(0.62, 0.32, 0);
+    g.add(body, top, hl); body.castShadow = true;
+    const ns = i % 2 === 0; const dir = r() < 0.5 ? 1 : -1;
+    g.userData = { ns, dir, t: r() * 140 - 70, speed: 4 + r() * 3, lane: dir * 0.9, hl: hl.material };
+    if (ns) g.rotation.y = dir > 0 ? -Math.PI / 2 : Math.PI / 2; else g.rotation.y = dir > 0 ? 0 : Math.PI;
+    city.add(g); cars.push(g);
+  }
+}
+
+/* ---------------- weather + fireworks ---------------- */
+const RAIN_N = 1800;
+const rainGeo = new THREE.BufferGeometry();
+const rainPos = new Float32Array(RAIN_N * 6);
+const rr = rng(3);
+for (let i = 0; i < RAIN_N; i++) { const x = rr() * 90 - 55, y = rr() * 70, z = rr() * 80 - 38; rainPos.set([x, y, z, x - 0.15, y - 1.3, z - 0.1], i * 6); }
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
+const rain = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: 0xbfd3e6, transparent: true, opacity: 0.55 }));
+rain.visible = false; scene.add(rain);
+const bursts = [];
+function spawnBurst(x, y, z) {
+  const n = 70, pos = new Float32Array(n * 3), vel = [];
+  const col = new THREE.Color().setHSL([0.0, 0.02, 0.08, 0.12, 0.95][Math.floor(Math.random() * 5)], 0.95, 0.62);
+  for (let i = 0; i < n; i++) { pos.set([x, y, z], i * 3); const v = new THREE.Vector3().randomDirection().multiplyScalar(4 + Math.random() * 3); vel.push(v); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ color: col, size: 0.45, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  scene.add(p); bursts.push({ p, vel, life: 0 });
+}
+
+
+/* ================= chat-driven city ================= */
+const HIST = {}; for (const k of ETF_KEYS) if (CITY.monthly && CITY.monthly[k]) HIST[k] = { m: CITY.monthly[k], last: CITY.last[k] };
+const demoTag = () => scenarioKey === 'real' ? '' : ' (示意行情)';
+const dailySrc = () => scenarioKey === 'real' ? `資料：${CITY.daily.source || '證交所每日行情'} (${CITY.daily.date})` : '資料：今日漲跌為示意行情，不是真實報價';
+const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const $ = id => document.getElementById(id);
+const DESK = () => innerWidth > 760;
+const r1 = v => Math.round(v * 10) / 10;
+const r2 = v => Math.round(v * 100) / 100;
+const money = v => Math.round(v).toLocaleString('en-US');
+const ymText = s => { const [y, m, d] = s.split('-'); return d ? `${y}/${+m}/${+d}` : `${y}/${m}`; };
+const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
+const cn = n => '零一兩三四五六七八九十'[n] ?? String(n);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RULES = { crash_below: -3, boom_above: 3, rain_below: -1.2 };
+
+let scenarioKey = REAL ? 'real' : 'mixed', timeH = 14.5, idxNow = 0;
+const weather = { rain: false, haze: 0 };
+const labelSet = new Map();
+let allLabels = false, focusLines = null, mine = null, replay = null, ctx = null;
+
+/* ---------- city state ---------- */
+function paintCrown(b, c) {
+  b.crown.emissive.set(c >= 0.3 ? 0xff2d2d : c <= -0.3 ? 0x20e070 : 0xffffff);
+  b.crown.emissiveIntensity = Math.abs(c) < 0.3 ? 0.6 : 1.8;
+}
+function applyScenario(key) {
+  scenarioKey = key; scenarioNow = key; chg = genChanges(key);
+  for (const b of Object.values(B)) {
+    const c = chg[b.c.name], st = stateOf(c);
+    applyFacades(b, LIT[st], st === 'crash');
+    paintCrown(b, c);
+    b.fx.clear();
+    if (st === 'crash') { const [w, d] = b.c.kind === 'air' ? [2.4, 2.4] : b.c.fp; b.fx.add(scaffold(b, w, d, Math.min(b.c.H * 0.45, 9))); }
+    b.boom = st === 'boom'; b.nextBurst = Math.random() * 1.5;
+  }
+  idxNow = indexEst();
+  weather.rain = idxNow <= RULES.rain_below; weather.haze = clamp(Math.abs(idxNow) / 4, 0, 1);
+  rain.visible = weather.rain;
+  document.querySelectorAll('[data-scn]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.scn === key)));
+  applyTime(timeH);
+  refreshLabels();
+}
+const SKY = { night: ['#08101e', '#1a2a46'], dusk: ['#36477a', '#f1a066'], day: ['#5ea6e2', '#d4e9f6'], storm: ['#4a5361', '#8f99a4'] };
+function mixHex(a, b, t) { return '#' + new THREE.Color(a).lerp(new THREE.Color(b), t).getHexString(); }
+const hhmm = h => { const hh = Math.floor(h), mm = Math.round((h - hh) * 60); return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; };
+function applyTime(h) {
+  timeH = h;
+  $('time').value = String(h); $('timeOut').textContent = hhmm(h);
+  const live = h >= 9 && h < 13.5, st = $('status');
+  st.classList.toggle('live', live);
+  st.innerHTML = `<i></i><span>${live ? '盤中' : h < 9 ? '盤前' : '收盤'}</span><span class="${cls(idxNow)}">大盤 ${fmtPct(idxNow)}</span>`;
+  const day = clamp(1 - Math.abs(h - 12.5) / 7.4, 0, 1), dl = day * day * (3 - 2 * day);
+  let top, bot;
+  if (dl < 0.35) { top = mixHex(SKY.night[0], SKY.dusk[0], dl / 0.35); bot = mixHex(SKY.night[1], SKY.dusk[1], dl / 0.35); }
+  else { top = mixHex(SKY.dusk[0], SKY.day[0], (dl - 0.35) / 0.65); bot = mixHex(SKY.dusk[1], SKY.day[1], (dl - 0.35) / 0.65); }
+  if (weather.rain) { top = mixHex(top, SKY.storm[0], 0.4 * dl + 0.15); bot = mixHex(bot, SKY.storm[1], 0.4 * dl + 0.15); }
+  $('sky').style.background = `linear-gradient(180deg, ${top} 0%, ${bot} 100%)`;
+  scene.fog.color.set(bot);
+  scene.fog.near = weather.rain ? 105 : 125 - weather.haze * 15; scene.fog.far = weather.rain ? 300 : 380;
+  const az = (h - 6) / 12 * Math.PI;
+  sun.position.set(Math.cos(az) * 90, Math.max(8, Math.sin(az) * 100), 55); sun.target.position.set(0, 0, 0);
+  const warm = 1 - clamp((dl - 0.15) / 0.5, 0, 1);
+  sun.color.set(mixHex('#ffffff', '#ffb070', warm));
+  sun.intensity = (0.15 + 2.5 * dl) * (weather.rain ? 0.55 : 1);
+  hemi.intensity = 0.22 + 0.75 * dl; hemi.color.set(mixHex('#7d93c9', '#dfeeff', dl));
+  const night = 1 - dl;
+  for (const m of windowMats) m.emissiveIntensity = (0.06 + 1.5 * Math.pow(night, 1.4)) * (m.userData.dim || 1);
+  M.lampOff.emissiveIntensity = night > 0.45 ? 2.2 : 0;
+  for (const car of cars) car.userData.hl.emissiveIntensity = night > 0.45 ? 2.5 : 0;
+  renderer.toneMappingExposure = 1.0 + 0.15 * night;
+}
+
+/* ---------- labels ---------- */
+const lightOf = hex => shade(hex, 0.2);
+function labelLinesFor(b, mode) {
+  const n = b.c.name, c = chg[n], L = [{ text: n, size: 22 }];
+  if (mode === 'chg') L.push({ text: fmtPct(c), size: 20, color: c > 0 ? '#ff7b7b' : c < 0 ? '#5fe0a0' : '#e8e8e8' });
+  else if (mode.startsWith('w:')) { for (const k of mode.slice(2).split(',')) if (ETFS[k].w[n] != null) L.push({ text: `${k}  ${ETFS[k].w[n].toFixed(2)}%`, size: 18, color: lightOf(ETFS[k].color) }); }
+  else if (mode === 'mine' && mine) L.push({ text: `你持有 ${(mine._share[n] * 100).toFixed(1)}%`, size: 19, color: '#ffd45c' });
+  return L;
+}
+function drawLabel(b, mode) {
+  const ls = labelLinesFor(b, mode), h = 22 + ls.length * 24;
+  if (b.label.userData.h !== h) {
+    b.group.remove(b.label); b.label.material.map.dispose(); b.label.material.dispose();
+    const sp = textSprite(ls, { w: 190, h, depthTest: false }); sp.userData.h = h; b.group.add(sp); b.label = sp;
+  } else b.label.userData.draw(ls);
+}
+function refreshLabels() {
+  for (const b of Object.values(B)) {
+    const mode = labelSet.get(b.c.name) || (allLabels ? 'chg' : null);
+    b.label.visible = !!mode;
+    if (mode) drawLabel(b, mode);
+  }
+}
+function setLabels(pairs) { labelSet.clear(); for (const [n, m] of pairs.slice(0, DESK() ? 8 : 4)) labelSet.set(n, m); refreshLabels(); }
+function defaultLabels() {
+  return Object.keys(chg).sort((a, b) => Math.abs(chg[b]) - Math.abs(chg[a])).slice(0, 5).map(n => [n, 'chg']);
+}
+
+/* ---------- lines, rings, gold ---------- */
+function setFocus(set) {
+  focusLines = set && set.size ? set : null;
+  for (const [k, L] of Object.entries(LINES)) {
+    const on = !focusLines || focusLines.has(k);
+    L.mat.opacity = on ? 0.95 : 0.12; L.ribbon.userData.ghost.material.opacity = on ? 0.42 : 0.03;
+    L.pulses.forEach(p => { p.visible = on; p.renderOrder = 6; });
+  }
+  buildStations(focusLines || new Set(Object.keys(ETFS)));
+}
+const ringG = new THREE.Group(); scene.add(ringG);
+function ringAt(p, r, color = 0xffffff) { return { p, r, color }; }
+function ringForCo(n, color) { const c = CO[n]; const r = c.kind === 'fab' ? 6 : c.kind === 'air' ? 3 : c.kind === 'fin' ? Math.max(...c.fp) / 2 + 2 : Math.max(...c.fp) / 2 + 1.3; return ringAt(c.pos, r, color); }
+function ringForSt(n, color) { const p = ST[n].p; return ringAt([p.x, p.z], 1.7, color); }
+function setRings(items) {
+  for (const m of [...ringG.children]) { ringG.remove(m); m.geometry.dispose(); m.material.dispose(); }
+  items.forEach((it, i) => {
+    for (let j = 0; j < 2; j++) {
+      const m = new THREE.Mesh(new THREE.RingGeometry(it.r, it.r + (j ? 0.16 : 0.34), 56), new THREE.MeshBasicMaterial({ color: it.color, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide }));
+      m.rotation.x = -Math.PI / 2; m.position.set(it.p[0], 0.5 + j * 0.01, it.p[1]); m.userData = { pulse: j === 1, ph: i * 0.23 }; m.renderOrder = 4;
+      ringG.add(m);
+    }
+  });
+}
+function setMine(m) {
+  mine = m;
+  const maxS = mine ? Math.max(...Object.values(mine._share)) : 1;
+  for (const b of Object.values(B)) {
+    if (b.gold) { b.group.remove(b.gold); b.gold.traverse(o => { if (o.geometry) o.geometry.dispose(); }); b.gold = null; }
+    const s = mine && mine._share[b.c.name];
+    if (!s) continue;
+    const [w, d] = b.c.kind === 'air' ? [2.4, 2.4] : b.c.fp, base = b.c.kind === 'fin' ? 1.6 : 0;
+    const h = Math.max(0.8, b.c.H * (b.c.kind === 'fin' ? 0.68 : 0.62) * (s / maxS));
+    const g = new THREE.Group();
+    const box = new THREE.Mesh(new THREE.BoxGeometry(w + 0.18, h, d + 0.18), new THREE.MeshBasicMaterial({ color: 0xffc83d, transparent: true, opacity: 0.4, depthWrite: false }));
+    box.position.y = base + h / 2; g.add(box);
+    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0xffd45c }));
+    edges.position.copy(box.position); g.add(edges);
+    b.group.add(g); b.gold = g;
+  }
+}
+function resetCity() { setFocus(null); setRings([]); setMine(null); setLabels(defaultLabels()); }
+
+/* ---------- camera ---------- */
+function layoutView() {
+  const W = innerWidth, H = innerHeight, a = W / H;
+  Object.assign(camera, { left: -VIEW * a / 2, right: VIEW * a / 2, top: VIEW / 2, bottom: -VIEW / 2 });
+  camera.setViewOffset(W, H, DESK() ? 208 : 0, DESK() ? 0 : Math.round(H * 0.23 - 36), W, H);
+  camera.updateProjectionMatrix(); renderer.setSize(W, H);
+}
+let fly = null;
+function flyTo(target, zoom, dur = 1.15) {
+  fly = { t: reduce ? dur : 0, dur, fromT: controls.target.clone(), toT: target, fromZ: camera.zoom, toZ: zoom, off: camera.position.clone().sub(controls.target) };
+}
+controls.addEventListener('start', () => { fly = null; });
+function fitNames(names, { maxZoom = 2.1, pad = 1.12 } = {}) {
+  // project each building's bounding box onto the camera's screen axes, then pick target + zoom so it fills the free area
+  const off = fly ? fly.off : camera.position.clone().sub(controls.target);
+  const fwd = off.clone().negate().normalize();
+  const Rv = new THREE.Vector3().crossVectors(fwd, camera.up).normalize(), Uv = new THREE.Vector3().crossVectors(Rv, fwd).normalize();
+  let r0 = Infinity, r1 = -Infinity, u0 = Infinity, u1 = -Infinity; const ctr = new THREE.Vector3(), p = new THREE.Vector3();
+  for (const n of names) {
+    const c = CO[n], rr = Math.max(...c.fp) / 2 + (c.kind === 'fab' ? 5 : c.kind === 'ship' ? 3 : 1), top = B[n].topY + 1;
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const y of [0, top]) {
+      p.set(c.pos[0] + sx * rr, y, c.pos[1] + sz * rr);
+      const a = p.dot(Rv), b = p.dot(Uv); r0 = Math.min(r0, a); r1 = Math.max(r1, a); u0 = Math.min(u0, b); u1 = Math.max(u1, b);
+    }
+    ctr.add(p.set(c.pos[0], top / 2, c.pos[1]));
+  }
+  ctr.divideScalar(names.length);
+  const fw = (DESK() ? innerWidth - 416 : innerWidth) - 40, fh = DESK() ? innerHeight - 70 : innerHeight * 0.54 - 110;
+  const zfit = (hu) => clamp(Math.min(fw * VIEW / innerHeight / ((r1 - r0) * pad), fh * VIEW / innerHeight / (hu * pad)), 0.3, maxZoom);
+  const z0 = zfit(u1 - u0);
+  u1 += 80 * VIEW / (innerHeight * z0); // room for the floating labels above the tallest roof
+  const zoom = zfit(u1 - u0);
+  const T = ctr.clone().addScaledVector(Rv, (r0 + r1) / 2 - ctr.dot(Rv)).addScaledVector(Uv, (u0 + u1) / 2 - ctr.dot(Uv));
+  flyTo(T, zoom);
+}
+const ALL = Object.keys(CO);
+const overview = () => fitNames(ALL, { maxZoom: 0.95 });
+
+/* ================= agent: tools ================= */
+const reEsc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const KB = (CITY.kb || []).map(d => ({ ...d, keys: new RegExp([d.title, ...(d.aliases || [])].filter(Boolean).map(reEsc).join('|'), 'i'), lines: ETF_KEYS.filter(k => d.text.includes(k)).slice(0, 3) }));
+const KB_KEYS = /什麼是|是什麼|什麼意思|怎麼算|如何計算|收益平準金|折價|溢價|淨值|除息|填息|配息|內扣|費用|經理費|手續費|證交稅|稅|市值型|高股息型|高股息(跟|和|與|還是)|成分股調整|換股|追蹤誤差|申購|買回|槓桿|反向|債券|殖利率|零股|下市|清算|風險|主動式|被動式/;
+function firstSection(md, limit = 420) {
+  const out = []; let n = 0;
+  for (let ln of md.split('\n')) {
+    ln = ln.trim();
+    if (!ln || ln.startsWith('#') || ln.startsWith('|')) { if (n > 120 && ln.startsWith('#')) break; continue; }
+    ln = ln.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s*\(來源[:：][^)]*\)/g, '').replace(/^[-*]\s*/, '').replace(/\*\*/g, '');
+    out.push(/[。！？]$/.test(ln) ? ln : ln + '。'); n += ln.length; if (n > limit) break;
+  }
+  return esc(out.join(''));
+}
+function bigrams(s) { s = s.replace(/[\s，。、()（）？?！!「」:：]/g, ''); const m = new Map(); for (let i = 0; i < s.length - 1; i++) { const g = s.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; }
+function cosine(a, b) { let d = 0, na = 0, nb = 0; for (const [k, v] of a) { na += v * v; if (b.has(k)) d += v * b.get(k); } for (const v of b.values()) nb += v * v; return na && nb ? d / Math.sqrt(na * nb) : 0; }
+
+const TOOLS = {
+  market_summary() {
+    const avg = {};
+    for (const d of Object.keys(DIST)) { const ns = Object.values(CO).filter(c => c.d === d).map(c => chg[c.name]); avg[d] = r2(ns.reduce((a, b) => a + b, 0) / ns.length); }
+    const ks = Object.keys(avg).sort((a, b) => avg[a] - avg[b]);
+    const pick = f => Object.keys(chg).filter(f).map(n => ({ name: n, change: chg[n] }));
+    return {
+      index_est: r2(idxNow), district_avg: Object.fromEntries(ks.map(d => [DIST[d].name, avg[d]])),
+      worst: DIST[ks[0]].name, best: DIST[ks.at(-1)].name,
+      crash: pick(n => chg[n] <= RULES.crash_below).sort((a, b) => a.change - b.change),
+      boom: pick(n => chg[n] >= RULES.boom_above).sort((a, b) => b.change - a.change),
+      rain: weather.rain, rules: RULES, note: scenarioKey === 'real' ? '' : '示意行情',
+      _wk: ks[0], _bk: ks.at(-1),
+    };
+  },
+  district_detail({ district }) {
+    const k = Object.keys(DIST).find(x => DIST[x].name === district);
+    const list = Object.values(CO).filter(c => c.d === k).map(c => ({ name: c.name, change: chg[c.name] })).sort((a, b) => b.change - a.change);
+    return { district, avg: r2(list.reduce((a, b) => a + b.change, 0) / list.length), companies: list, rules: RULES, note: scenarioKey === 'real' ? '' : '示意行情', _k: k };
+  },
+  get_stock_today({ name }) { const c = CO[name]; return { name, code: c.code, industry: c.ind, district: DIST[c.d].name, change: chg[name], state: stateOf(chg[name]), rules: RULES, note: scenarioKey === 'real' ? '' : '示意行情' }; },
+  etfs_holding({ name }) {
+    return { name, etfs: Object.keys(ETFS).filter(k => ETFS[k].w[name] != null).map(k => ({ etf: k, weight: ETFS[k].w[name], rank: Object.entries(ETFS[k].w).sort((a, b) => b[1] - a[1]).findIndex(([n]) => n === name) + 1 })) };
+  },
+  get_holdings({ etf }) {
+    const e = ETFS[etf], top = Object.entries(e.w).sort((a, b) => b[1] - a[1]), byD = {};
+    for (const [n, w] of top) { const dn = DIST[CO[n].d].name; byD[dn] = r2((byD[dn] || 0) + w); }
+    return { etf, name: e.name, type: e.type, top10: top.map(([name, w]) => ({ name, w })), top10_sum: r2(top.reduce((a, [, w]) => a + w, 0)), by_district: byD };
+  },
+  holdings_overlap({ a, b }) {
+    const A = ETFS[a].w, Bw = ETFS[b].w;
+    const shared = Object.keys(A).filter(n => Bw[n] != null).sort((x, y) => Math.min(A[y], Bw[y]) - Math.min(A[x], Bw[x])).map(n => ({ name: n, [a]: A[n], [b]: Bw[n] }));
+    return { a, b, count: shared.length, overlap: r2(shared.reduce((s, x) => s + Math.min(x[a], x[b]), 0)), shared, method: '共同持股取較小權重相加' };
+  },
+  get_return({ etf, period = '1y' }) {
+    const R = (CITY.returns[etf] || {})[period] || (CITY.returns[etf] || {})['max'];
+    return { etf, period, from: R.from, to: R.to, ret: R.ret, basis: '價格報酬，未含息' };
+  },
+  simulate_dca({ etf, monthly, start }) {
+    const H = HIST[etf]; let rows = H.m.filter(([ym]) => ym >= start); if (!rows.length) rows = H.m.slice(-12);
+    let sh = 0, inv = 0, worst = { d: rows[0][0], pnl: Infinity };
+    const series = rows.map(([d, p], i) => {
+      sh += monthly / p; inv += monthly; const val = sh * p, pnl = (val / inv - 1) * 100;
+      if (pnl < worst.pnl) worst = { d, pnl: r2(pnl) };
+      const nxt = i + 1 < rows.length ? rows[i + 1][1] : H.last[1];
+      return { d, p, inv, val, ch: nxt / p - 1 };
+    });
+    const val = sh * H.last[1];
+    series.push({ d: H.last[0], p: H.last[1], inv, val, ch: null });
+    const chs = series.filter(s => s.ch != null);
+    const mn = chs.reduce((a, b) => b.ch < a.ch ? b : a), mx = chs.reduce((a, b) => b.ch > a.ch ? b : a);
+    return { etf, monthly, start: rows[0][0], end: H.last[0], n: rows.length, invested: inv, value: Math.round(val), ret: r2((val / inv - 1) * 100),
+      worst, max_drop: { d: mn.d, ch: r2(mn.ch * 100) }, max_gain: { d: mx.d, ch: r2(mx.ch * 100) }, effects: { rain_below: -4, fireworks_above: 5 },
+      basis: '每月第一個交易日收盤價買進，可買零股，價格報酬未含息與手續費', _series: series };
+  },
+  lookthrough({ amounts }) {
+    const ex = {}, from = {}; let total = 0, covered = 0;
+    for (const [k, a] of Object.entries(amounts)) { total += a; for (const [n, w] of Object.entries(ETFS[k].w)) { const v = a * w / 100; ex[n] = (ex[n] || 0) + v; (from[n] ||= {})[k] = Math.round(v); covered += v; } }
+    const share = {}; for (const n in ex) share[n] = ex[n] / total;
+    const top = Object.keys(ex).sort((x, y) => ex[y] - ex[x]).slice(0, 6).map(n => ({ name: n, share_pct: r1(share[n] * 100), from: from[n] }));
+    const cp = r1(covered / total * 100);
+    return { total, top, covered_pct: cp, rest_pct: r1(100 - cp), note: '只計各檔前十大成分股', _share: share };
+  },
+  search_knowledge({ query }) {
+    const qa = bigrams(query.replace(/什麼是|是什麼|什麼意思|為什麼|怎麼|如何|請問|可以|嗎|呢|多少|哪些/g, ' '));
+    const sc = KB.map(d => ({ d, s: cosine(qa, bigrams(d.title + d.title + d.summary + d.text)) + (d.keys.test(query) ? 0.5 : 0) })).sort((a, b) => b.s - a.s);
+    const top = sc[0];
+    if (!top || top.s < 0.2) return { hit: false, score: top ? r2(top.s) : 0 };
+    return { hit: true, title: top.d.title, score: r2(Math.min(0.99, top.s)), _text: firstSection(top.d.text), _raw: top.d.text, _doc: top.d, second: sc[1] ? sc[1].d.title : null };
+  },
+};
+
+/* ================= agent: planner (rule-based stand-in for the LLM planner) ================= */
+const ETF_RE = () => new RegExp('(?<!\\d)(' + [...ETF_KEYS].sort((a, b) => b.length - a.length).join('|') + ')(?!\\d)', 'g');
+const ETF_ALIAS = [...ETF_KEYS.map(k => [ETFS[k].name, k]), ['群益高息', '00919'], ['群益精選高息', '00919'], ['元大台灣50', '0050'], ['台灣50', '0050'], ['台灣五十', '0050'], ['富邦台50', '006208'], ['元大高股息', '0056'], ['國泰永續高股息', '00878'], ['國泰永續', '00878']];
+const CO_ALIAS = [...Object.keys(CO).map(n => [n, n]), ['台積', '台積電'], ['TSMC', '台積電'], ['發哥', '聯發科'], ['中華電信', '中華電'], ['日月光', '日月光投控'], ['長榮海運', '長榮'], ['長榮航空', '長榮航'], ['陽明海運', '陽明'], ['華南', '華南金'], ['國泰金控', '國泰金'], ['富邦金控', '富邦金'], ['中信', '中信金'], ['元大金控', '元大金']]
+  .sort((a, b) => b[0].length - a[0].length);
+const CN_D = { 零: 0, 〇: 0, 一: 1, 二: 2, 兩: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+function parseCN(s) {
+  let total = 0, sec = 0, num = 0, last = '';
+  for (const ch of s) {
+    if (ch in CN_D) num = CN_D[ch];
+    else { const u = { 十: 10, 百: 100, 千: 1000 }[ch]; if (u) { sec += (num || 1) * u; num = 0; last = ch; } else if (ch === '萬') { total += (sec + num) * 10000; sec = 0; num = 0; last = ch; } }
+  }
+  if (num && last === '萬') return total + num * 1000;
+  if (num && last === '千') return total + sec + num * 100;
+  return total + sec + num;
+}
+function extract(q) {
+  let s = q;
+  for (const [a, k] of ETF_ALIAS) if (ETFS[k]) s = s.split(a).join(` ${k} `);
+  const cos = []; let sc = s;
+  for (const [a, n] of CO_ALIAS) { const i = sc.indexOf(a); if (i >= 0) { if (!cos.some(x => x.n === n)) cos.push({ n, i }); sc = sc.split(a).join('＃'.repeat(a.length)); } }
+  cos.sort((a, b) => a.i - b.i);
+  const tok = [];
+  for (const m of sc.matchAll(ETF_RE())) tok.push({ t: 'etf', v: m[1], i: m.index });
+  const yr = sc.match(/(?<!\d)(20[12]\d)(?!\d)/);
+  let hour = null; const hm = sc.match(/(?<!\d)(\d{1,2})\s*點/);
+  if (hm) { hour = +hm[1]; if (/晚上|下午|傍晚/.test(sc) && hour < 12) hour += 12; }
+  const mask = m => '§'.repeat(m.length);
+  const qa = sc.replace(ETF_RE(), mask).replace(/(?<!\d)20[12]\d(?!\d)\s*年?/g, mask).replace(/(?<!\d)\d{1,2}\s*點/g, mask);
+  for (const m of qa.matchAll(/(\d+(?:\.\d+)?)\s*(萬|千|k|K)?|([一二兩三四五六七八九十百千萬]*[十百千萬][一二兩三四五六七八九十百千萬]*)/g)) {
+    const v = m[1] ? parseFloat(m[1]) * (m[2] === '萬' ? 10000 : m[2] ? 1000 : 1) : parseCN(m[3]);
+    if (v >= 100) tok.push({ t: 'amt', v: Math.round(v), i: m.index });
+  }
+  tok.sort((a, b) => a.i - b.i);
+  const pairs = {}; let lastEtf = null, pend = null;
+  for (const t of tok) {
+    if (t.t === 'etf') { lastEtf = t.v; if (pend != null && pairs[t.v] == null) { pairs[t.v] = pend; pend = null; } }
+    else if (lastEtf && pairs[lastEtf] == null) pairs[lastEtf] = t.v; else pend = t.v;
+  }
+  return { etfs: [...new Set(tok.filter(t => t.t === 'etf').map(t => t.v))], cos: cos.map(x => x.n), amounts: tok.filter(t => t.t === 'amt').map(t => t.v), pairs, year: yr ? +yr[1] : null, hour };
+}
+function districtIn(q) { return /半導體|園區/.test(q) ? 'semi' : /電子|科技區/.test(q) ? 'tech' : /金融區/.test(q) ? 'fin' : /航運|港/.test(q) ? 'port' : /民生|工業區/.test(q) && DIST.life ? 'life' : null; }
+function planner(q0) {
+  const q = q0.replace(/(\d),(?=\d{3})/g, '$1').trim(), E = extract(q), has = re => re.test(q);
+  const followUp = /^(那|換成|改成|如果是|那如果|換)|呢[？?]?$/.test(q);
+  let intent;
+  if (has(/(明天|下週|下周|明年|未來|之後|接下來).{0,8}(漲|跌|走勢|表現)|會(漲|跌)嗎|會不會(漲|跌|賺|賠)|該不該|要不要買|可以買嗎|值得買|推薦|明牌|保證|梭哈|all ?in|借錢|目標價|預測|穩賺/i)) intent = 'refuse';
+  else if (!has(/什麼是|是什麼/) && (has(/定期定額|每月|每個月|存股|回放|重播/) || (has(/如果|假設/) && has(/買|存|投入/) && E.amounts.length))) intent = 'replay';
+  else if (Object.keys(E.pairs).length && has(/我(有|買|持有|手上|的)|持股|改成|換成|配置/)) intent = 'mine';
+  else if (has(/我的城市|我的持股|看穿/)) intent = 'mine';
+  else if (followUp && E.etfs.length === 1 && ctx && ['replay', 'etf', 'refuse'].includes(ctx.intent)) intent = ctx.intent;
+  else if (E.etfs.length >= 2) intent = 'compare';
+  else if (KB_KEYS.test(q)) intent = 'kb';
+  else if (E.cos.length && has(/站|轉乘|經過/)) intent = 'station';
+  else if (E.cos.length) intent = 'company';
+  else if (has(/大跌|崩盤|股災|大漲|平盤|震盪/)) intent = 'scenario';
+  else if (has(/晚上|夜景|夜晚|天黑|白天|早上|中午|下午|傍晚/) || E.hour != null) intent = 'time';
+  else if (E.etfs.length === 1) intent = 'etf';
+  else if (has(/總覽|全部|回到|重置|重來|整個城市|全城|看全部/)) intent = 'overview';
+  else if (has(/今天|今日|大盤|市場|怎麼了|發生|新聞|日報|為什麼|下雨|煙火|港區|園區|金融區|科技區|行情/)) intent = 'market';
+  else if (has(/什麼是|是什麼|意思|差在哪|差別/)) intent = 'kb';
+  else intent = 'help';
+  return { intent, E, q };
+}
+
+/* ================= agent: handlers (tools to call, city actions, writer) ================= */
+const ROLE = { guide: ['城市導覽員', '導', '#435369'], archive: ['城市檔案室', '檔', '#7a5c2e'] };
+function marketText(m) {
+  const da = m.district_avg, wv = da[m.worst], bv = da[m.best];
+  let h = `今天${demoTag()} 大盤${scenarioKey === 'real' ? '' : '估算'} <b class="${cls(m.index_est)}">${fmtPct(m.index_est)}</b>${m.rain ? '，城市在下雨' : ''}。`;
+  const parts = [];
+  if (wv < -0.5) parts.push(`${m.worst}最弱，平均 <b class="down">${fmtPct(wv)}</b>`);
+  if (bv > 0.5) parts.push(`${m.best}最強，平均 <b class="up">${fmtPct(bv)}</b>`);
+  h += parts.length ? parts.join('；') + '。' : '各區變動都不大，燈光照常。';
+  const li = xs => xs.map(x => `${x.name} <b class="${cls(x.change)}">${fmtPct(x.change)}</b>`).join('、');
+  const ev = [];
+  if (m.crash.length) ev.push(`跌超過 ${Math.abs(m.rules.crash_below)}% 的有${li(m.crash.slice(0, 2))}，外牆龜裂、搭起鷹架`);
+  if (m.boom.length) ev.push(`漲超過 ${m.rules.boom_above}% 的有${li(m.boom.slice(0, 2))}，頂樓在放煙火`);
+  if (ev.length) h += ev.join('；') + '。';
+  return h + '點任何一棟大樓，可以直接問它的管理員。';
+}
+function marketAct(m) {
+  setFocus(null); setMine(null);
+  const hot = [...m.crash.slice(0, 3), ...m.boom.slice(0, 3)].map(x => x.name);
+  const names = hot.length ? hot : defaultLabels().map(x => x[0]);
+  setLabels(names.map(n => [n, 'chg']));
+  setRings([...m.crash.slice(0, 1).map(x => ringForCo(x.name, 0x20e070)), ...m.boom.slice(0, 1).map(x => ringForCo(x.name, 0xff4d4d))]);
+  overview();
+}
+const HANDLERS = {
+  market({ q }) {
+    const dk = districtIn(q);
+    if (dk) return {
+      role: ROLE.guide, tools: [['district_detail', { district: DIST[dk].name }]],
+      scene: [['fly_to', { district: DIST[dk].name }], ['label', { names: '區內所有大樓', mode: '漲跌' }]],
+      act([d]) { setFocus(null); setMine(null); const ns = d.companies.map(c => c.name); setLabels(ns.map(n => [n, 'chg'])); setRings([]); fitNames(ns, { maxZoom: 1.8 }); },
+      write([d]) {
+        const up = d.companies.filter(c => c.change > 0), dn = d.companies.filter(c => c.change < 0);
+        let h = `${d.district}今天${demoTag()} 平均 <b class="${cls(d.avg)}">${fmtPct(d.avg)}</b>。`;
+        if (up.length) h += `上漲的有${up.slice(0, 3).map(c => `${c.name} <b class="up">${fmtPct(c.change)}</b>`).join('、')}。`;
+        if (dn.length) h += `下跌的有${dn.slice(-3).reverse().map(c => `${c.name} <b class="down">${fmtPct(c.change)}</b>`).join('、')}。`;
+        const boom = d.companies.filter(c => c.change >= d.rules.boom_above), crash = d.companies.filter(c => c.change <= d.rules.crash_below);
+        if (boom.length) h += `漲超過 ${d.rules.boom_above}% 的${boom.map(c => c.name).join('、')}頂樓在放煙火。`;
+        if (crash.length) h += `跌超過 ${Math.abs(d.rules.crash_below)}% 的${crash.map(c => c.name).join('、')}外牆龜裂、搭起鷹架。`;
+        return h;
+      },
+      src: dailySrc,
+      follow: d => [`${d.companies[0].name}今天怎麼了？`, '今天城市怎麼了？', '回到全城'],
+    };
+    return {
+      role: ROLE.guide, tools: [['market_summary', {}]],
+      scene: [['fly_to', { overview: true }], ['label', { names: '漲跌最大的大樓', mode: '漲跌' }], ['ring', { names: '最弱與最強各一棟' }]],
+      act([m]) { marketAct(m); }, write([m]) { return marketText(m); },
+      src: dailySrc,
+      follow: m => [`${(m.crash[0] || m.boom[0] || { name: '台積電' }).name}今天怎麼了？`, '0050 跟 00878 差在哪？', '晚上的城市長怎樣？'],
+    };
+  },
+  scenario({ q }) {
+    const key = /大跌|崩盤|股災/.test(q) ? 'down' : /大漲/.test(q) ? 'up' : /平盤/.test(q) ? 'flat' : 'mixed';
+    const name = { down: '大跌', up: '大漲', flat: '平盤', mixed: '震盪' }[key];
+    return {
+      role: ROLE.guide, pre() { applyScenario(key); }, tools: [['market_summary', {}]],
+      scene: [['set_market', { scenario: name }], ['fly_to', { overview: true }]],
+      act([m]) { marketAct(m); }, write([m]) { return `換成「${name}」的示意行情。` + marketText(m); },
+      src: '資料：示意行情，用來看城市在不同市況下的樣子',
+      follow: () => [key !== 'down' ? '如果今天大跌呢？' : '如果今天大漲呢？', key !== 'mixed' ? '回到震盪行情' : '如果今天大漲呢？', '晚上的城市長怎樣？'],
+    };
+  },
+  company({ E }) {
+    const n = E.cos[0];
+    return {
+      role: [`${n}大樓管理員`, '管', '#5b4a8a'], tools: [['get_stock_today', { name: n }], ['etfs_holding', { name: n }]],
+      scene: [['fly_to', { names: [n] }], ['focus_lines', { lines: '經過這棟樓的線' }], ['ring', { names: [n] }], ['label', { names: [n], mode: '漲跌' }]],
+      act([s, eh]) { setMine(null); setFocus(new Set(eh.etfs.map(x => x.etf))); setRings([ringForCo(n, 0xffffff)]); setLabels([[n, 'chg']]); fitNames([n], { maxZoom: 1.9 }); },
+      write([s, eh]) {
+        const look = { boom: `漲超過 ${s.rules.boom_above}%，頂樓放起煙火，窗戶幾乎全亮`, up: '小漲，窗戶比平常亮', flat: '變動不大，燈光照常', down: '下跌，窗戶暗了一些', crash: `跌超過 ${Math.abs(s.rules.crash_below)}%，外牆出現裂痕、搭起鷹架，窗戶暗了一大半` }[s.state];
+        const L = eh.etfs;
+        let h = `${n} (${s.code}) 今天 <b class="${cls(s.change)}">${fmtPct(s.change)}</b>${demoTag()}，${look}。`;
+        h += `經過這棟樓的捷運線有${cn(L.length)}條：${L.map(x => `${x.etf} (權重 <b>${x.weight.toFixed(2)}%</b>，第 ${x.rank} 大)`).join('、')}。`;
+        const big = L.find(x => x.weight >= 50);
+        if (big) h += `${big.etf} 有超過一半的錢在這棟樓，它今天的漲跌，幾乎就決定了 ${big.etf} 今天的表現。`;
+        else if (L.length >= 3) h += `這是城裡的大轉乘站，${cn(L.length)}條線都會停，所以它一動，好幾檔 ETF 會一起受影響。`;
+        else if (L.length === 2) h += `兩條線都停這裡，所以它是 ${L[0].etf} 和 ${L[1].etf} 的轉乘站。`;
+        else h += `只有 ${L[0].etf} 這條線會停這站。`;
+        return h;
+      },
+      src: () => '資料：前十大成分股權重；' + dailySrc().replace('資料：', ''),
+      follow: (s, eh) => [`${n}站有哪些線經過？`, `${eh.etfs[0].etf} 前十大是哪些？`, '今天城市怎麼了？'],
+    };
+  },
+  station({ E }) {
+    const n = E.cos[0];
+    return {
+      role: [`${n}站站務員`, '站', '#2e6b5e'], tools: [['etfs_holding', { name: n }]],
+      scene: [['focus_lines', { lines: '停靠這站的線' }], ['ring', { station: n }], ['label', { names: [n], mode: '各線權重' }], ['fly_to', { names: [n] }]],
+      act([eh]) { const ks = eh.etfs.map(x => x.etf); setMine(null); setFocus(new Set(ks)); setRings([ringForSt(n, 0xffffff)]); setLabels([[n, 'w:' + ks.join(',')]]); fitNames([n], { maxZoom: 1.9 }); },
+      write([eh]) {
+        const L = eh.etfs;
+        if (L.length === 1) return `${n}站只有 ${L[0].etf} 經過，權重 <b>${L[0].weight.toFixed(2)}%</b>，是它的第 ${L[0].rank} 大持股。`;
+        return `${n}站是${cn(L.length)}條線的轉乘站：${L.map(x => `${x.etf} <b>${x.weight.toFixed(2)}%</b>`).join('、')}。這${cn(L.length)}檔的前十大都有${n}，同時買的話，等於在這站重複買了好幾次。`;
+      },
+      src: '資料：前十大成分股權重',
+      follow: (eh) => eh.etfs.length >= 2 ? [`${eh.etfs[0].etf} 跟 ${eh.etfs[eh.etfs.length - 1].etf} 差在哪？`, `${n}今天怎麼了？`] : [`${eh.etfs[0].etf} 前十大是哪些？`, `${n}今天怎麼了？`],
+    };
+  },
+  compare({ E }) {
+    const [a, b] = E.etfs;
+    return {
+      role: ROLE.guide,
+      tools: [['holdings_overlap', { a, b }], ['get_holdings', { etf: a }], ['get_holdings', { etf: b }], ['get_return', { etf: a, period: '1y' }], ['get_return', { etf: b, period: '1y' }]],
+      scene: [['focus_lines', { lines: [a, b] }], ['ring', { stations: '共同車站' }], ['label', { names: '共同車站與各自最大站', mode: '兩檔權重' }], ['fly_to', { names: '共同車站' }]],
+      act([ov, ha, hb]) {
+        setMine(null); setFocus(new Set([a, b]));
+        const sh = ov.shared.slice(0, 4).map(x => x.name), tops = [ha.top10[0].name, hb.top10[0].name];
+        const names = [...new Set([...tops, ...sh])];
+        setRings(ov.shared.map(x => ringForSt(x.name, 0xffffff)));
+        setLabels(names.map(n => [n, `w:${a},${b}`]));
+        fitNames(names, { maxZoom: 1.5 });
+      },
+      write([ov, ha, hb, ra, rb]) {
+        const ta = ha.top10[0], tb = hb.top10[0];
+        let h = `${a} (${ha.type}) 和 ${b} (${hb.type}) 兩條線，`;
+        if (!ov.count) h += '前十大沒有共同車站，完全不重疊。';
+        else if (ov.count === 10 || ov.overlap > 60) h += `前十大${cn(ov.count)}站全部相同，重疊權重 <b>${ov.overlap.toFixed(2)}%</b>，幾乎是同一條線，同時持有兩檔，分散的效果很有限。`;
+        else h += `前十大${ov.count <= 3 ? '只在' : '有'}${cn(ov.count)}站轉乘：${ov.shared.map(s => s.name).join('、')}，重疊權重 <b>${ov.overlap.toFixed(2)}%</b>。`;
+        if (ta.name !== tb.name) h += `最大的差別在第一站：${a} 最大是${ta.name} <b>${ta.w.toFixed(2)}%</b>，${b} 最大是${tb.name} <b>${tb.w.toFixed(2)}%</b>${Math.max(ta.w, tb.w) > 30 ? `，${ta.w > tb.w ? b : a} 分散很多` : ''}。`;
+        h += `過去一年 (${ymText(ra.from)} 到 ${ymText(ra.to)}) 價格報酬：${a} <b class="${cls(ra.ret)}">${fmtPct(ra.ret)}</b>，${b} <b class="${cls(rb.ret)}">${fmtPct(rb.ret)}</b>。`;
+        h += ha.type === '高股息' || hb.type === '高股息' ? '這只算股價，配息沒有加回來；高股息 ETF 配息比較多，加回去之後差距會縮小。' : '這只算股價，配息沒有加回來。';
+        return h;
+      },
+      src: '資料：前十大成分股權重、ETF 歷史收盤價',
+      follow: () => [`每月 5000 買 ${b}，從 2020 到現在會怎樣？`, `我有 ${a} 30萬、${b} 20萬`, '什麼是收益平準金？'],
+    };
+  },
+  etf({ E }) {
+    const k = E.etfs[0];
+    return {
+      role: [`${k} 線站長`, '線', ETFS[k].color], tools: [['get_holdings', { etf: k }], ['get_return', { etf: k, period: '1y' }]],
+      scene: [['focus_lines', { lines: [k] }], ['label', { names: '前五大', mode: '權重' }], ['fly_to', { line: k }]],
+      act([h1]) { setMine(null); setFocus(new Set([k])); setRings([]); setLabels(h1.top10.slice(0, 5).map(x => [x.name, 'w:' + k])); fitNames(h1.top10.map(x => x.name), { maxZoom: 1.3 }); },
+      write([h1, r]) {
+        const t = h1.top10[0], bd = Object.entries(h1.by_district).sort((x, y) => y[1] - x[1])[0];
+        return `${k} ${h1.name}是一條${h1.type}線，前十大經過${cn(h1.top10.length)}站，最大站是${t.name} <b>${t.w.toFixed(2)}%</b>，前十大合計 <b>${h1.top10_sum.toFixed(2)}%</b>，其餘分散在其他公司，沒有畫進城市。這條線在${bd[0]}停最多，合計 <b>${bd[1].toFixed(2)}%</b>。過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含息)。`;
+      },
+      src: '資料：前十大成分股權重、ETF 歷史收盤價',
+      follow: (h1) => [`每月 5000 買 ${k}，從 2020 到現在會怎樣？`, `${k} 跟 ${k === '00878' ? '0056' : '00878'} 差在哪？`, `${h1.top10[0].name}今天怎麼了？`],
+    };
+  },
+  replay({ E }) {
+    const k = E.etfs[0] || ctx?.etf || '0050';
+    const monthly = clamp(E.amounts[0] ?? (ctx?.intent === 'replay' ? ctx.monthly : 5000), 100, 10000000);
+    const first = HIST[k].m[0][0], y = E.year ?? (ctx?.intent === 'replay' ? +ctx.start.slice(0, 4) : 2020);
+    const start = clamp(y, 2020, 2025) + '-01' < first ? first : clamp(y, 2020, 2025) + '-01';
+    return {
+      role: ROLE.archive, tools: [['simulate_dca', { etf: k, monthly, start }]],
+      scene: [['focus_lines', { lines: [k] }], ['replay', { etf: k, speed: '每月 0.11 秒' }], ['weather', { rain: '單月跌超過 4%', fireworks: '單月漲超過 5%' }]],
+      replay: true,
+      act([s], msg) { setMine(null); setFocus(new Set([k])); setRings([]); const top = ETFS[k]; setLabels(Object.entries(top.w).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n]) => [n, 'w:' + k])); fitNames(Object.keys(top.w), { maxZoom: 1.3 }); startReplay(s, msg); },
+      write([s]) {
+        let h = '';
+        const late = s.start !== `${clamp(y, 2020, 2025)}-01`;
+        h += y < 2020 || late ? `${late ? k + ' ' : ''}資料從 ${ymText(s.start)} 才開始，所以從那個月起算：` : `從 ${ymText(s.start)} 開始，`;
+        h += `每月第一個交易日買 <b>${money(s.monthly)} 元</b>的 ${k}，共買 ${s.n} 次，總共投入 <b>${money(s.invested)} 元</b>。到 ${ymText(s.end)}，市值約 <b>${money(s.value)} 元</b>，價格報酬 <b class="${cls(s.ret)}">${fmtPct(s.ret)}</b> (未含息)。`;
+        h += s.worst.pnl < 0 ? `最難熬的是 ${ymText(s.worst.d)}，帳面 <b class="down">${fmtPct(s.worst.pnl)}</b>。` : '整段期間，每個月初的帳面都沒有虧損。';
+        h += `單月跌最多是 ${ymText(s.max_drop.d)} (<b class="down">${fmtPct(s.max_drop.ch)}</b>)${s.max_drop.ch <= s.effects.rain_below ? '，回放到那個月時城市下了一場大雨' : ''}；`;
+        h += `漲最多是 ${ymText(s.max_gain.d)} (<b class="up">${fmtPct(s.max_gain.ch)}</b>)${s.max_gain.ch >= s.effects.fireworks_above ? '，那個月頂樓放了煙火' : ''}。`;
+        return h;
+      },
+      src: '資料：ETF 歷史收盤價，每月第一個交易日買進，可買零股，未含息與手續費',
+      follow: () => [k === '0050' ? '換成 00878 呢？' : '換成 0050 呢？', `${k} 前十大是哪些？`, '回到全城'],
+      ctx: { etf: k, monthly, start: `${clamp(y, 2000, 2030)}-01` },
+    };
+  },
+  mine({ E }) {
+    let amounts = Object.fromEntries(Object.entries(E.pairs).filter(([, v]) => v > 0));
+    const demo = !Object.keys(amounts).length;
+    if (demo) amounts = { '0050': 300000, '0056': 100000, '00878': 200000 };
+    return {
+      role: ROLE.guide, tools: [['lookthrough', { amounts }]],
+      scene: [['show_my_city', { amounts }], ['focus_lines', { lines: Object.keys(amounts) }], ['label', { names: '你持有最多的 6 家', mode: '持有比例' }], ['fly_to', { names: '你持有最多的公司' }]],
+      act([L]) { setMine(L); setFocus(new Set(Object.keys(amounts))); setRings([]); setLabels(L.top.map(x => [x.name, 'mine'])); fitNames(L.top.map(x => x.name), { maxZoom: 1.2 }); },
+      write([L]) {
+        const t0 = L.top[0], f0 = Object.keys(t0.from);
+        let h = demo ? '你沒有給金額，我先用示範配置。' : '';
+        h += `你一共投入 <b>${money(L.total)} 元</b>。把${cn(Object.keys(amounts).length)}檔 ETF 拆開來看，你實際持有最多的是${t0.name}，占 <b>${t0.share_pct.toFixed(1)}%</b>，${f0.length === 1 ? `全部來自 ${f0[0]}` : `來自 ${f0.join('、')}`}。`;
+        const multi = L.top.slice(1).find(x => Object.keys(x.from).length >= 3) || L.top.slice(1).find(x => Object.keys(x.from).length >= 2);
+        if (multi) { const fs = Object.keys(multi.from); h += `${multi.name} <b>${multi.share_pct.toFixed(1)}%</b> 比較特別，${fs.join('、')} ${cn(fs.length)}條線都經過它，等於${fs.length >= 3 ? '重複買了好幾次' : '買了兩次'}。`; }
+        h += `前十大成分股只涵蓋你 <b>${L.covered_pct.toFixed(1)}%</b> 的錢，其餘 <b>${L.rest_pct.toFixed(1)}%</b> 分散在其他公司，沒有畫進城市。金色框越高，代表你在那棟樓持有越多。`;
+        return h;
+      },
+      src: '資料：前十大成分股權重，結果為估計值。也可以按右上角「我的持股」輸入金額或上傳截圖。',
+      follow: () => ['改成 0050 20萬、00878 40萬', '聯發科站有哪些線經過？', '回到全城'],
+    };
+  },
+  kb({ q }) {
+    return {
+      role: ROLE.guide, tools: [['search_knowledge', { query: q }]],
+      scene: [['focus_lines', { lines: '依文件決定' }]],
+      act([k]) { setMine(null); setRings([]); const ls = k.hit && k._doc.lines.length && k._doc.lines; setFocus(ls ? new Set(ls) : null); if (ls) { const ns = [...new Set(ls.flatMap(x => Object.keys(ETFS[x].w)))]; setLabels([]); fitNames(ns, { maxZoom: 1.1 }); } },
+      write([k]) {
+        if (!k.hit) return '知識庫裡找不到相關的資料，所以我不亂回答。可以換個說法，或問收益平準金、折溢價、除息填息、內扣費用、市值型和高股息型的差別。';
+        return k._text;
+      },
+      src: k => k.hit ? `來源：知識庫《${k.title}》${k._doc.source || ''}` : '來源：知識庫 (沒有命中)',
+      follow: k => k.hit && k._doc.id === 'income-equalization' ? ['什麼是除息和填息？', '0056 跟 00878 差在哪？'] : ['什麼是收益平準金？', '市值型跟高股息差在哪？', '今天城市怎麼了？'],
+    };
+  },
+  refuse({ E }) {
+    const k = E.etfs[0];
+    return {
+      role: ROLE.guide, guard: '拒答：預測漲跌或個人投資建議', tools: k ? [['get_return', { etf: k, period: '1y' }]] : [],
+      scene: k ? [['focus_lines', { lines: [k] }]] : [],
+      act() { if (k) { setMine(null); setRings([]); setFocus(new Set([k])); } },
+      write([r]) {
+        let h = '我不會預測漲跌，也不會告訴你該不該買，這是這個系統刻意設下的規則。';
+        if (r) h += `我能給你的是過去的資料：${k} 過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含息)，過去的表現不代表未來。`;
+        return h + '想知道長期持有是什麼感覺，可以用回放，看城市怎麼走過每一次下跌。';
+      },
+      src: '規則：不預測、不推薦，只說明資料',
+      follow: () => [`每月 5000 買 ${k || '0056'}，從 2020 到現在會怎樣？`, '什麼是除息和填息？'],
+      ctx: { etf: k },
+    };
+  },
+  time({ E, q }) {
+    let h = E.hour ?? (/晚上|夜景|夜晚|天黑/.test(q) ? 20.5 : /傍晚/.test(q) ? 18 : /早上/.test(q) ? 9.5 : /中午/.test(q) ? 12.5 : 14.5);
+    h = clamp(h, 8, 22);
+    const night = h >= 18.5;
+    return {
+      role: ROLE.guide, tools: [], scene: [['set_time', { hour: hhmm(h) }]],
+      act() { applyTime(h); if (night) { setLabels(defaultLabels()); } },
+      write() { return night ? `切到晚上 ${hhmm(h)}。晚上最容易看出今天的行情：漲越多的大樓窗戶亮越多，跌很多的大樓會整片暗掉；路燈和車燈也都亮起來了。` : `切到 ${hhmm(h)}。白天看外觀：漲的大樓頂樓燈框是紅色，跌的是綠色，大跌的大樓搭著鷹架。`; },
+      src: '城市動作：調整時間',
+      follow: () => night ? ['切回白天', '今天城市怎麼了？'] : ['晚上的城市長怎樣？', '今天城市怎麼了？'],
+    };
+  },
+  overview() {
+    return {
+      role: ROLE.guide, tools: [], scene: [['reset', {}], ['fly_to', { overview: true }]],
+      act() { resetCity(); overview(); },
+      write() { return '回到全城視角。每條彩色的線是一檔 ETF，白點是行駛中的列車；轉乘站代表兩檔以上的 ETF 都持有這家公司。'; },
+      src: '城市動作：重置視角', follow: () => START_CHIPS.slice(0, 3),
+    };
+  },
+  help({ q }) {
+    const hi = /^(嗨|哈囉|你好|您好|hi|hello|hey)/i.test(q);
+    return {
+      role: ROLE.guide, tools: [], scene: [],
+      act() {},
+      write() { return (hi ? '嗨，我是城市導覽員。' : '這個問題我還聽不懂。') + '我現在會回答：今天的行情、某家公司 (例如台積電)、兩檔 ETF 比較、每月定期定額的回放、你的持股 (例如「我有 0050 30萬」)、ETF 名詞 (例如收益平準金)。也可以直接點城市裡的大樓或車站。'; },
+      src: '', follow: () => START_CHIPS,
+    };
+  },
+};
+
+/* ================= writer check (reflection: numbers must come from tools) ================= */
+function numberCheck(html, results) {
+  const txt = html.replace(/<[^>]+>/g, '').replace(/「[^」]*」/g, '');
+  const found = [...txt.matchAll(/([+-]?\d[\d,]*(?:\.\d+)?)\s*(%|元(?!大)|萬)/g)];
+  const vals = [];
+  const walk = o => { if (typeof o === 'number') vals.push(o); else if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) if (!k.startsWith('_')) walk(v); };
+  results.forEach(r => { walk(r.result); walk(r.args); });
+  const docText = results.map(r => (r.result && r.result._raw) || '').join(' ').replace(/,/g, '');
+  const bad = [];
+  for (const m of found) {
+    const s = m[1].replace(/[+,]/g, ''), d = m[2] === '萬' ? 0 : (s.split('.')[1] || '').length;
+    const x = (Math.abs(parseFloat(s)) * (m[2] === '萬' ? 10000 : 1)).toFixed(d);
+    if (!vals.some(v => Math.abs(v).toFixed(d) === x || Math.abs(v * 100).toFixed(d) === x) && !docText.includes(s.replace(/^-/, ''))) bad.push(m[0]);
+  }
+  return { n: found.length, bad };
+}
+
+/* ================= chat UI ================= */
+const logEl = $('log'), chipsEl = $('chips');
+const START_CHIPS = ['今天城市怎麼了？', '0050 跟 00878 差在哪？', '每月 5000 買 0050，從 2020 到現在會怎樣？', '我有 0050 30萬、0056 10萬、00878 20萬', '什麼是收益平準金？', '0056 明天會漲嗎？'];
+function scrollLog() { logEl.scrollTop = logEl.scrollHeight; }
+function setChips(list) {
+  chipsEl.innerHTML = '';
+  for (const t of list) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chipq'; b.textContent = t; b.addEventListener('click', () => ask(t)); chipsEl.appendChild(b); }
+}
+function addUser(text) {
+  const d = document.createElement('div'); d.className = 'msg user';
+  const b = document.createElement('div'); b.className = 'body'; b.textContent = text; d.appendChild(b);
+  logEl.appendChild(d); scrollLog();
+}
+function addBot(role, html, src) {
+  const d = document.createElement('div'); d.className = 'msg bot';
+  d.innerHTML = `<div class="who"><i style="background:${role[2]}">${role[1]}</i>${role[0]}</div><div class="body"></div>`;
+  d.querySelector('.body').innerHTML = html + (src ? `<div class="src">${src}</div>` : '');
+  logEl.appendChild(d); scrollLog(); return d;
+}
+function addTyping() { const d = document.createElement('div'); d.className = 'msg bot'; d.innerHTML = '<div class="body typing" aria-label="思考中"><i></i><i></i><i></i></div>'; logEl.appendChild(d); scrollLog(); return d; }
+function slim(o, depth = 0) {
+  if (Array.isArray(o)) { const a = o.slice(0, depth ? 4 : 6).map(x => slim(x, depth + 1)); if (o.length > a.length) a.push(`…共 ${o.length} 筆`); return a; }
+  if (o && typeof o === 'object') { const r = {}; for (const [k, v] of Object.entries(o)) if (!k.startsWith('_')) r[k] = slim(v, depth + 1); return r; }
+  if (typeof o === 'string' && o.length > 48) return o.slice(0, 48) + '…';
+  return o;
+}
+function traceEl(planJson, results, scene, role, check) {
+  const d = document.createElement('details'); d.className = 'trace';
+  const sum = document.createElement('summary'); sum.textContent = 'Agent 執行過程'; d.appendChild(sum);
+  const step = (title, body, html) => { const s = document.createElement('div'); s.className = 'step'; s.innerHTML = `<b>${title}</b>`; if (body != null) { const p = document.createElement('pre'); p.textContent = body; s.appendChild(p); } if (html) s.insertAdjacentHTML('beforeend', html); d.appendChild(s); };
+  step('離線示範模式', null, '<div>沒有連上後端，這題由瀏覽器裡的規則版 Agent 回答；連上後端後改由 LLM 規劃與撰寫，數字一樣由程式計算。</div>');
+  step('① 規劃 Planner', '{\n' + Object.entries(planJson).map(([k, v]) => ` "${k}": ${JSON.stringify(v)}`).join(',\n') + '\n}');
+  step('② 執行工具', results.length ? results.map(r => `${r.name}(${JSON.stringify(r.args)})\n→ ${JSON.stringify(slim(r.result))}`).join('\n\n') : '(這題不需要資料工具)');
+  step('③ 城市動作', scene.length ? scene.map(([n, a]) => `${n}(${JSON.stringify(a)})`).join('\n') : '(無)');
+  step('④ 撰寫 Writer', null, `<div>角色：${role[0]}。只能使用上面的工具結果。</div>`);
+  step('⑤ 數字檢查', null, check.n ? (check.bad.length ? `<div>未通過：${check.bad.join('、')} 找不到來源，正式版會退回重寫。</div>` : `<div><span class="ok">通過</span> 答案裡 ${check.n} 個金額或百分比，都能在工具結果找到。</div>`) : '<div>答案沒有金額或百分比，略過。</div>');
+  return d;
+}
+let busy = false;
+async function ask(q) {
+  q = (q || '').trim(); if (!q || busy) return;
+  if (replay) finishReplay(true);
+  $('hud').hidden = true;
+  busy = true; $('send').disabled = true; $('q').value = '';
+  addUser(q); setChips([]);
+  const typing = addTyping();
+  if (online && await askApi(q, typing)) { busy = false; $('send').disabled = false; return; }
+  const P = planner(q), Hd = HANDLERS[P.intent](P);
+  await sleep(reduce ? 60 : 650);
+  typing.remove();
+  if (Hd.pre) Hd.pre();
+  const results = Hd.tools.map(([name, args]) => ({ name, args, result: TOOLS[name](args) }));
+  const R = results.map(r => r.result);
+  const html = Hd.write(R), check = numberCheck(html, results);
+  const planJson = { intent: P.intent, entities: Object.fromEntries(Object.entries({ etfs: P.E.etfs, companies: P.E.cos, amounts: P.E.amounts, year: P.E.year, hour: P.E.hour }).filter(([, v]) => v != null && (!Array.isArray(v) || v.length))), ...(Hd.guard ? { guardrail: Hd.guard } : {}), tools: Hd.tools.map(([name, args]) => ({ name, args })), scene: Hd.scene.map(([n]) => n) };
+  const src = typeof Hd.src === 'function' ? Hd.src(...R) : Hd.src;
+  const msg = addBot(Hd.role, Hd.replay ? `<span class="note">回放中，看城市怎麼走過這幾年…</span>` : html, Hd.replay ? '' : src);
+  msg.appendChild(traceEl(planJson, results, Hd.scene, Hd.role, check));
+  const follow = Hd.follow(...R);
+  if (Hd.replay) msg._final = { html, src, follow };
+  Hd.act(R, msg);
+  ctx = { intent: P.intent, ...(Hd.ctx || {}) };
+  if (!Hd.replay) setChips(follow);
+  scrollLog();
+  busy = false; $('send').disabled = false;
+}
+$('ask').addEventListener('submit', e => { e.preventDefault(); ask($('q').value); });
+
+/* ---------- replay ---------- */
+function startReplay(sim, msg) {
+  const S = sim._series, k = sim.etf;
+  replay = { k, sim, S, i: 0, acc: 0.3, step: reduce ? 0.02 : 0.11, msg, maxV: Math.max(...S.map(s => Math.max(s.val, s.inv))), top: Object.entries(ETFS[k].w).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([n]) => n) };
+  for (const b of Object.values(B)) b.fx.visible = false;
+  $('hudTitle').textContent = `每月 ${money(sim.monthly)} 元買 ${k}`;
+  $('hud').hidden = false; drawHud(-1);
+}
+function drawHud(upto) {
+  const R = replay, cv = $('hudChart'), g = cv.getContext('2d'), W = cv.width, Hh = cv.height, S = R.S;
+  g.clearRect(0, 0, W, Hh);
+  const x = i => i / (S.length - 1) * (W - 4) + 2, y = v => Hh - 6 - v / R.maxV * (Hh - 14);
+  const line = (key, col, dash) => { g.setLineDash(dash); g.strokeStyle = col; g.lineWidth = 4; g.beginPath(); for (let i = 0; i <= upto; i++) { i ? g.lineTo(x(i), y(S[i][key])) : g.moveTo(x(i), y(S[i][key])); } g.stroke(); };
+  if (upto < 0) return;
+  const s = S[upto], c = s.val >= s.inv ? tok('--up') : tok('--down');
+  line('inv', tok('--muted'), [8, 6]); line('val', c, []);
+  g.setLineDash([]); g.fillStyle = c; g.beginPath(); g.arc(x(upto), y(s.val), 6, 0, Math.PI * 2); g.fill();
+  $('hudLeg').style.color = c;
+}
+function replayStep() {
+  const R = replay, s = R.S[R.i];
+  $('hudDate').textContent = ymText(s.d);
+  $('hudIn').textContent = money(s.inv) + ' 元';
+  const v = $('hudVal'); v.textContent = `${money(s.val)} 元 (${fmtPct((s.val / s.inv - 1) * 100)})`; v.className = 'val ' + cls(s.val - s.inv);
+  drawHud(R.i);
+  if (s.ch != null) {
+    const pct = s.ch * 100;
+    for (const n of Object.keys(ETFS[R.k].w)) paintCrown(B[n], pct);
+    const wet = pct <= -4;
+    if (wet !== weather.rain) { weather.rain = wet; rain.visible = wet; applyTime(timeH); }
+    if (pct >= 5 && !reduce) for (const n of R.top) { const b = B[n], p = b.group.position; spawnBurst(p.x, p.y + b.topY + 5, p.z); spawnBurst(p.x + 1.5, p.y + b.topY + 7, p.z - 1); }
+  }
+  R.i++;
+  if (R.i >= R.S.length) finishReplay(false);
+}
+function finishReplay(skipped) {
+  const R = replay; if (!R) return; replay = null;
+  if (skipped) { const s = R.S.at(-1); $('hudDate').textContent = ymText(s.d); }
+  for (const b of Object.values(B)) { b.fx.visible = true; paintCrown(b, chg[b.c.name]); }
+  weather.rain = idxNow <= RULES.rain_below; rain.visible = weather.rain; applyTime(timeH);
+  const f = R.msg._final, body = R.msg.querySelector('.body');
+  body.innerHTML = f.html + `<div class="src">${f.src}</div>`;
+  if (!skipped) setChips(f.follow);
+  scrollLog();
+}
+
+/* ================= 後端連線：連上時問答交給後端的 LLM Agent，畫面動作由這裡執行 ================= */
+let online = false, API = '', apiCtx = null, apiInfo = null;
+const LS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} } };
+async function fetchJson(url, opt = {}, ms = 45000) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(url, { ...opt, signal: ctl.signal });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+function setMode() {
+  const sub = $('modeTxt');
+  if (sub) sub.textContent = online ? `已連線後端｜${apiInfo && apiInfo.llm === 'groq' ? 'LLM Agent' : '規則版 Agent (後端未設定金鑰)'}` : '離線示範｜瀏覽器內的規則版 Agent';
+  const st = $('apiState'); if (st) st.textContent = online ? `已連線：${API}` : API ? `連不上：${API}` : '未設定，使用離線示範模式';
+  const pb = $('pfParse'); if (pb) pb.disabled = !online;
+}
+async function connectApi(url) {
+  API = (url || '').trim().replace(/\/+$/, ''); online = false; apiInfo = null;
+  if (API && !/^https?:\/\//.test(API)) API = 'https://' + API;
+  if (API) {
+    try { apiInfo = await fetchJson(API + '/api/health', {}, 6000); online = !!apiInfo.ok; } catch (e) { online = false; }
+  }
+  LS.set('etfcity.api', API); setMode(); return online;
+}
+function initApi() {
+  const qs = new URLSearchParams(location.search).get('api');
+  const url = qs ?? LS.get('etfcity.api') ?? (CITY.api_default || '');
+  if ($('apiUrl')) $('apiUrl').value = url;
+  setMode();
+  if (url) connectApi(url);
+}
+
+/* ---------- 後端回答的呈現 ---------- */
+function roleTuple(r) {
+  const o = r.role || {};
+  return [o.name || '城市導覽員', o.icon || '導', o.color || (o.etf && ETFS[o.etf] ? ETFS[o.etf].color : '#435369')];
+}
+function highlightFacts(answer, r) {
+  let h = esc(answer);
+  for (const id of (r.check && r.check.used) || []) {
+    const f = r.facts[id]; if (!f) continue;
+    const t = esc(f.text), i = h.indexOf(t); if (i < 0 || h.slice(Math.max(0, i - 3), i).includes('<b')) continue;
+    const c = f.unit === 'pct_signed' ? cls(f.value) : '';
+    h = h.slice(0, i) + `<b class="${c}" title="${esc(f.label)}｜來源：${esc(f.source || '')}">${t}</b>` + h.slice(i + t.length);
+  }
+  return h;
+}
+function apiTrace(r) {
+  const d = document.createElement('details'); d.className = 'trace';
+  d.innerHTML = '<summary>Agent 執行過程</summary>';
+  const step = (title, body, html) => { const s = document.createElement('div'); s.className = 'step'; s.innerHTML = `<b>${title}</b>`; if (body != null) { const p = document.createElement('pre'); p.textContent = body; s.appendChild(p); } if (html) s.insertAdjacentHTML('beforeend', html); d.appendChild(s); };
+  const p = r.trace && r.trace.planner || {}, w = r.trace && r.trace.writer || {};
+  step('① 規劃 Planner', JSON.stringify(r.plan, null, 1), `<div>${p.fallback ? '由規則版 Planner 規劃' + (p.attempts ? ' (LLM 的計畫沒有通過驗證)' : '') : `由 ${esc(p.by || 'LLM')} 規劃，已通過 Pydantic 驗證`}${p.guard ? '；規則守門判定為拒答' : ''}</div>`);
+  step('② 執行工具', r.tool_results.length ? r.tool_results.map(t => `${t.name}(${JSON.stringify(t.args)})${t.ok ? '' : '\n  錯誤：' + t.error}${t.note ? '\n  註：' + t.note : ''}`).join('\n') : '(這題不需要資料工具)');
+  const facts = Object.entries(r.facts || {});
+  step('③ 有編號的數字', facts.length ? facts.map(([k, f]) => `{${k}} = ${f.text}  ← ${f.label}`).join('\n') : '(沒有)');
+  step('④ Writer 草稿', (w.attempts || []).map((a, i) => `【第 ${i + 1} 版｜${a.by}】${a.ok ? '通過' : '未通過：' + (a.message || a.error || '')}\n${a.draft || ''}`).join('\n\n') || '(無)');
+  const c = r.check || {};
+  step('⑤ 數字填入與檢查', null, c.ok ? `<div><span class="ok">通過</span> 用了 ${(c.used || []).length} 個編號，沒有不明來源的數字。最後採用：${w.final === 'llm' ? 'LLM 撰寫' : '模板'}</div>` : `<div>未通過：${esc([...(c.unknown || []), ...(c.stray || [])].join('、'))}</div>`);
+  step('⑥ 畫面動作', (r.scene || []).map(a => a.name + '(' + JSON.stringify(a.args, (k, v) => k === 'series' ? `[${v.length} 個月]` : k === 'shares' ? '{…}' : v) + ')').join('\n') || '(無)');
+  return d;
+}
+function renderApi(r, label) {
+  const src = (r.sources || []).map(esc).join('；') + (r.notes && r.notes.length ? `<br>註：${r.notes.map(esc).join('；')}` : '');
+  const html = highlightFacts(r.answer, r), rp = (r.scene || []).find(a => a.name === 'replay');
+  const msg = addBot(roleTuple(r), rp ? '<span class="note">回放中，看城市怎麼走過這幾年…</span>' : html, rp ? '' : src);
+  msg.appendChild(apiTrace(r));
+  if (rp) msg._final = { html, src, follow: r.followups || [] };
+  runScene(r.scene || [], msg);
+  apiCtx = r.context || null;
+  if (!rp) setChips(r.followups || []);
+  scrollLog();
+}
+async function askApi(q, typing) {
+  try {
+    const r = await fetchJson(API + '/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q, context: apiCtx }) });
+    typing.remove(); renderApi(r); return true;
+  } catch (e) {
+    online = false; setMode();
+    addBot(ROLE.guide, '後端暫時連不上 (免費的伺服器閒置後會休眠，可能要等一下)，這題先用離線模式回答。', '');
+    return false;
+  }
+}
+
+/* ---------- 畫面動作：後端只說「要看什麼」，這裡決定城市怎麼呈現 ---------- */
+function runScene(actions, msg) {
+  const names = xs => (xs || []).filter(n => CO[n]);
+  if (!actions.some(a => a.name === 'show_portfolio')) setMine(null);
+  if (!actions.some(a => a.name === 'mark_companies')) setRings([]);
+  for (const a of actions) {
+    const g = a.args || {};
+    if (a.name === 'reset') resetCity();
+    else if (a.name === 'focus_etfs') setFocus(g.etfs && g.etfs.length ? new Set(g.etfs.filter(k => ETFS[k])) : null);
+    else if (a.name === 'mark_companies') {
+      const mode = g.label === 'weights' ? 'w:' + (g.etfs || []).filter(k => ETFS[k]).join(',') : g.label === 'portfolio' ? 'mine' : 'chg';
+      setLabels(names(g.companies).map(n => [n, mode === 'w:' ? 'chg' : mode]));
+      setRings(names(g.ring).map(n => ringForCo(n, 0xffffff)));
+    } else if (a.name === 'fly_to') { const ns = names(g.companies); g.overview || !ns.length ? overview() : fitNames(ns, { maxZoom: ns.length === 1 ? 1.9 : 1.4 }); }
+    else if (a.name === 'show_portfolio') setMine({ _share: Object.fromEntries(Object.entries(g.shares || {}).filter(([n]) => CO[n])) });
+    else if (a.name === 'set_time') applyTime(clamp(+g.hour || 14.5, 8, 22));
+    else if (a.name === 'replay' && ETFS[g.etf] && msg) {
+      const S = (g.series || []).map(s => ({ ...s, ch: s.ch == null ? null : s.ch / 100 }));
+      startReplay({ etf: g.etf, monthly: g.monthly, _series: S }, msg);
+    }
+  }
+}
+
+/* ---------- 我的持股：手動輸入，或上傳截圖 (先在畫面上塗掉個資) ---------- */
+const pf = $('pf'); let pfImg = null, pfBoxes = [], pfDrag = null;
+function pfRow(code = ETF_KEYS[0], amt = '') {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><select aria-label="ETF">${ETF_KEYS.map(k => `<option value="${k}"${k === code ? ' selected' : ''}>${k} ${esc(ETFS[k].name)}</option>`).join('')}</select></td><td><input type="number" min="0" step="1000" inputmode="numeric" aria-label="金額" placeholder="金額 (元)" value="${amt}"></td><td><button type="button" class="icon-btn" aria-label="刪除這列">刪除</button></td>`;
+  tr.querySelector('button').onclick = () => tr.remove();
+  $('pfRows').appendChild(tr);
+}
+function pfPositions() {
+  const pos = {};
+  for (const tr of $('pfRows').children) { const k = tr.querySelector('select').value, v = +tr.querySelector('input').value; if (v > 0) pos[k] = (pos[k] || 0) + v; }
+  return pos;
+}
+function pfDraw() {
+  const cv = $('pfCanvas'), g = cv.getContext('2d');
+  if (!pfImg) { cv.hidden = true; return; }
+  cv.hidden = false; g.drawImage(pfImg, 0, 0, cv.width, cv.height); g.fillStyle = '#000';
+  for (const b of [...pfBoxes, ...(pfDrag ? [pfDrag] : [])]) g.fillRect(Math.min(b.x0, b.x1), Math.min(b.y0, b.y1), Math.abs(b.x1 - b.x0), Math.abs(b.y1 - b.y0));
+}
+function pfPoint(e) { const cv = $('pfCanvas'), r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height]; }
+if (pf) {
+  $('pfBtn').onclick = () => { if (!$('pfRows').children.length) { pfRow('0050', 300000); pfRow('0056', 100000); pfRow('00878', 200000); } setMode(); pf.showModal(); };
+  $('pfClose').onclick = () => pf.close();
+  $('pfAdd').onclick = () => pfRow();
+  $('pfFile').onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const img = new Image(); img.onload = () => { const cv = $('pfCanvas'), s = Math.min(1, 900 / img.width); cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s); pfImg = img; pfBoxes = []; pfDraw(); $('pfMaskHint').hidden = false; URL.revokeObjectURL(img.src); };
+    img.src = URL.createObjectURL(f);
+  };
+  const cv = $('pfCanvas');
+  cv.addEventListener('pointerdown', e => { const [x, y] = pfPoint(e); pfDrag = { x0: x, y0: y, x1: x, y1: y }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', e => { if (!pfDrag) return; [pfDrag.x1, pfDrag.y1] = pfPoint(e); pfDraw(); });
+  cv.addEventListener('pointerup', () => { if (pfDrag && Math.abs(pfDrag.x1 - pfDrag.x0) > 4) pfBoxes.push(pfDrag); pfDrag = null; pfDraw(); });
+  $('pfUndo').onclick = () => { pfBoxes.pop(); pfDraw(); };
+  $('pfParse').onclick = async () => {
+    if (!pfImg || !online) return;
+    const note = $('pfNote'); note.textContent = '辨識中…';
+    const blob = await new Promise(r => $('pfCanvas').toBlob(r, 'image/png'));   // 送出的是塗黑後的畫面，不是原圖
+    const fd = new FormData(); fd.append('file', blob, 'holdings.png');
+    try {
+      const r = await fetchJson(API + '/api/portfolio/parse', { method: 'POST', body: fd }, 60000);
+      if (!r.ok) { note.textContent = r.error || '辨識失敗'; return; }
+      $('pfRows').innerHTML = '';
+      for (const row of r.rows.filter(x => x.in_city && x.amount)) pfRow(row.code, Math.round(row.amount));
+      note.textContent = `讀到 ${r.rows.length} 筆，${Object.keys(r.positions).length} 筆在城市裡。${r.skipped.length ? '不在城市裡的：' + r.skipped.join('、') + '。' : ''}請確認金額後再計算。`;
+    } catch (e) { note.textContent = '辨識失敗：' + e.message; }
+  };
+  $('pfGo').onclick = async () => {
+    const pos = pfPositions(); if (!Object.keys(pos).length) { $('pfNote').textContent = '請至少輸入一筆金額。'; return; }
+    pf.close();
+    const q = '我有 ' + Object.entries(pos).map(([k, v]) => `${k} ${v} 元`).join('、');
+    if (!online) { ask(q); return; }
+    if (replay) finishReplay(true);
+    addUser(q + ' (已確認)'); setChips([]); const typing = addTyping();
+    try { const r = await fetchJson(API + '/api/portfolio/lookthrough', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ positions: pos }) }); typing.remove(); renderApi(r); }
+    catch (e) { typing.remove(); online = false; setMode(); ask(q); }
+  };
+}
+$('apiGo') && ($('apiGo').onclick = async () => { $('apiState').textContent = '連線中…'; await connectApi($('apiUrl').value); });
+
+/* ---------- settings ---------- */
+const setBtn = $('setBtn'), setPanel = $('settings');
+function toggleSettings(open) { setPanel.hidden = !open; setBtn.setAttribute('aria-expanded', String(open)); }
+setBtn.addEventListener('click', () => toggleSettings(setPanel.hidden));
+addEventListener('keydown', e => { if (e.key === 'Escape') toggleSettings(false); });
+if (!REAL) $('scn-real').hidden = true;
+document.querySelectorAll('[data-scn]').forEach(bt => bt.addEventListener('click', () => { applyScenario(bt.dataset.scn); if (!labelSet.size || [...labelSet.values()].every(m => m === 'chg')) setLabels(defaultLabels()); }));
+$('time').addEventListener('input', e => applyTime(Number(e.target.value)));
+$('allLabels').addEventListener('change', e => { allLabels = e.target.checked; refreshLabels(); });
+
+/* ---------- picking ---------- */
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
+let downAt = null;
+renderer.domElement.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; if (!setPanel.hidden) toggleSettings(false); });
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6) return;
+  ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(pickables, false)[0];
+  if (!hit) return;
+  if (hit.object.userData.station) ask(`${hit.object.userData.station}站有哪些線經過？`);
+  else ask(`${hit.object.userData.company}今天怎麼了？`);
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (e.buttons) return;
+  ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  renderer.domElement.style.cursor = ray.intersectObjects(pickables, false).length ? 'pointer' : 'grab';
+});
+
+/* ---------- label layout: keep labels from covering each other ---------- */
+const _v = new THREE.Vector3();
+function placeLabels(ls) {
+  const wpp = VIEW / (innerHeight * camera.zoom), items = [];
+  for (const b of Object.values(B)) if (b.label.visible) {
+    const h = b.label.userData.h || 66, sy = h / 34 * ls, y0 = b.topY + 0.6 + sy / 2;
+    b.label.scale.set(190 / 34 * ls, sy, 1);
+    _v.set(b.group.position.x, b.group.position.y + y0, b.group.position.z).project(camera);
+    items.push({ b, y0, px: (_v.x + 1) / 2 * innerWidth, py: (1 - _v.y) / 2 * innerHeight, w: 190 / 34 * ls / wpp, hh: sy / wpp });
+  }
+  items.sort((a, b) => b.py - a.py);
+  const placed = [];
+  for (const it of items) {
+    let py = it.py;
+    for (let pass = 0; pass < 3; pass++) for (const o of placed) if (Math.abs(it.px - o.px) < (it.w + o.w) / 2 - 6 && Math.abs(py - o.py) < (it.hh + o.hh) / 2 + 2) py = o.py - (it.hh + o.hh) / 2 - 2;
+    const lift = (it.py - py) * wpp / 0.92;
+    it.b.label.position.set(0, it.y0 + lift, 0); it.py = py; placed.push(it);
+  }
+}
+
+/* ---------- loop ---------- */
+const clock = new THREE.Clock();
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05), T = clock.elapsedTime;
+  if (fly) {
+    fly.t += dt; const u = clamp(fly.t / fly.dur, 0, 1), k = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    controls.target.lerpVectors(fly.fromT, fly.toT, k); camera.position.copy(controls.target).add(fly.off);
+    camera.zoom = lerp(fly.fromZ, fly.toZ, k); camera.updateProjectionMatrix();
+    if (u >= 1) fly = null;
+  }
+  controls.update();
+  const ls = (DESK() ? 135 : 96) * VIEW / (190 / 34 * innerHeight * camera.zoom);
+  placeLabels(ls);
+  for (const m of ringG.children) if (m.userData.pulse) { const f = ((T * 0.6 + m.userData.ph) % 1); m.scale.set(1 + f * 0.7, 1 + f * 0.7, 1); m.material.opacity = 0.85 * (1 - f); }
+  if (replay) { replay.acc += dt; while (replay && replay.acc >= replay.step) { replay.acc -= replay.step; replayStep(); } }
+  if (!reduce) {
+    for (const L of Object.values(LINES)) for (const p of L.pulses) {
+      p.userData.t = (p.userData.t + dt * 0.035) % 1;
+      const f = p.userData.t * (L.sample.length - 1), i = Math.floor(f);
+      p.position.copy(L.sample[i]).lerp(L.sample[Math.min(i + 1, L.sample.length - 1)], f - i).setY(0.62);
+    }
+    for (const car of cars) {
+      const u = car.userData; u.t += u.dir * u.speed * dt; if (u.t > 75) u.t = -75; if (u.t < -75) u.t = 75;
+      if (u.ns) car.position.set(u.lane, 0.08, u.t); else car.position.set(Math.min(u.t, 26) - 30, 0.08, 1 + u.lane);
+    }
+    if (rain.visible) {
+      const a = rain.geometry.attributes.position.array;
+      for (let i = 0; i < RAIN_N; i++) { const o = i * 6; let y = a[o + 1] - 55 * dt; if (y < 0) y += 70; a[o + 1] = y; a[o + 4] = y - 1.3; }
+      rain.geometry.attributes.position.needsUpdate = true;
+    }
+    if (!replay) for (const b of Object.values(B)) if (b.boom) {
+      b.nextBurst -= dt;
+      if (b.nextBurst <= 0) { const p = b.group.position; spawnBurst(p.x + (Math.random() - 0.5) * 3, p.y + b.topY + 5 + Math.random() * 4, p.z + (Math.random() - 0.5) * 3); b.nextBurst = 0.9 + Math.random() * 1.4; }
+    }
+    for (let i = bursts.length - 1; i >= 0; i--) {
+      const bu = bursts[i]; bu.life += dt;
+      const a = bu.p.geometry.attributes.position.array;
+      bu.vel.forEach((v, j) => { v.y -= 4.5 * dt; v.multiplyScalar(0.985); a[j * 3] += v.x * dt; a[j * 3 + 1] += v.y * dt; a[j * 3 + 2] += v.z * dt; });
+      bu.p.geometry.attributes.position.needsUpdate = true;
+      bu.p.material.opacity = Math.max(0, 1 - bu.life / 1.6);
+      if (bu.life > 1.6) { scene.remove(bu.p); bu.p.geometry.dispose(); bu.p.material.dispose(); bursts.splice(i, 1); }
+    }
+    for (const b of Object.values(B)) if (b.crane) b.crane.rotation.y += dt * 0.08;
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+addEventListener('resize', layoutView);
+
+/* ---------- boot ---------- */
+controls.minZoom = 0.35; controls.maxZoom = 4;
+layoutView();
+applyScenario(REAL ? 'real' : 'mixed');
+resetCity();
+{ overview(); fly.t = fly.dur; }
+addBot(ROLE.guide, '歡迎來到 ETF 都會。這座城市把 ETF 畫成捷運：每條彩色路線是一檔 ETF，車站是它的前十大成分股，兩條線都停的站就是<b>轉乘站</b> (重疊持股)。大樓越高，代表在 ETF 裡的權重越大；今天的漲跌決定大樓的樣子，漲越多燈越亮，大跌會龜裂、搭鷹架。直接問我，城市會跟著你的問題移動。' +
+  `<div class="lg">${Object.entries(ETFS).map(([k, e]) => `<span style="--c:${e.color}">${k} ${e.name}</span>`).join('')}</div>`,
+  '本系統只說明資料，不提供投資建議，也不預測漲跌。報酬是價格報酬 (未含息)，持股只計前十大。');
+setChips(START_CHIPS);
+$('dataNote').textContent = `成分股為前十大 (${CITY.holdings_meta && CITY.holdings_meta.as_of ? '資料日 ' + CITY.holdings_meta.as_of : '初始資料'})；ETF 價格到 ${Object.values(CITY.prices_as_of || {})[0] || ''}，報酬為價格報酬 (未含息)。` + (REAL ? `個股漲跌為 ${CITY.daily.date} 收盤行情。` : '個股今日漲跌目前是示意行情。');
+initApi();
+window.__ready = true;
+window.__city = { get online() { return online; }, connectApi, runScene, ask, planner, extract, TOOLS, numberCheck, get busy() { return busy; }, get replaying() { return !!replay; }, fastReplay() { if (replay) replay.step = 0.001; }, screenOf(n, y = 6) { const c = CO[n]; _v.set(c.pos[0], y, c.pos[1]).project(camera); return [(_v.x + 1) / 2 * innerWidth, (1 - _v.y) / 2 * innerHeight]; } };
+tick();
+</script>
+</body>
+</html>
