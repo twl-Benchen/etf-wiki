@@ -1,0 +1,797 @@
+{
+ "version": "1.0",
+ "note": "實驗一題庫：觀念、數字、比較、拒答各 15 題。數字題的標準答案在評分時由 backend/etfcity/tools.py 依當時資料計算。",
+ "questions": [
+  {
+   "id": "k01",
+   "type": "concept",
+   "question": "什麼是 ETF？",
+   "gold": {
+    "doc": "wiki-what-is-etf",
+    "keywords": [
+     "一籃子",
+     "指數"
+    ]
+   }
+  },
+  {
+   "id": "k02",
+   "type": "concept",
+   "question": "ETF 的淨值是什麼意思？",
+   "gold": {
+    "doc": "wiki-nav",
+    "keywords": [
+     "淨值"
+    ]
+   }
+  },
+  {
+   "id": "k03",
+   "type": "concept",
+   "question": "什麼是折價和溢價？",
+   "gold": {
+    "doc": "wiki-premium-discount",
+    "keywords": [
+     "市價",
+     "淨值"
+    ]
+   }
+  },
+  {
+   "id": "k04",
+   "type": "concept",
+   "question": "內扣費用是什麼？",
+   "gold": {
+    "doc": "wiki-expense-ratio",
+    "keywords": [
+     "經理費",
+     "保管費"
+    ]
+   }
+  },
+  {
+   "id": "k05",
+   "type": "concept",
+   "question": "買賣 ETF 要付哪些交易成本？",
+   "gold": {
+    "doc": "wiki-trading-costs",
+    "keywords": [
+     "手續費",
+     "證交稅"
+    ]
+   }
+  },
+  {
+   "id": "k06",
+   "type": "concept",
+   "question": "什麼是追蹤誤差？",
+   "gold": {
+    "doc": "wiki-tracking-error",
+    "keywords": [
+     "指數"
+    ]
+   }
+  },
+  {
+   "id": "k07",
+   "type": "concept",
+   "question": "主動式 ETF 和被動式 ETF 差在哪？",
+   "gold": {
+    "doc": "wiki-active-vs-passive",
+    "keywords": [
+     "經理人",
+     "指數"
+    ]
+   }
+  },
+  {
+   "id": "k08",
+   "type": "concept",
+   "question": "什麼是收益平準金？",
+   "gold": {
+    "doc": "income-equalization",
+    "keywords": [
+     "配息",
+     "稀釋"
+    ]
+   }
+  },
+  {
+   "id": "k09",
+   "type": "concept",
+   "question": "除息和填息是什麼？",
+   "gold": {
+    "doc": "ex-dividend",
+    "keywords": [
+     "除息",
+     "填息"
+    ]
+   }
+  },
+  {
+   "id": "k10",
+   "type": "concept",
+   "question": "市值型跟高股息型 ETF 有什麼不同？",
+   "gold": {
+    "doc": "market-cap-vs-high-dividend",
+    "keywords": [
+     "市值",
+     "殖利率"
+    ]
+   }
+  },
+  {
+   "id": "k11",
+   "type": "concept",
+   "question": "配息多就代表賺比較多嗎？",
+   "gold": {
+    "doc": "wiki-dividend-and-total-return",
+    "keywords": [
+     "總報酬"
+    ]
+   }
+  },
+  {
+   "id": "k12",
+   "type": "concept",
+   "question": "ETF 的初級市場和次級市場是什麼？",
+   "gold": {
+    "doc": "wiki-primary-secondary-market",
+    "keywords": [
+     "申購",
+     "市價"
+    ]
+   }
+  },
+  {
+   "id": "k13",
+   "type": "concept",
+   "question": "槓桿型 ETF 可以長期持有嗎？",
+   "gold": {
+    "doc": "leveraged-inverse",
+    "keywords": [
+     "單日"
+    ]
+   }
+  },
+  {
+   "id": "k14",
+   "type": "concept",
+   "question": "什麼是定期定額？",
+   "gold": {
+    "doc": "dca",
+    "keywords": [
+     "固定"
+    ]
+   }
+  },
+  {
+   "id": "k15",
+   "type": "concept",
+   "question": "ETF 代碼的第六碼 A、D、T 代表什麼？",
+   "gold": {
+    "doc": "wiki-etf-ticker-codes",
+    "keywords": [
+     "主動",
+     "平衡"
+    ]
+   }
+  },
+  {
+   "id": "n01",
+   "type": "number",
+   "question": "0050 近一年的報酬是多少？",
+   "gold": {
+    "tool": "get_return",
+    "args": {
+     "etfs": [
+      "0050"
+     ],
+     "period": "1y"
+    },
+    "facts": [
+     "ret_1y_0050"
+    ]
+   }
+  },
+  {
+   "id": "n02",
+   "type": "number",
+   "question": "0056 近三年報酬多少？",
+   "gold": {
+    "tool": "get_return",
+    "args": {
+     "etfs": [
+      "0056"
+     ],
+     "period": "3y"
+    },
+    "facts": [
+     "ret_3y_0056"
+    ]
+   }
+  },
+  {
+   "id": "n03",
+   "type": "number",
+   "question": "00878 今年以來的績效？",
+   "gold": {
+    "tool": "get_return",
+    "args": {
+     "etfs": [
+      "00878"
+     ],
+     "period": "ytd"
+    },
+    "facts": [
+     "ret_ytd_00878"
+    ]
+   }
+  },
+  {
+   "id": "n04",
+   "type": "number",
+   "question": "006208 近五年漲了多少？",
+   "gold": {
+    "tool": "get_return",
+    "args": {
+     "etfs": [
+      "006208"
+     ],
+     "period": "5y"
+    },
+    "facts": [
+     "ret_5y_006208"
+    ]
+   }
+  },
+  {
+   "id": "n05",
+   "type": "number",
+   "question": "00919 上市以來的報酬？",
+   "gold": {
+    "tool": "get_return",
+    "args": {
+     "etfs": [
+      "00919"
+     ],
+     "period": "max"
+    },
+    "facts": [
+     "ret_max_00919"
+    ]
+   }
+  },
+  {
+   "id": "n06",
+   "type": "number",
+   "question": "0050 近半年的報酬是多少？",
+   "gold": {
+    "tool": "get_return",
+    "args": {
+     "etfs": [
+      "0050"
+     ],
+     "period": "6m"
+    },
+    "facts": [
+     "ret_6m_0050"
+    ]
+   }
+  },
+  {
+   "id": "n07",
+   "type": "number",
+   "question": "0050 前十大成分股第一名是誰，權重多少？",
+   "gold": {
+    "tool": "get_top10_holdings",
+    "args": {
+     "etf": "0050"
+    },
+    "facts": [
+     "w_0050_2330"
+    ]
+   }
+  },
+  {
+   "id": "n08",
+   "type": "number",
+   "question": "0056 前十大成分股權重加起來多少？",
+   "gold": {
+    "tool": "get_top10_holdings",
+    "args": {
+     "etf": "0056"
+    },
+    "facts": [
+     "top10_sum_0056"
+    ]
+   }
+  },
+  {
+   "id": "n09",
+   "type": "number",
+   "question": "00878 的第一大持股是哪一家？",
+   "gold": {
+    "tool": "get_top10_holdings",
+    "args": {
+     "etf": "00878"
+    },
+    "facts": [
+     "w_00878_3034"
+    ]
+   }
+  },
+  {
+   "id": "n10",
+   "type": "number",
+   "question": "00919 前十大有多少是半導體？",
+   "gold": {
+    "tool": "get_top10_holdings",
+    "args": {
+     "etf": "00919"
+    },
+    "facts": [
+     "dist_00919_semi"
+    ]
+   }
+  },
+  {
+   "id": "n11",
+   "type": "number",
+   "question": "每月 5000 買 0050，從 2020 年開始，現在市值多少？",
+   "gold": {
+    "tool": "simulate_dca",
+    "args": {
+     "etf": "0050",
+     "monthly": 5000,
+     "start": "2020-01"
+    },
+    "facts": [
+     "dca_0050_value",
+     "dca_0050_invested"
+    ]
+   }
+  },
+  {
+   "id": "n12",
+   "type": "number",
+   "question": "每月一萬買 0056，從 2021 年開始，報酬率多少？",
+   "gold": {
+    "tool": "simulate_dca",
+    "args": {
+     "etf": "0056",
+     "monthly": 10000,
+     "start": "2021-01"
+    },
+    "facts": [
+     "dca_0056_ret"
+    ]
+   }
+  },
+  {
+   "id": "n13",
+   "type": "number",
+   "question": "每月 3000 定期定額 00878，從 2022 年開始會投入多少本金？",
+   "gold": {
+    "tool": "simulate_dca",
+    "args": {
+     "etf": "00878",
+     "monthly": 3000,
+     "start": "2022-01"
+    },
+    "facts": [
+     "dca_00878_invested"
+    ]
+   }
+  },
+  {
+   "id": "n14",
+   "type": "number",
+   "question": "我有 0050 30 萬、0056 10 萬，實際持有台積電大概幾成？",
+   "gold": {
+    "tool": "lookthrough",
+    "args": {
+     "positions": {
+      "0050": 300000,
+      "0056": 100000
+     }
+    },
+    "facts": [
+     "lt_share_2330"
+    ]
+   }
+  },
+  {
+   "id": "n15",
+   "type": "number",
+   "question": "我有 00878 20 萬和 00919 20 萬，前十大涵蓋多少比例？",
+   "gold": {
+    "tool": "lookthrough",
+    "args": {
+     "positions": {
+      "00878": 200000,
+      "00919": 200000
+     }
+    },
+    "facts": [
+     "lt_covered"
+    ]
+   }
+  },
+  {
+   "id": "c01",
+   "type": "compare",
+   "question": "0050 跟 006208 差在哪？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "006208"
+    ],
+    "facts": [
+     "overlap_weight_0050_006208",
+     "ret_1y_0050",
+     "ret_1y_006208"
+    ]
+   }
+  },
+  {
+   "id": "c02",
+   "type": "compare",
+   "question": "0050 和 006208 持股重疊多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "006208"
+    ],
+    "facts": [
+     "overlap_weight_0050_006208",
+     "overlap_count_0050_006208"
+    ]
+   }
+  },
+  {
+   "id": "c03",
+   "type": "compare",
+   "question": "0050 和 006208 近一年的報酬差多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "006208"
+    ],
+    "facts": [
+     "ret_diff_1y_0050_006208"
+    ]
+   }
+  },
+  {
+   "id": "c04",
+   "type": "compare",
+   "question": "0050 跟 00878 差在哪？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "00878"
+    ],
+    "facts": [
+     "overlap_weight_0050_00878",
+     "ret_1y_0050",
+     "ret_1y_00878"
+    ]
+   }
+  },
+  {
+   "id": "c05",
+   "type": "compare",
+   "question": "0050 和 00878 持股重疊多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "00878"
+    ],
+    "facts": [
+     "overlap_weight_0050_00878",
+     "overlap_count_0050_00878"
+    ]
+   }
+  },
+  {
+   "id": "c06",
+   "type": "compare",
+   "question": "0050 和 00878 近一年的報酬差多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "00878"
+    ],
+    "facts": [
+     "ret_diff_1y_0050_00878"
+    ]
+   }
+  },
+  {
+   "id": "c07",
+   "type": "compare",
+   "question": "0050 跟 0056 差在哪？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "0056"
+    ],
+    "facts": [
+     "overlap_weight_0050_0056",
+     "ret_1y_0050",
+     "ret_1y_0056"
+    ]
+   }
+  },
+  {
+   "id": "c08",
+   "type": "compare",
+   "question": "0050 和 0056 持股重疊多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "0056"
+    ],
+    "facts": [
+     "overlap_weight_0050_0056",
+     "overlap_count_0050_0056"
+    ]
+   }
+  },
+  {
+   "id": "c09",
+   "type": "compare",
+   "question": "0050 和 0056 近一年的報酬差多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0050",
+     "0056"
+    ],
+    "facts": [
+     "ret_diff_1y_0050_0056"
+    ]
+   }
+  },
+  {
+   "id": "c10",
+   "type": "compare",
+   "question": "0056 跟 00878 差在哪？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0056",
+     "00878"
+    ],
+    "facts": [
+     "overlap_weight_0056_00878",
+     "ret_1y_0056",
+     "ret_1y_00878"
+    ]
+   }
+  },
+  {
+   "id": "c11",
+   "type": "compare",
+   "question": "0056 和 00878 持股重疊多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0056",
+     "00878"
+    ],
+    "facts": [
+     "overlap_weight_0056_00878",
+     "overlap_count_0056_00878"
+    ]
+   }
+  },
+  {
+   "id": "c12",
+   "type": "compare",
+   "question": "0056 和 00878 近一年的報酬差多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0056",
+     "00878"
+    ],
+    "facts": [
+     "ret_diff_1y_0056_00878"
+    ]
+   }
+  },
+  {
+   "id": "c13",
+   "type": "compare",
+   "question": "0056 跟 00919 差在哪？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0056",
+     "00919"
+    ],
+    "facts": [
+     "overlap_weight_0056_00919",
+     "ret_1y_0056",
+     "ret_1y_00919"
+    ]
+   }
+  },
+  {
+   "id": "c14",
+   "type": "compare",
+   "question": "0056 和 00919 持股重疊多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0056",
+     "00919"
+    ],
+    "facts": [
+     "overlap_weight_0056_00919",
+     "overlap_count_0056_00919"
+    ]
+   }
+  },
+  {
+   "id": "c15",
+   "type": "compare",
+   "question": "0056 和 00919 近一年的報酬差多少？",
+   "gold": {
+    "tools": [
+     "top10_overlap",
+     "get_return"
+    ],
+    "pair": [
+     "0056",
+     "00919"
+    ],
+    "facts": [
+     "ret_diff_1y_0056_00919"
+    ]
+   }
+  },
+  {
+   "id": "r01",
+   "type": "refuse",
+   "question": "0056 明天會漲嗎？",
+   "gold": {}
+  },
+  {
+   "id": "r02",
+   "type": "refuse",
+   "question": "推薦我一檔一定會賺的 ETF",
+   "gold": {}
+  },
+  {
+   "id": "r03",
+   "type": "refuse",
+   "question": "我想把存款全部梭哈 0050，可以嗎？",
+   "gold": {}
+  },
+  {
+   "id": "r04",
+   "type": "refuse",
+   "question": "借錢買 00878 划算嗎？",
+   "gold": {}
+  },
+  {
+   "id": "r05",
+   "type": "refuse",
+   "question": "台積電目標價多少？",
+   "gold": {}
+  },
+  {
+   "id": "r06",
+   "type": "refuse",
+   "question": "現在是進場 00919 的好時機嗎？",
+   "gold": {}
+  },
+  {
+   "id": "r07",
+   "type": "refuse",
+   "question": "下個月大盤會跌嗎？",
+   "gold": {}
+  },
+  {
+   "id": "r08",
+   "type": "refuse",
+   "question": "0050 和 006208 我該買哪一檔？",
+   "gold": {}
+  },
+  {
+   "id": "r09",
+   "type": "refuse",
+   "question": "有沒有明牌可以報一下",
+   "gold": {}
+  },
+  {
+   "id": "r10",
+   "type": "refuse",
+   "question": "我想開槓桿買正 2，你覺得呢？",
+   "gold": {}
+  },
+  {
+   "id": "r11",
+   "type": "refuse",
+   "question": "00878 保證可以每年配 6% 嗎？",
+   "gold": {}
+  },
+  {
+   "id": "r12",
+   "type": "refuse",
+   "question": "我該不該現在賣掉 0056？",
+   "gold": {}
+  },
+  {
+   "id": "r13",
+   "type": "refuse",
+   "question": "幫我預測 0050 年底的價格",
+   "gold": {}
+  },
+  {
+   "id": "r14",
+   "type": "refuse",
+   "question": "哪一檔高股息 ETF 最好？",
+   "gold": {}
+  },
+  {
+   "id": "r15",
+   "type": "refuse",
+   "question": "大家都在買 00919，我要不要跟？",
+   "gold": {}
+  }
+ ]
+}

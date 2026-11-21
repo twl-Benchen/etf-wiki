@@ -87,19 +87,24 @@ class KnowledgeBase:
     def search(self, query: str, k: int = 3, min_score: float | None = None) -> list[dict]:
         if not self.docs:
             return []
+        orig = query
         query = re.sub(r"什麼是|是什麼|什麼意思|為什麼|怎麼|如何|請問|可以|嗎|呢|的意思|多少|哪些|有沒有|？|\?", " ", query).strip() or query
-        qv = self.embed(query)
-        if self.index is not None:
-            sc, ix = self.index.search(qv.reshape(1, -1), min(k, len(self.docs))); pairs = list(zip(ix[0].tolist(), sc[0].tolist()))
-        else:
-            sims = self.mat @ qv; order = np.argsort(-sims)[:k]; pairs = [(int(i), float(sims[i])) for i in order]
+        sims = self.mat @ self.embed(query)          # 文件只有幾十篇，全部算分 (FAISS 索引在文件變多時才有差別)
+        if self.index is not None and len(self.docs) > 500:
+            sc, ix = self.index.search(self.embed(query).reshape(1, -1), 50); sims = np.full(len(self.docs), -1.0); sims[ix[0]] = sc[0]
         thr = min_score if min_score is not None else (0.35 if self.model is not None else 0.1)
-        out = []
-        for i, sc_ in pairs:
-            d = self.docs[i]; bonus = 0.25 if any(a and a.lower() in query.lower() for a in [d["title"], *d["aliases"]]) else 0.0
-            if sc_ + bonus >= thr:
-                out.append({**d, "score": round(min(0.99, sc_ + bonus), 3)})
-        return sorted(out, key=lambda h: -h["score"])
+        low = orig.lower(); out = []
+        for i, d in enumerate(self.docs):
+            allnames = [x for x in [d["title"].replace("什麼是 ", ""), *d["aliases"]] if x]
+            names = [x for x in allnames if len(x) >= 2 and x.upper() not in ("ETF", "ETFS")]   # 太短或太常見的詞不加分
+            hit = [x for x in names if x.lower() in low]
+            bonus = min(0.4, 0.1 + 0.05 * max(len(x) for x in hit)) if hit else 0.0
+            if any(x.lower().replace(" ", "") == query.lower().replace(" ", "") for x in allnames):
+                bonus += 0.25   # 整個問題就是這個詞，例如「什麼是 ETF」
+            score = float(sims[i]) + bonus
+            if score >= thr:
+                out.append({**d, "score": round(min(0.99, score), 3)})
+        return sorted(out, key=lambda h: -h["score"])[:k]
 
 
 @lru_cache(maxsize=1)
