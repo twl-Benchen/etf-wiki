@@ -1,0 +1,201 @@
+{
+ "date": "2026-11-20",
+ "demo": false,
+ "index": {
+  "name": "加權指數",
+  "close": 36033.29,
+  "pct": -6.23
+ },
+ "stocks": {
+  "0050": {
+   "name": "元大台灣50",
+   "close": 84.45,
+   "change": -5.75,
+   "pct": -6.37,
+   "market": "twse"
+  },
+  "0056": {
+   "name": "元大高股息",
+   "close": 44.31,
+   "change": -3.1,
+   "pct": -6.54,
+   "market": "twse"
+  },
+  "006208": {
+   "name": "富邦台50",
+   "close": 189.8,
+   "change": -12.85,
+   "pct": -6.34,
+   "market": "twse"
+  },
+  "00878": {
+   "name": "國泰永續高股息",
+   "close": 28.03,
+   "change": -1.75,
+   "pct": -5.88,
+   "market": "twse"
+  },
+  "00919": {
+   "name": "群益台灣精選高息",
+   "close": 27.49,
+   "change": -1.66,
+   "pct": -5.69,
+   "market": "twse"
+  },
+  "1216": {
+   "name": "統一",
+   "close": 75.0,
+   "change": -3.7,
+   "pct": -4.7,
+   "market": "twse"
+  },
+  "1303": {
+   "name": "南亞",
+   "close": 206.0,
+   "change": -22.5,
+   "pct": -9.85,
+   "market": "twse"
+  },
+  "2303": {
+   "name": "聯電",
+   "close": 80.3,
+   "change": -7.9,
+   "pct": -8.96,
+   "market": "twse"
+  },
+  "2308": {
+   "name": "台達電",
+   "close": 900.0,
+   "change": -100.0,
+   "pct": -10.0,
+   "market": "twse"
+  },
+  "2317": {
+   "name": "鴻海",
+   "close": 210.0,
+   "change": -10.5,
+   "pct": -4.76,
+   "market": "twse"
+  },
+  "2330": {
+   "name": "台積電",
+   "close": 2000.0,
+   "change": -100.0,
+   "pct": -4.76,
+   "market": "twse"
+  },
+  "2357": {
+   "name": "華碩",
+   "close": 756.0,
+   "change": -44.0,
+   "pct": -5.5,
+   "market": "twse"
+  },
+  "2379": {
+   "name": "瑞昱",
+   "close": 668.0,
+   "change": -58.0,
+   "pct": -7.99,
+   "market": "twse"
+  },
+  "2382": {
+   "name": "廣達",
+   "close": 252.0,
+   "change": -10.5,
+   "pct": -4.0,
+   "market": "twse"
+  },
+  "2454": {
+   "name": "聯發科",
+   "close": 3350.0,
+   "change": -370.0,
+   "pct": -9.95,
+   "market": "twse"
+  },
+  "2603": {
+   "name": "長榮",
+   "close": 233.0,
+   "change": -14.0,
+   "pct": -5.67,
+   "market": "twse"
+  },
+  "2880": {
+   "name": "華南金",
+   "close": 47.0,
+   "change": -1.85,
+   "pct": -3.79,
+   "market": "twse"
+  },
+  "2881": {
+   "name": "富邦金",
+   "close": 136.5,
+   "change": -11.5,
+   "pct": -7.77,
+   "market": "twse"
+  },
+  "2882": {
+   "name": "國泰金",
+   "close": 96.9,
+   "change": -6.6,
+   "pct": -6.38,
+   "market": "twse"
+  },
+  "2883": {
+   "name": "凱基金",
+   "close": 29.9,
+   "change": -1.95,
+   "pct": -6.12,
+   "market": "twse"
+  },
+  "2886": {
+   "name": "兆豐金",
+   "close": 51.8,
+   "change": -1.6,
+   "pct": -3.0,
+   "market": "twse"
+  },
+  "2887": {
+   "name": "台新新光金",
+   "close": 33.95,
+   "change": -1.75,
+   "pct": -4.9,
+   "market": "twse"
+  },
+  "2890": {
+   "name": "永豐金",
+   "close": 36.0,
+   "change": -3.1,
+   "pct": -7.93,
+   "market": "twse"
+  },
+  "2891": {
+   "name": "中信金",
+   "close": 68.0,
+   "change": -5.1,
+   "pct": -6.98,
+   "market": "twse"
+  },
+  "3034": {
+   "name": "聯詠",
+   "close": 416.5,
+   "change": -20.0,
+   "pct": -4.58,
+   "market": "twse"
+  },
+  "3231": {
+   "name": "緯創",
+   "close": 147.0,
+   "change": -9.0,
+   "pct": -5.77,
+   "market": "twse"
+  },
+  "3711": {
+   "name": "日月光投控",
+   "close": 457.0,
+   "change": -47.0,
+   "pct": -9.33,
+   "market": "twse"
+  }
+ },
+ "source": "臺灣證券交易所 OpenAPI、證券櫃檯買賣中心 OpenAPI"
+}

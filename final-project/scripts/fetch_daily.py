@@ -1,7 +1,7 @@
 """抓當日行情：證交所 OpenAPI (上市個股、大盤指數) 與櫃買中心 OpenAPI (上櫃個股)，寫成 data/daily.json。
 欄位名稱以實際回傳為準，這裡做了容錯；任何一步失敗都會記在 data/_fetch_daily_log.json，不會覆蓋掉舊的 daily.json。
 用法：python scripts/fetch_daily.py"""
-import json, datetime as dt
+import json, time, datetime as dt
 from pathlib import Path
 import requests
 D = Path(__file__).resolve().parents[1] / "data"
@@ -27,8 +27,14 @@ def roc(d):   # 民國日期 1151117 → 2026-11-17
     return None
 
 
-def get(name):
-    r = requests.get(URLS[name], headers=UA, timeout=40); r.raise_for_status(); j = r.json()
+def get(name, tries=3):
+    for i in range(tries):   # 證交所偶爾會中途切斷連線，等幾秒再試
+        try:
+            r = requests.get(URLS[name], headers=UA, timeout=40); r.raise_for_status(); j = r.json(); break
+        except (requests.ConnectionError, requests.Timeout):
+            if i == tries - 1:
+                raise
+            time.sleep(5 * (i + 1))
     LOG["steps"][name] = {"rows": len(j), "keys": list(j[0].keys()) if j else []}
     return j
 
