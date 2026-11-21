@@ -1,0 +1,187 @@
+<title>ETF 都會</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@900&display=swap">
+<style>
+/* Layout: full-bleed 3D city; conversation dock on the right (bottom sheet on phones) drives the camera; small brand chip top-left */
+:root {
+  --bg: #0d1522;
+  --panel: rgba(248, 250, 252, 0.9);
+  --panel-solid: #f8fafc;
+  --ink: #142030;
+  --muted: #5a6879;
+  --hair: rgba(20, 32, 48, 0.12);
+  --chip: #e9eef5;
+  --bubble: #1f6fd6;
+  --bubble-ink: #ffffff;
+  --focus: #1f6fd6;
+  --up: #d63a3a;
+  --down: #12905a;
+  --gold: #b88407;
+  --code-bg: #eef2f7;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-head: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --panel: rgba(15, 21, 30, 0.9); --panel-solid: #0f151e; --ink: #e6ebf2; --muted: #98a5b5;
+    --hair: rgba(230, 235, 242, 0.14); --chip: #1c2633; --bubble: #3b82f6; --focus: #6aa8ff;
+    --up: #ff6b6b; --down: #3fd391; --gold: #f0c24a; --code-bg: #18212d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --panel: rgba(15, 21, 30, 0.9); --panel-solid: #0f151e; --ink: #e6ebf2; --muted: #98a5b5;
+  --hair: rgba(230, 235, 242, 0.14); --chip: #1c2633; --bubble: #3b82f6; --focus: #6aa8ff;
+  --up: #ff6b6b; --down: #3fd391; --gold: #f0c24a; --code-bg: #18212d;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow: hidden; }
+#sky { position: fixed; inset: 0; }
+#stage { position: fixed; inset: 0; touch-action: none; }
+#stage canvas { display: block; }
+.panel {
+  background: var(--panel); color: var(--ink);
+  backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid var(--hair); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+.up { color: var(--up); } .down { color: var(--down); }
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* brand chip + settings */
+#brand { position: fixed; z-index: 5; top: calc(14px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; }
+#brand h1 { margin: 0; font-family: var(--font-head); font-weight: 900; font-size: 22px; letter-spacing: 1px; }
+#brand .sub { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--chip); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.pill.live i { background: var(--up); }
+.icon-btn { border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 9px; height: 32px; padding: 0 10px; font: 500 12.5px var(--font-body); cursor: pointer; }
+#settings { position: fixed; z-index: 6; top: calc(66px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); width: 280px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+#settings h2 { margin: 0; font-size: 12px; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; }
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--chip); padding: 3px; border-radius: 10px; }
+.seg button { border: 0; background: transparent; color: var(--ink); font: 500 12.5px var(--font-body); padding: 6px 2px; border-radius: 8px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--panel-solid); box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 700; }
+.time-row { display: flex; align-items: center; gap: 10px; }
+.time-row input { flex: 1; accent-color: var(--focus); }
+.time-row output { font: 700 14px var(--font-body); font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.note { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+
+/* replay HUD */
+#hud { position: fixed; z-index: 5; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(calc(-50% - 200px)); width: 330px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+#hud .row { display: flex; justify-content: space-between; align-items: baseline; font-variant-numeric: tabular-nums; }
+#hud .date { font: 700 20px var(--font-body); }
+#hud .val { font: 700 18px var(--font-body); }
+#hud canvas { width: 100%; height: 54px; display: block; }
+#hud .legend { display: flex; gap: 12px; font-size: 11.5px; color: var(--muted); }
+#hud .legend span::before { content: ""; display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; background: currentColor; }
+
+/* chat dock */
+#chat { position: fixed; z-index: 5; top: calc(14px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: 384px; display: flex; flex-direction: column; overflow: hidden; }
+#chat header { padding: 12px 16px 10px; border-bottom: 1px solid var(--hair); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#chat header b { font-size: 14px; }
+#chat header span { font-size: 11.5px; color: var(--muted); }
+#log { flex: 1; overflow-y: auto; padding: 14px 14px 6px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+.msg { max-width: 92%; display: flex; flex-direction: column; gap: 4px; }
+.msg.user { align-self: flex-end; }
+.msg.user .body { background: var(--bubble); color: var(--bubble-ink); border-radius: 14px 14px 4px 14px; padding: 8px 12px; font-size: 14px; line-height: 1.55; }
+.msg.bot { align-self: flex-start; }
+.msg.bot .who { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.msg.bot .who i { width: 18px; height: 18px; border-radius: 6px; display: inline-grid; place-items: center; font-style: normal; font-size: 11px; color: #fff; background: #435369; }
+.msg.bot .body { background: var(--panel-solid); border: 1px solid var(--hair); border-radius: 4px 14px 14px 14px; padding: 10px 12px; font-size: 14px; line-height: 1.7; }
+.msg.bot .body b { font-variant-numeric: tabular-nums; }
+.msg .src { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+details.trace { font-size: 12px; color: var(--muted); }
+details.trace summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 2px 0; }
+details.trace summary::-webkit-details-marker { display: none; }
+details.trace summary::before { content: "▸"; font-size: 10px; }
+details.trace[open] summary::before { content: "▾"; }
+.trace .step { margin-top: 6px; }
+.trace .step b { color: var(--ink); font-weight: 700; }
+.trace pre { margin: 4px 0 0; background: var(--code-bg); border-radius: 8px; padding: 8px 10px; font: 11.5px/1.5 var(--font-mono); white-space: pre-wrap; word-break: break-all; color: var(--ink); max-height: 180px; overflow: auto; }
+.ok { display: inline-block; background: color-mix(in srgb, var(--down) 18%, transparent); color: var(--down); border-radius: 6px; padding: 1px 7px; font-weight: 700; }
+.typing { display: inline-flex; gap: 4px; padding: 12px 14px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+#chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px 4px; }
+.chipq { border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 999px; padding: 6px 11px; font: 13px var(--font-body); cursor: pointer; text-align: left; }
+.chipq:hover { border-color: var(--focus); }
+#ask { display: flex; gap: 8px; padding: 10px 14px 14px; }
+#q { flex: 1; min-width: 0; border: 1px solid var(--hair); background: var(--panel-solid); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 14px var(--font-body); }
+#send { border: 0; background: var(--bubble); color: var(--bubble-ink); border-radius: 10px; padding: 0 16px; font: 700 14px var(--font-body); cursor: pointer; }
+#send:disabled { opacity: .5; cursor: default; }
+#tip { position: fixed; z-index: 4; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 12px; color: #fff; background: rgba(0,0,0,.38); padding: 5px 11px; border-radius: 999px; pointer-events: none; }
+
+.lg { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.lg span::before { content: ""; display: inline-block; width: 14px; height: 4px; border-radius: 2px; background: var(--c); margin-right: 6px; vertical-align: middle; }
+@media (max-width: 760px) {
+  #chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+  .chipq { flex: none; white-space: nowrap; }
+  #ask { padding-top: 6px; }
+  #chat { top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 46%; border-radius: 16px 16px 0 0;
+    padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  #chat header { display: none; }
+  #hud { left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: auto; transform: none; bottom: auto; top: calc(66px + env(safe-area-inset-top, 0px)); padding: 8px 12px; gap: 3px; }
+  #hud canvas { height: 34px; }
+  #hud .legend { display: none; }
+  #brand .sub { display: none; }
+  #settings { width: auto; right: max(16px, env(safe-area-inset-right, 0px)); }
+  #tip { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { #log { scroll-behavior: auto; } .typing i { animation: none; } }
+</style>
+
+<div id="sky"></div>
+<div id="stage" aria-label="ETF 都會 3D 城市"></div>
+
+<div id="brand" class="panel">
+  <div><h1>ETF 都會</h1><div class="sub">原型｜Agent 回應為規則模擬</div></div>
+  <span id="status" class="pill"><i></i><span>收盤</span></span>
+  <button id="setBtn" class="icon-btn" type="button" aria-expanded="false" aria-controls="settings">城市設定</button>
+</div>
+<div id="settings" class="panel" hidden>
+  <h2 id="h-scn">今日行情 (示意)</h2>
+  <div class="seg" role="group" aria-labelledby="h-scn">
+    <button type="button" id="scn-mixed" data-scn="mixed" aria-pressed="true">震盪</button>
+    <button type="button" id="scn-up" data-scn="up" aria-pressed="false">大漲</button>
+    <button type="button" id="scn-flat" data-scn="flat" aria-pressed="false">平盤</button>
+    <button type="button" id="scn-down" data-scn="down" aria-pressed="false">大跌</button>
+  </div>
+  <h2 id="h-time">時間</h2>
+  <div class="time-row"><input id="time" type="range" min="8" max="22" step="0.25" value="14.5" aria-labelledby="h-time"><output id="timeOut" for="time">14:30</output></div>
+  <label class="check"><input id="allLabels" type="checkbox"> 顯示所有大樓標籤</label>
+  <div class="note">成分股權重、ETF 價格為真實歷史資料 (至 2025/5/29)。個股今日漲跌是示意行情。</div>
+</div>
+
+<div id="hud" class="panel" hidden aria-live="polite">
+  <div class="row"><span class="date" id="hudDate">2020/01</span><span class="note" id="hudTitle">每月定期定額</span></div>
+  <div class="row"><span class="note">投入 <b id="hudIn">0</b></span><span class="val" id="hudVal">0</span></div>
+  <canvas id="hudChart" width="600" height="108"></canvas>
+  <div class="legend"><span style="color:var(--muted)">投入本金</span><span id="hudLeg" style="color:var(--up)">市值</span></div>
+</div>
+
+<section id="chat" class="panel" aria-label="問城市">
+  <header><b>問城市</b><span>點大樓或車站也能直接問</span></header>
+  <div id="log" aria-live="polite"></div>
+  <div id="chips"></div>
+  <form id="ask" autocomplete="off">
+    <input id="q" placeholder="例如：0056 跟 00878 差在哪？" aria-label="輸入問題">
+    <button id="send" type="submit">問</button>
+  </form>
+</section>
+<div id="tip">拖曳旋轉・滾輪縮放・點大樓直接問</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">

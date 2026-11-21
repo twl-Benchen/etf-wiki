@@ -1,0 +1,124 @@
+{
+ "companies": {
+  "台積電": {
+   "code": "2330",
+   "market": "TWSE",
+   "industry": "半導體業"
+  },
+  "聯發科": {
+   "code": "2454",
+   "market": "TWSE",
+   "industry": "半導體業"
+  },
+  "鴻海": {
+   "code": "2317",
+   "market": "TWSE",
+   "industry": "其他電子業"
+  },
+  "台達電": {
+   "code": "2308",
+   "market": "TWSE",
+   "industry": "電子零組件業"
+  },
+  "富邦金": {
+   "code": "2881",
+   "market": "TWSE",
+   "industry": "金融保險業"
+  },
+  "中信金": {
+   "code": "2891",
+   "market": "TWSE",
+   "industry": "金融保險業"
+  },
+  "廣達": {
+   "code": "2382",
+   "market": "TWSE",
+   "industry": "電腦及週邊設備業"
+  },
+  "國泰金": {
+   "code": "2882",
+   "market": "TWSE",
+   "industry": "金融保險業"
+  },
+  "聯電": {
+   "code": "2303",
+   "market": "TWSE",
+   "industry": "半導體業"
+  },
+  "中華電": {
+   "code": "2412",
+   "market": "TWSE",
+   "industry": "通信網路業"
+  },
+  "長榮": {
+   "code": "2603",
+   "market": "TWSE",
+   "industry": "航運業"
+  },
+  "聯詠": {
+   "code": "3034",
+   "market": "TWSE",
+   "industry": "半導體業"
+  },
+  "瑞昱": {
+   "code": "2379",
+   "market": "TWSE",
+   "industry": "半導體業"
+  },
+  "華碩": {
+   "code": "2357",
+   "market": "TWSE",
+   "industry": "電腦及週邊設備業"
+  },
+  "華南金": {
+   "code": "2880",
+   "market": "TWSE",
+   "industry": "金融保險業"
+  },
+  "長榮航": {
+   "code": "2618",
+   "market": "TWSE",
+   "industry": "航運業"
+  },
+  "陽明": {
+   "code": "2609",
+   "market": "TWSE",
+   "industry": "航運業"
+  },
+  "日月光投控": {
+   "code": "3711",
+   "market": "TWSE",
+   "industry": "半導體業"
+  },
+  "世界": {
+   "code": "5347",
+   "market": "TPEx",
+   "industry": "半導體業"
+  },
+  "元大金": {
+   "code": "2885",
+   "market": "TWSE",
+   "industry": "金融保險業"
+  },
+  "上海商銀": {
+   "code": "5876",
+   "market": "TWSE",
+   "industry": "金融保險業"
+  },
+  "群聯": {
+   "code": "8299",
+   "market": "TPEx",
+   "industry": "半導體業"
+  },
+  "力成": {
+   "code": "6239",
+   "market": "TWSE",
+   "industry": "半導體業"
+  },
+  "瑞儀": {
+   "code": "6176",
+   "market": "TWSE",
+   "industry": "光電業"
+  }
+ }
+}

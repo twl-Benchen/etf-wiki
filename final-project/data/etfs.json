@@ -1,0 +1,80 @@
+{
+ "etfs": {
+  "0050": {
+   "code": "0050",
+   "name": "元大台灣50",
+   "type": "市值型",
+   "color": "#1f6fd6",
+   "issuer": "元大",
+   "listing_date": "2003-06-30",
+   "index_name": "富時臺灣證券交易所臺灣50指數",
+   "dividend_freq": "半年配",
+   "dividend_months": [
+    1,
+    7
+   ]
+  },
+  "006208": {
+   "code": "006208",
+   "name": "富邦台50",
+   "type": "市值型",
+   "color": "#8a63d2",
+   "issuer": "富邦",
+   "listing_date": "2012-07-17",
+   "index_name": "富時臺灣證券交易所臺灣50指數",
+   "dividend_freq": "半年配",
+   "dividend_months": [
+    7,
+    11
+   ]
+  },
+  "0056": {
+   "code": "0056",
+   "name": "元大高股息",
+   "type": "高股息",
+   "color": "#e47b24",
+   "issuer": "元大",
+   "listing_date": "2007-12-26",
+   "index_name": "臺灣高股息指數",
+   "dividend_freq": "季配",
+   "dividend_months": [
+    1,
+    4,
+    7,
+    10
+   ]
+  },
+  "00878": {
+   "code": "00878",
+   "name": "國泰永續高股息",
+   "type": "高股息",
+   "color": "#17a06c",
+   "issuer": "國泰",
+   "listing_date": "2020-07-20",
+   "index_name": "MSCI臺灣ESG永續高股息精選30指數",
+   "dividend_freq": "季配",
+   "dividend_months": [
+    2,
+    5,
+    8,
+    11
+   ]
+  },
+  "00919": {
+   "code": "00919",
+   "name": "群益台灣精選高息",
+   "type": "高股息",
+   "color": "#d6417f",
+   "issuer": "群益",
+   "listing_date": "2022-10-20",
+   "index_name": "臺灣上市上櫃精選高息指數",
+   "dividend_freq": "季配",
+   "dividend_months": [
+    3,
+    6,
+    9,
+    12
+   ]
+  }
+ }
+}
