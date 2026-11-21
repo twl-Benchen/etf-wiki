@@ -88,3 +88,4 @@ if __name__ == "__main__":
         LOG["fatal"] = str(e)[:300]
     (D / "_fetch_daily_log.json").write_text(json.dumps(LOG, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(LOG, ensure_ascii=False)[:2000])
+    raise SystemExit(0 if LOG.get("written") else 1)

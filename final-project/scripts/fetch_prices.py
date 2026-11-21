@@ -26,7 +26,8 @@ def main():
                 w = csv.writer(f); w.writerow(["date", "close"]); w.writerows(rows)
             if "Dividends" in h:
                 divs[code] = [{"date": i.strftime("%Y-%m-%d"), "amount": round(float(v), 4)} for i, v in zip(h.index, h["Dividends"]) if v and v > 0]
-            LOG["ok"].append({"code": code, "rows": len(rows), "first": rows[0][0], "last": rows[-1][0]})
+            jumps = [rows[i][0] for i in range(1, len(rows)) if rows[i][1] / rows[i - 1][1] - 1 < -0.4]   # 單日跌超過 40%，可能是沒還原的分割
+            LOG["ok"].append({"code": code, "rows": len(rows), "first": rows[0][0], "last": rows[-1][0], "suspicious_drops": jumps})
         except Exception as e:
             LOG["failed"][code] = str(e)[:300]
         time.sleep(1)
@@ -42,3 +43,4 @@ if __name__ == "__main__":
         LOG["failed"]["_fatal"] = str(e)[:300]
     (D / "_fetch_prices_log.json").write_text(json.dumps(LOG, ensure_ascii=False, indent=1), encoding="utf-8")
     print(json.dumps(LOG, ensure_ascii=False)[:1500])
+    raise SystemExit(0 if LOG["ok"] and not LOG["failed"] else 1)
