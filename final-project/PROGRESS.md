@@ -45,6 +45,7 @@
 - [x] 假 LLM 測試 (`backend/tests/test_llm_path.py`)：計畫驗證失敗重試、Writer 寫了沒編號的數字被退回、退回模板
 - [x] `scripts/update_all.py` 一鍵更新資料；`notebooks/etf_metropolis_colab.ipynb` 在 Colab 更新資料、測 Groq、跑實驗一
 - [x] `docs/demo.md` 期末 demo 流程
+- [x] `scripts/make_space.py` 產生 HF Space 上傳資料夾 `dist/space/` (已在本機用 TestClient 驗證可啟動)
 
 ## 待辦清單 (依序)
 1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。
@@ -58,5 +59,5 @@
 
 ## 已知問題
 - 這個開發環境連不到 Groq、證交所、Yahoo、Hugging Face，所以 LLM 路徑和抓資料腳本都還沒有實際跑過。
-- 知識庫中自編的 16 篇標示「待核對」，期末前要對照來源檢查。
+- 知識庫自編文件：`income-equalization`、`split` 已對照來源改寫 (status: 已核對)；其餘標示「待核對」的 9 篇期末前要對照來源檢查 (`grep -l '待核對' data/kb/*.md`)。
 - 城市在手機上可以用，但標籤較擠；實驗二建議用電腦做。
