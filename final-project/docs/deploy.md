@@ -24,7 +24,7 @@ python scripts/check_groq.py                # 確認模型名稱與 LLM 的規�
 ## 3. 後端部署到 Hugging Face Space
 
 1. 在 Hugging Face 建一個 Space，SDK 選 **Docker**。
-2. 把 `final-project/` 裡的這些檔案放到 Space 的根目錄：`Dockerfile`、`requirements.txt`、`backend/`、`data/`。
+2. 在 `final-project/` 執行 `python scripts/make_space.py`，把產生的 `dist/space/` 裡的全部檔案上傳到 Space (網頁上的 Files → Add file → Upload files，或 git push 到 Space 的 repo)。
 3. Space 的 Settings → Variables and secrets 新增 secret `GROQ_API_KEY`。若要限制只有自己的網站能呼叫，再加 variable `ETFCITY_CORS=https://twl-benchen.github.io`。
 4. 建好之後，`https://<帳號>-<space 名稱>.hf.space/` 是 Gradio 介面，`/api/health` 可以確認狀態，`/docs` 是 API 文件。
 5. 免費的 Space 閒置一段時間會休眠，展示前先打開一次網址把它叫醒。
