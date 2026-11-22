@@ -2,7 +2,7 @@
 title: 申購買回與套利
 type: concept
 summary: 利用初級市場的淨值和次級市場的市價之間的價差來套利，這個機制會把市價拉回淨值附近。
-aliases: [套利, 申購買回, 套利機制, creation, redemption, arbitrage]
+aliases: [套利, 申購買回, 套利機制, creation, redemption, arbitrage, 創建, 贖回, 創建與贖回]
 sources: [s03a, s03b]
 updated: 2026-11-16
 ---

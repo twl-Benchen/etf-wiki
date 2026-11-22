@@ -3,8 +3,8 @@ title: 什麼是 ETF
 type: concept
 summary: ETF 是在交易所像股票一樣買賣、追蹤某個指數的基金，正式名稱是指數股票型基金。
 aliases: [ETF, Exchange Traded Fund, 指數股票型基金, 交易所交易基金]
-sources: [s01a]
-updated: 2026-11-16
+sources: [s01a, s04b]
+updated: 2026-11-23
 ---
 
 # 什麼是 ETF
@@ -23,6 +23,8 @@ ETF 是 Exchange Traded Fund 的縮寫，意思是在交易所買賣的基金，
 
 因為是一籃子股票，買一個單位的 ETF，就等於同時持有指數裡所有成分股的一小部分 (來源: s01a)。
 
+上面說的是傳統的被動式 ETF。台灣從 2025 年起也有由經理人主動選股、不追蹤指數的[主動式 ETF](active-vs-passive.md)，所以「ETF 一定追蹤指數」只適用被動式 ETF (來源: s04b)。
+
 ## 例子
 
 假設有一個指數由 50 家公司組成，你想自己把 50 家都買齊，需要很多錢；買一個追蹤這個指數的 ETF，用比較少的錢就能一次擁有這 50 家公司的一小部分。
@@ -32,5 +34,10 @@ ETF 是 Exchange Traded Fund 的縮寫，意思是在交易所買賣的基金，
 - [指數與追蹤](index-tracking.md)
 - [臺灣證券交易所](../entities/twse.md)
 - [淨值](nav.md)
+- [ETF 的特色](etf-features.md)
+- [ETF、股票與共同基金的比較](etf-vs-stock-and-fund.md)
+- [ETF 的價格為什麼會漲跌](price-movement.md)
+- [複利](compound-interest.md)
+- [主動式與被動式 ETF](active-vs-passive.md)
 - [ETF 的風險](etf-risks.md)
 - [新手常見誤解](common-misconceptions.md)

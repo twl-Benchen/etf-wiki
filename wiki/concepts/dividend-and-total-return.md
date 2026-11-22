@@ -2,7 +2,7 @@
 title: 配息與總報酬
 type: concept
 summary: 配息只是報酬的一部分，ETF 也不保證固定配息，證交所提醒看表現要看總報酬率。
-aliases: [配息, 配息率, 殖利率, 總報酬率, 總報酬, 月配, 季配, 高股息]
+aliases: [配息, 配息率, 殖利率, 總報酬率, 總報酬, 月配, 季配, 高股息, 分紅, 股息]
 sources: [s05a]
 updated: 2026-11-16
 ---
@@ -33,3 +33,5 @@ updated: 2026-11-16
 
 - [ETF 的風險](etf-risks.md)
 - [新手常見誤解](common-misconceptions.md)
+- [除息與填息](ex-dividend.md)
+- [複利](compound-interest.md)

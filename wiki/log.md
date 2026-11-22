@@ -186,3 +186,20 @@ type: log
   - x01 費率的一般範圍：題庫答案 (0.05% 到 1%) 本身沒有來源和日期，Wiki 不寫是對的，算部分正確
 - 處理：依 5.4 第 2 點，holdout 不拿來修 Wiki。缺口列為下一輪 ingest 的候選資料：淨值計算、除息與淨值、ETF 與共同基金比較
 - 附帶發現：題庫答案品質不一。除了建議性質的答案，也有和證交所說法衝突的，例如題庫寫「折溢價對長期持有者影響有限，因為價格最終會回歸淨值」，但證交所 (s03b) 提醒，高溢價買進在溢價收斂時就可能虧損。外部題庫拿來找缺口很有用，但標準答案不能直接當真
+
+## [2026-11-23] ingest | s07 到 s09 第二輪 (使用者指定主題)
+- 討論：使用者要求簡報前面加上「為什麼要買 ETF」「為什麼會漲」「什麼是複利」。AI 依 v1.2 的 5.1 第 2 步先列缺口：
+  - 「為什麼要買」只能寫成 ETF 的特色，不能寫成推薦，所以頁面命名為「ETF 的特色」
+  - 「為什麼會漲」不能寫成預測，改成說明價格變動的機制 (持股漲跌、配息、市價與淨值、整體市場)
+  - 順便補外部題庫考出的缺口：ETF 和共同基金的比較 (x19)、除息會讓淨值下修 (x08)
+  - 淨值的計算公式 (x04) 這次還是沒找到合適的官方來源，維持缺口
+  - 複利找不到政府機關的說明，改用銀行投資教育文與今周刊，在來源頁註明
+- 寫入：新增 raw/s07、s08、s09 卡 (使用者指定主題，AI 代建，卡上註明 added_by)；新增 sources/s07 到 s09；新增 concepts/etf-features.md、etf-vs-stock-and-fund.md、ex-dividend.md、price-movement.md、compound-interest.md；修改 what-is-etf.md、dividend-and-total-return.md、common-misconceptions.md、creation-redemption.md、primary-secondary-market.md、expense-ratio.md (aliases)、index.md、raw/README.md
+- 檢查：lint.py 第 1 次 2 個問題 (price-movement 的導言與免責句沒有來源)，修正後 0 個。語意檢查發現 3 處 AI 自己補的說法，已改回來源的說法：
+  - compound-interest：「實際報酬也可能虧損」，s09a 只寫「不代表實際或保證的報酬」
+  - ex-dividend：「配出去的錢原本就是基金資產的一部分」，s08a 只寫「配息從淨值扣除」
+  - price-movement：「所以 ETF 不保證上漲」，改寫成有來源的常見誤解
+- 問題與修正：
+  - [矛盾] 使用者人工審查外部題庫時發現 x16「ETF 是追蹤指數的基金」和主動式 ETF 的定義衝突；回頭檢查發現 Wiki 自己的 what-is-etf.md 也只寫「追蹤指數」，和 active-vs-passive.md 矛盾，但語意檢查當時沒抓到 (s01a 是 2024 年的文章，寫的是被動式)。已在 what-is-etf.md 補充主動式的說明
+  - s09b 的例子用程式驗算 (100 萬元、10%、10 年，複利獲利約 159.4 萬元)，和原文「將近 160 萬元」相符
+  - 「為什麼要買」「為什麼會漲」這兩個主題名稱本身就帶有建議與預測的語氣，是這次最需要在討論階段先處理的地方

@@ -1,7 +1,7 @@
 ---
 title: ETF 入門 Wiki 目錄
 type: index
-updated: 2026-11-16
+updated: 2026-11-23
 ---
 
 # ETF 入門 Wiki 目錄
@@ -10,7 +10,11 @@ updated: 2026-11-16
 
 ## 概念 (concepts/)
 
-- [什麼是 ETF](concepts/what-is-etf.md)：ETF 是在交易所像股票一樣買賣、追蹤某個指數的基金，正式名稱是指數股票型基金。(別名: ETF, 指數股票型基金)
+- [什麼是 ETF](concepts/what-is-etf.md)：ETF 是在交易所像股票一樣買賣、追蹤某個指數的基金，正式名稱是指數股票型基金。(別名: ETF, 指數股票型基金, 交易所交易基金)
+- [ETF 的特色](concepts/etf-features.md)：分散風險、透明、交易方便、成本較低，也有自己的風險。(別名: 為什麼要買 ETF, ETF 優點)
+- [ETF、股票與共同基金的比較](concepts/etf-vs-stock-and-fund.md)：交易方式像股票但分散，被動式 ETF 比主動式基金費用低。(別名: 共同基金, 個股)
+- [ETF 的價格為什麼會漲跌](concepts/price-movement.md)：持股漲跌反映在淨值，配息讓淨值下修，市價圍繞淨值。(別名: 為什麼會漲, 漲跌)
+- [複利](concepts/compound-interest.md)：收益再投入後繼續產生收益，時間是關鍵。(別名: 利滾利, 單利)
 - [指數與追蹤](concepts/index-tracking.md)：指數代表一群股票的整體表現，被動式 ETF 依照指數的成分股和比重買進。(別名: 指數, 成分股)
 - [內扣費用與費用率](concepts/expense-ratio.md)：持有 ETF 期間的經理費、保管費等費用，直接從淨值裡扣除。(別名: 費用率, 經理費, 保管費)
 - [交易成本：手續費與證交稅](concepts/trading-costs.md)：買賣時付券商手續費，賣出時另付證交稅。(別名: 手續費, 證交稅)
@@ -18,10 +22,11 @@ updated: 2026-11-16
 - [淨值](concepts/nav.md)：ETF 持有的一籃子資產真正值多少錢。(別名: NAV, 資產淨值)
 - [折溢價](concepts/premium-discount.md)：市價和淨值的落差，市價比較高叫溢價，比較低叫折價。(別名: 折價, 溢價)
 - [初級市場與次級市場](concepts/primary-secondary-market.md)：大額向投信用淨值申購買回，或一般人用市價買賣。(別名: 一級市場, 二級市場)
-- [申購買回與套利](concepts/creation-redemption.md)：利用淨值和市價的價差套利，把市價拉回淨值附近。(別名: 套利, 申購買回)
+- [申購買回與套利](concepts/creation-redemption.md)：利用淨值和市價的價差套利，把市價拉回淨值附近。(別名: 套利, 申購買回, 創建與贖回)
 - [主動式與被動式 ETF](concepts/active-vs-passive.md)：被動式追蹤指數，主動式由經理人主動調整，不保證打敗績效指標。(別名: 主動式, 被動式, 平衡型, 績效指標)
 - [ETF 代碼與簡稱怎麼看](concepts/etf-ticker-codes.md)：從名稱、簡稱、代碼第六碼分辨主動式 (A/D) 和平衡型 (T)。(別名: 證券代碼, 第六碼)
-- [配息與總報酬](concepts/dividend-and-total-return.md)：配息只是報酬的一部分，ETF 不保證固定配息，看表現要看總報酬率。(別名: 配息率, 月配, 高股息)
+- [配息與總報酬](concepts/dividend-and-total-return.md)：配息只是報酬的一部分，ETF 不保證固定配息，看表現要看總報酬率。(別名: 配息率, 月配, 高股息, 分紅)
+- [除息與填息](concepts/ex-dividend.md)：配息從淨值扣除，價格回到除息前水準叫填息。(別名: 除息, 填息, 收益平準金)
 - [ETF 的風險](concepts/etf-risks.md)：折溢價、流動性、追蹤誤差、市場、集中度與下市風險。(別名: 風險, 下市)
 - [新手常見誤解](concepts/common-misconceptions.md)：各頁常見誤解的總整理。(別名: 迷思)
 
@@ -40,3 +45,6 @@ updated: 2026-11-16
 | s04 | [s04 主動式與被動式](sources/s04-active-vs-passive.md) | 已 ingest (2026-11-16) |
 | s05 | [s05 配息與總報酬](sources/s05-dividend-vs-total-return.md) | 已 ingest (2026-11-16) |
 | s06 | [s06 證券交易稅條例](sources/s06-securities-transaction-tax.md) | 已 ingest (2026-11-16，eval 後補) |
+| s07 | [s07 ETF 的特色與比較](sources/s07-etf-features.md) | 已 ingest (2026-11-23) |
+| s08 | [s08 配息會從淨值扣除](sources/s08-ex-dividend.md) | 已 ingest (2026-11-23) |
+| s09 | [s09 複利](sources/s09-compound-interest.md) | 已 ingest (2026-11-23) |
