@@ -318,6 +318,7 @@ button.primary { border: 0; background: var(--bubble); color: var(--bubble-ink);
   <div class="tools panel">
     <button type="button" class="icon-btn" id="viewBtn">眼睛視角</button>
     <button type="button" class="icon-btn" id="rideBtn" aria-pressed="false">滑板車</button>
+    <button type="button" class="icon-btn" id="avatarBtn">換角色</button>
     <button type="button" class="icon-btn" id="questBtn">任務</button>
     <button type="button" class="icon-btn" id="mapBtn">導覽圖</button>
     <button type="button" class="icon-btn" id="homeBtn">回到廣場</button>
@@ -993,8 +994,23 @@ for (let s = 4; s < LAY.P; s += 17) for (const sg of [1, -1]) {
   buildInstanced(trunk, MAT.trunk, INST.tree, false);
   const crown = new THREE.IcosahedronGeometry(1.3, 0); crown.translate(0, 3.1, 0);
   buildInstanced(crown, MAT.leaf, INST.tree, true);
-  const sc = mergeGeometries([new THREE.BoxGeometry(0.34, 0.5, 1.5).translate(0, 0.45, 0), new THREE.BoxGeometry(0.3, 0.25, 0.6).translate(0, 0.82, -0.25), new THREE.BoxGeometry(0.06, 0.6, 0.06).translate(0, 0.95, 0.6)]);
-  buildInstanced(sc, new THREE.MeshLambertMaterial({ color: 0x9aa7b4 }), INST.scooter, false);
+  // 停在騎樓前的機車：車殼是白色頂點色 (會乘上每台不同的顏色)，輪子、座墊、龍頭是深色
+  const part = (geo, hex, rx = 0) => { if (rx) geo.rotateX(rx); const c = new THREE.Color(hex), n = geo.attributes.position.count, a = new Float32Array(n * 3); for (let k = 0; k < n; k++) { a[k * 3] = c.r; a[k * 3 + 1] = c.g; a[k * 3 + 2] = c.b; } geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); return geo.toNonIndexed(); };
+  const W = 0x1d1f22, D = 0x2b2e33, Bc = 0xffffff;
+  const sc = mergeGeometries([
+    part(wheelGeo(0.21, 0.1).translate(0, 0.21, 0.56), W), part(wheelGeo(0.21, 0.1).translate(0, 0.21, -0.55), W),
+    part(new THREE.BoxGeometry(0.3, 0.07, 0.5).translate(0, 0.29, 0.02), D),
+    part(new THREE.BoxGeometry(0.36, 0.34, 0.64).translate(0, 0.52, -0.38), Bc),
+    part(new THREE.BoxGeometry(0.33, 0.09, 0.6).translate(0, 0.74, -0.35), 0x222222),
+    part(new THREE.BoxGeometry(0.36, 0.58, 0.11), Bc, -0.28).translate(0, 0.6, 0.43),
+    part(new THREE.BoxGeometry(0.22, 0.09, 0.3).translate(0, 0.4, 0.58), Bc),
+    part(new THREE.BoxGeometry(0.06, 0.34, 0.06), D, -0.2).translate(0, 0.98, 0.5),
+    part(new THREE.BoxGeometry(0.62, 0.05, 0.05).translate(0, 1.13, 0.46), D),
+    part(new THREE.BoxGeometry(0.14, 0.08, 0.04).translate(0, 0.8, 0.5), 0xfff4cc),
+    part(new THREE.BoxGeometry(0.2, 0.06, 0.04).translate(0, 0.62, -0.71), 0xc62828),
+  ]);
+  const scm = buildInstanced(sc, new THREE.MeshLambertMaterial({ vertexColors: true }), INST.scooter, true);
+  if (scm) { const pal = [0xe53935, 0xf5f5f5, 0x1e88e5, 0x212121, 0xfdd835, 0x43a047, 0x90a4ae, 0xff7043, 0x8e24aa].map(h => new THREE.Color(h)); for (let k = 0; k < INST.scooter.length; k++) scm.setColorAt(k, pal[(k * 7) % pal.length]); }
 }
 
 /* ---------------- 人物：路人與店長 (instanced) ---------------- */
@@ -1049,6 +1065,7 @@ function vehicle(kind, color) {
     add(new THREE.BoxGeometry(0.24, 0.12, 0.34), m, 0, 0.42, 0.58);
     add(new THREE.BoxGeometry(0.06, 0.36, 0.06), dark, 0, 0.98, 0.5, -0.2);
     add(new THREE.BoxGeometry(0.62, 0.05, 0.05), dark, 0, 1.13, 0.46);
+    g.userData.riderFrom = g.children.length;
     const shirt = new THREE.MeshLambertMaterial({ color: SHIRTS[Math.floor(Math.random() * SHIRTS.length)] }), pants = new THREE.MeshLambertMaterial({ color: 0x2c3542 }), skin = new THREE.MeshLambertMaterial({ color: 0xf0c8a8 });
     add(new THREE.BoxGeometry(0.4, 0.52, 0.24), shirt, 0, 1.12, -0.24, 0.12);
     for (const x of [-0.12, 0.12]) { add(new THREE.BoxGeometry(0.14, 0.13, 0.42), pants, x, 0.86, -0.1); add(new THREE.BoxGeometry(0.13, 0.42, 0.14), pants, x, 0.6, 0.12); add(new THREE.BoxGeometry(0.11, 0.11, 0.46), shirt, x * 2.1, 1.18, 0.12, -0.35); add(new THREE.BoxGeometry(0.09, 0.09, 0.09), skin, x * 2.4, 1.12, 0.42); }
@@ -1569,101 +1586,75 @@ function attachToBone(bone, mesh, worldPos, refObj) {
   mesh.position.copy(worldPos.clone().applyMatrix4(inv)); mesh.quaternion.copy(bq.invert().multiply(rq)); mesh.scale.set(1 / bs.x, 1 / bs.y, 1 / bs.z);
   bone.add(mesh);
 }
-// 真人外觀 (Universal Base Characters) 是只穿內衣的基礎人體，用著色器依身體部位「穿上」T 恤、長褲和鞋子 (顏色每個人不同，保留原貼圖的陰影)
-function bodyParams(body) {
-  const sk = body.skeleton, pos = n => { const i = ASSET.jointNames.indexOf(n); const M = new THREE.Matrix4().copy(sk.boneInverses[i]).invert().premultiply(body.bindMatrixInverse); return new THREE.Vector3().setFromMatrixPosition(M); };
-  const head = pos('Head'), foot = pos('foot_l').add(pos('foot_r')).multiplyScalar(0.5), pel = pos('pelvis'), neck = pos('neck_01'), ul = pos('upperarm_l'), ur = pos('upperarm_r'), ll = pos('lowerarm_l');
-  const side = ul.clone().sub(ur).normalize(), up0 = head.clone().sub(foot), up = up0.sub(side.clone().multiplyScalar(up0.dot(side))).normalize(), H = head.clone().sub(foot).dot(up);
-  // 原始姿勢是 T 字形：手臂平舉在脖子附近的高度，所以肩膀和上臂另外判斷 (離身體中心夠遠、又在手臂高度範圍內)
-  return { up, side, center: pel.clone(), shoe: foot.dot(up) + 0.045 * H, waist: pel.dot(up) + 0.075 * H, neck: neck.dot(up) - 0.01 * H, sleeve: ul.clone().sub(pel).dot(side) + 0.55 * ll.clone().sub(ul).dot(side), neckW: 0.075 * H, armTop: neck.dot(up) + 0.09 * H };
-}
-function clothMaterial(map, P, o) {
-  const m = new THREE.MeshLambertMaterial({ map });
-  const u = { uUp: { value: P.up }, uSide: { value: P.side }, uCenter: { value: P.center }, uShoe: { value: P.shoe }, uWaist: { value: P.waist }, uNeck: { value: P.neck }, uSleeve: { value: P.sleeve }, uNeckW: { value: P.neckW }, uArmTop: { value: P.armTop },
-    uShirt: { value: new THREE.Color(o.shirt) }, uPants: { value: new THREE.Color(o.pants) }, uShoeC: { value: new THREE.Color(o.shoe) } };
-  m.onBeforeCompile = sh => {
-    Object.assign(sh.uniforms, u);
-    sh.vertexShader = 'varying vec3 vBind;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vBind = position;');
-    sh.fragmentShader = 'varying vec3 vBind;\nuniform vec3 uUp, uSide, uCenter, uShirt, uPants, uShoeC;\nuniform float uShoe, uWaist, uNeck, uSleeve, uNeckW, uArmTop;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-  { float h = dot(vBind, uUp); float sx = abs(dot(vBind - uCenter, uSide)); float lum = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
-    vec3 c = vec3(-1.0);
-    if (h < uShoe) c = uShoeC; else if (h < uWaist) c = uPants; else if (sx < uSleeve && (h < uNeck || (sx > uNeckW && h < uArmTop))) c = uShirt;
-    if (c.x >= 0.0) diffuseColor.rgb = c * (0.5 + 1.2 * lum); }`);
-  };
-  m.customProgramCacheKey = () => 'cloth-v2';
-  return m;
-}
+// Q 版人物 (Kenney Mini Characters)：14 個穿休閒服的角色共用一套 7 根骨頭的骨架與動作
+const MINI_MODELS = ['character-male-a', 'character-male-b', 'character-male-c', 'character-male-d', 'character-male-e', 'character-male-f', 'character-male-g',
+  'character-female-a', 'character-female-b', 'character-female-c', 'character-female-d', 'character-female-e', 'character-female-f', 'character-worker'];
+const PLAYER_MODELS = ['character-male-e', 'character-male-b', 'character-male-c', 'character-male-d', 'character-male-g', 'character-female-b', 'character-female-c', 'character-female-d', 'character-female-e', 'character-female-f'];   // 主角可選的角色 (淺膚色)
+const ANIM = { Idle_Loop: 'idle', Walk_Loop: 'walk', Walk_Formal_Loop: 'walk', Jog_Fwd_Loop: 'sprint', Sprint_Loop: 'sprint', Jump_Loop: 'fall', Idle_Talking_Loop: 'emote-yes', Ride: 'holding-both' };
 function makeCharacter(o) {
-  const real = !!ASSET.people, kind = o.kind || 'male';
-  const m = SkeletonUtils.clone(real ? ASSET.people.getObjectByName(kind) : ASSET.base);
+  const m = SkeletonUtils.clone(ASSET.minis.getObjectByName('M_' + o.model));
   let body = null;
-  m.traverse(x => {
-    if (!x.isSkinnedMesh) return; x.castShadow = true;
-    if (!real) x.material = new THREE.MeshLambertMaterial({ color: /Joint/i.test(x.material.name) ? o.pants : o.shirt });
-    else if (/Superhero/i.test(x.material.name)) { body = x; x.material = clothMaterial(x.material.map, ASSET.body[kind], o); }
-  });
-  // three.js 載入時會把重複的骨頭名稱改成 Head_1 這種；三套骨架順序相同，改回標準名稱，動作才套得上
-  if (real) body.skeleton.bones.forEach((b, i) => { b.name = ASSET.jointNames[i]; });
-  m.scale.setScalar(real ? ASSET.pscale[kind] : ASSET.scale);
+  m.traverse(x => { if (x.isSkinnedMesh) { x.castShadow = true; if (!body) body = x; } });
+  // three.js 載入時會把重複的骨頭名稱改成 torso_1 這種；骨架順序都一樣，改回標準名稱，動作才套得上
+  body.skeleton.bones.forEach((b, i) => { b.name = ASSET.jointNames[i]; });
   const holder = new THREE.Group(); holder.add(m); scene.add(holder);
-  const bones = boneMap(m); holder.updateMatrixWorld(true);
-  if (real) {   // 用骨頭量身高：頭部骨頭到腳踝骨頭大約是身高的 79%
-    const hp = new THREE.Vector3(), fp = new THREE.Vector3(); bones.Head.getWorldPosition(hp); bones.foot_l.getWorldPosition(fp);
-    m.scale.multiplyScalar((kind === 'female' ? 1.65 : 1.75) * 0.79 / Math.max(0.01, hp.y - fp.y)); holder.updateMatrixWorld(true);
-  }
-  if (real) {   // 頭髮綁到角色的骨架上 (頭髮模型本身也是同一套骨架)
-    let hm = null; ASSET.people.getObjectByName(o.hairStyle || (kind === 'female' ? 'hair_long' : 'hair_short')).traverse(x => { if (x.isSkinnedMesh) hm = x; });
-    if (hm) { const h = hm.clone(); h.material = hm.material.clone(); h.material.color.set(o.hair); h.castShadow = true; body.parent.add(h); h.bind(new THREE.Skeleton(hm.skeleton.bones.map((b, i) => bones[ASSET.jointNames[i]]), hm.skeleton.boneInverses), hm.bindMatrix); }
-  } else {
-    const hp = new THREE.Vector3(); bones.Head.getWorldPosition(hp);
-    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.122, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), new THREE.MeshLambertMaterial({ color: o.hair })); hair.castShadow = true;
-    attachToBone(bones.Head, hair, new THREE.Vector3(hp.x, ASSET.headTop - 0.115, hp.z - 0.012), holder); hair.scale.multiply(new THREE.Vector3(1, 1, 1.08));
-  }
-  if (o.backpack) {
-    const sp = new THREE.Vector3(); bones.spine_03.getWorldPosition(sp);
-    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.42, 0.16), new THREE.MeshLambertMaterial({ color: 0xf0a830 })); bag.castShadow = true;
-    attachToBone(bones.spine_03, bag, new THREE.Vector3(sp.x, sp.y - 0.06, sp.z - (real ? ASSET.pchest[kind] : ASSET.chestDepth) - 0.08), holder);
+  m.scale.setScalar(ASSET.mscale); holder.updateMatrixWorld(true);
+  const bones = boneMap(m);
+  if (o.backpack) {   // 主角背後的黃色背包 (背後視角看得到)
+    const tp = new THREE.Vector3(); bones.torso.getWorldPosition(tp);
+    const bag = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.36, 0.16), new THREE.MeshLambertMaterial({ color: 0xf0a830 })); bag.castShadow = true;
+    attachToBone(bones.torso, bag, new THREE.Vector3(tp.x, tp.y + 0.06, tp.z - ASSET.backD), holder);
   }
   const mixer = new THREE.AnimationMixer(m), acts = {};
   for (const [n, c] of Object.entries(ASSET.clips)) acts[n] = mixer.clipAction(c);
-  for (const n of ['Jump_Start', 'Jump_Land', 'Interact']) if (acts[n]) { acts[n].setLoop(THREE.LoopOnce); acts[n].clampWhenFinished = true; }
   return { holder, m, bones, mixer, acts, cur: null };
 }
-function measure(root) { root.updateMatrixWorld(true); root.traverse(o => { if (o.isSkinnedMesh) o.skeleton.update(); }); return new THREE.Box3().setFromObject(root, true); }
-function setupPeople(gl) {
-  ASSET.people = gl.scene; ASSET.body = {}; ASSET.pscale = {}; ASSET.pchest = {};
-  gl.scene.getObjectByName('male').traverse(o => { if (o.isSkinnedMesh && /Superhero/i.test(o.material.name)) ASSET.jointNames = o.skeleton.bones.map(b => b.name); });
-  for (const k of ['male', 'female']) {
-    const r = gl.scene.getObjectByName(k); let body = null; r.traverse(o => { if (o.isSkinnedMesh && /Superhero/i.test(o.material.name)) body = o; });
-    ASSET.body[k] = bodyParams(body);
-    ASSET.pscale[k] = 1; ASSET.pchest[k] = 0.13;
-  }
-}
 function play(ch, name, fade = 0.22, ts = 1) {
+  name = ANIM[name] || name;
   const a = ch.acts[name]; if (!a) return; a.timeScale = ts;
   if (ch.cur === name) return;
   a.reset().setEffectiveWeight(1).fadeIn(fade).play(); if (ch.cur && ch.acts[ch.cur]) ch.acts[ch.cur].fadeOut(fade);
   ch.cur = name;
 }
-function setupMannequin(gl) {
-  ASSET.base = gl.scene;
-  for (const c of gl.animations) ASSET.clips[c.name] = c;
-  gl.scene.updateMatrixWorld(true); gl.scene.traverse(o => { if (o.isSkinnedMesh) o.skeleton.update(); });   // 骨架矩陣要先算好，量到的身高才對
-  const box = new THREE.Box3().setFromObject(gl.scene, true), h = box.max.y - box.min.y;
-  ASSET.scale = 1.74 / h; ASSET.headTop = (box.max.y - box.min.y) * ASSET.scale;  ASSET.chestDepth = Math.max(0.08, -box.min.z * ASSET.scale * 0.55);
-  // 主角：藍色上衣、黃色背包
-  const P = makeCharacter({ kind: 'male', shirt: 0x2f6fd6, pants: 0x2b3440, shoe: 0xf2f2f2, hair: 0x3a2a20, hairStyle: 'hair_short', backpack: true });
+function measure(root) { root.updateMatrixWorld(true); root.traverse(o => { if (o.isSkinnedMesh) o.skeleton.update(); }); return new THREE.Box3().setFromObject(root, true); }
+function playerModel() { let v = null; try { v = localStorage.getItem('etfcity.avatar'); } catch (e) {} return PLAYER_MODELS.includes(v) ? v : PLAYER_MODELS[0]; }
+function setPlayerModel(model) {
+  if (!ASSET.minis) return;
+  try { localStorage.setItem('etfcity.avatar', model); } catch (e) {}
+  if (ASSET.player) AV.g.remove(ASSET.player.holder);
+  const P = makeCharacter({ model, backpack: true });
   scene.remove(P.holder); AV.g.add(P.holder); P.holder.position.set(0, 0, 0);
   AV.g.children.forEach(o => { if (o !== P.holder) o.visible = false; });
   play(P, 'Idle_Loop', 0); ASSET.player = P;
-  // 路人與店長：離你近的才換成有動畫的模型
-  const nW = isDesk() ? 14 : 7, nK = isDesk() ? 8 : 4, hairs = [0x3a2a20, 0x24180f, 0x111111, 0x7a5232, 0x9a9a9a, 0x5a3a22];
-  const NPC_C = [0xe53935, 0x43a047, 0xfdd835, 0x8e24aa, 0xfb8c00, 0x00897b, 0xf5f5f5, 0x6d4c41, 0xec407a, 0x9e9d24, 0x26a69a, 0x5c6bc0];
-  const PANTS = [0x2b3440, 0x37474f, 0x5d4037, 0x1a237e, 0x424242, 0x8d6e63, 0x263238, 0x6d7a86], SHOE = [0xf5f5f5, 0x212121, 0x795548, 0xb0bec5];
+}
+function nextPlayerModel() { const i = PLAYER_MODELS.indexOf(playerModel()); setPlayerModel(PLAYER_MODELS[(i + 1) % PLAYER_MODELS.length]); }
+function setupMinis(gl) {
+  ASSET.minis = gl.scene;
+  for (const c of gl.animations) ASSET.clips[c.name] = c;
+  const first = gl.scene.getObjectByName('M_' + MINI_MODELS[0]); let body = null; first.traverse(o => { if (o.isSkinnedMesh && !body) body = o; });
+  ASSET.jointNames = body.skeleton.bones.map(b => b.name);
+  const box = measure(first), h = box.max.y - box.min.y;
+  ASSET.mscale = 1.5 / h;   // Q 版人物身高 1.5 公尺 (頭大身體小)
+  { let bm = null; first.traverse(o => { if (o.isSkinnedMesh && /body/i.test(o.name) && !bm) bm = o; }); const bb = measure(bm || body); ASSET.backD = Math.max(0.12, -bb.min.z * ASSET.mscale) + 0.06; }
+  setPlayerModel(playerModel());
+  // 路人與店長：離你近的才換成有動畫的模型 (每個人物很輕，可以多放幾個)
+  const nW = isDesk() ? 20 : 10, nK = isDesk() ? 10 : 5;
   for (let i = 0; i < nW + nK; i++) {
-    const ch = makeCharacter({ kind: i % 2 ? 'female' : 'male', shirt: NPC_C[(i * 5 + 1) % NPC_C.length], pants: PANTS[(i * 3) % PANTS.length], shoe: SHOE[i % SHOE.length], hair: hairs[(i * 7) % hairs.length], backpack: i % 5 === 2 });
+    const ch = makeCharacter({ model: MINI_MODELS[(i * 5 + 3) % MINI_MODELS.length], backpack: i % 6 === 4 });
     ch.holder.visible = false; ch.who = null; play(ch, 'Idle_Loop', 0);
     (i < nW ? ASSET.pool.walk : ASSET.pool.keep).push(ch);
+  }
+  // 行駛中的機車：騎士換成 Q 版小人 (坐姿，戴安全帽)
+  let k = 0;
+  for (const v of CARS) {
+    if (v.kind !== 'scooter') continue;
+    v.g.children.slice(v.g.userData.riderFrom).forEach(o => { o.visible = false; });
+    const r = makeCharacter({ model: MINI_MODELS[(k++ * 3 + 1) % MINI_MODELS.length] }); scene.remove(r.holder); v.g.add(r.holder);
+    r.holder.position.set(0, 0.38, -0.32); r.holder.scale.setScalar(0.85); play(r, 'sit', 0); r.mixer.update(0.5); v.g.updateMatrixWorld(true);
+    let hm = null; r.m.traverse(o => { if (o.isSkinnedMesh && /head/i.test(o.name)) hm = o; });
+    const hb = measure(hm || r.m), c = hb.getCenter(new THREE.Vector3()), sz = hb.getSize(new THREE.Vector3()); v.g.worldToLocal(c);
+    const helm = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), new THREE.MeshLambertMaterial({ color: [0xfafafa, 0xe53935, 0x1e88e5, 0xfdd835][k % 4] }));
+    helm.scale.set(sz.x * 1.12, sz.y * 1.0, sz.z * 1.12); helm.position.set(c.x, c.y - sz.y * 0.05, c.z); helm.castShadow = true; v.g.add(helm);
   }
 }
 // 角色動畫：依速度切換站立、走路、慢跑、衝刺；跳起來播跳躍；騎滑板車時手握龍頭
@@ -1679,14 +1670,13 @@ function charUpdate(dt) {
   const P = ASSET.player; if (!P) return;
   let name = 'Idle_Loop', ts = 1;
   if (ME.y > 0.08) name = 'Jump_Loop';
-  else if (ME.ride) name = 'Idle_Loop';
-  else if (ME.speed > 7.5) { name = 'Sprint_Loop'; ts = clamp(ME.speed / 9, 0.8, 1.7); }
-  else if (ME.speed > 2.6) { name = 'Jog_Fwd_Loop'; ts = clamp(ME.speed / 4.4, 0.7, 1.4); }
-  else if (ME.speed > 0.3) { name = 'Walk_Loop'; ts = clamp(ME.speed / 1.6, 0.6, 1.4); }
+  else if (ME.ride) name = 'Ride';
+  else if (ME.speed > 2.6) { name = 'Sprint_Loop'; ts = clamp(ME.speed / 6.5, 0.65, 1.6); }
+  else if (ME.speed > 0.3) { name = 'Walk_Loop'; ts = clamp(ME.speed / 1.3, 0.6, 1.8); }
   else if (CARD || CHAT) name = 'Idle_Talking_Loop';
   play(P, name, name === 'Jump_Loop' ? 0.1 : 0.22, ts);
   P.mixer.update(dt);
-  if (ME.ride) {
+  if (ME.ride && P.bones.upperarm_l) {
     P.holder.updateMatrixWorld(true); KICK.g.updateMatrixWorld(true);
     for (const [sd, gx] of [['l', 0.24], ['r', -0.24]]) {
       const grip = KICK.g.localToWorld(new THREE.Vector3(gx, 1.1, 0.36));
@@ -1714,7 +1704,7 @@ function npcPoolUpdate(dt) {
     ch.holder.position.set(w.p.x, 0.04, w.p.z);
     const talking = CHAT && CHAT.walker === ch.who;
     if (talking) { const a = Math.atan2(ME.x - w.p.x, ME.z - w.p.z); ch.holder.rotation.y = a; play(ch, 'Idle_Talking_Loop'); }
-    else { ch.holder.rotation.y = w.yaw; w.near ? play(ch, 'Idle_Loop') : play(ch, ch.formal ? 'Walk_Formal_Loop' : 'Walk_Loop', 0.22, w.v / 1.25); }
+    else { ch.holder.rotation.y = w.yaw; w.near ? play(ch, 'Idle_Loop') : play(ch, 'Walk_Loop', 0.22, w.v / 1.15); }
     ch.mixer.update(dt);
   }
   for (const ch of pool.keep) if (ch.who != null) {
@@ -1760,17 +1750,18 @@ function setupCitybits(gl) {
   for (let s0 = 12; s0 < LAY.P; s0 += 34) for (const sg of [1, -1]) {
     const lt = s0 - Math.floor(s0 / LAY.side) * LAY.side; if (lt < 16 || lt > LAY.side - 16) continue;
     const q = ringPt(s0, sg * (L.road + 0.55)); if (sg < 0 && q.i === 0 && Math.abs(q.x) < L.plazaHalf + 2) continue;
-    (Math.floor(s0 / 34) % 3 === 0 ? hyd : trash).push({ x: q.x, y: 0.04, z: q.z, ry: Math.atan2(q.nx, q.nz), s: [1, 1, 1] });
+    if (Math.floor(s0 / 34) % 2 === 0) hyd.push({ x: q.x, y: 0.04, z: q.z, ry: Math.atan2(q.nx, q.nz), s: [1, 1, 1] });
   }
+  void trash;
   for (const [x, z, ry] of [[9, PL.z0 + 13, 0], [12.5, PL.z0 + 13, 0], [-12.5, PL.z0 + 15, Math.PI / 2], [12.5, PL.z1 - 9, -Math.PI / 2]]) bench.push({ x, y: 0.03, z, ry, s: [1, 1, 1] });
   for (let x = PL.x0 + 1.2; x < PL.x1 - 1; x += 2.4) if (Math.abs(x) > 8) bush.push({ x, y: 0.03, z: PL.z0 + 0.9, ry: x, s: [1, 1, 1] });
-  put('trafficlight_A', 4.6, lights); put('firehydrant', 0.8, hyd); put('trash_A', 1.0, trash); put('bench', 0.9, bench); put('bush', 1.1, bush);
+  put('trafficlight_A', 4.6, lights); put('firehydrant', 0.8, hyd);   // trash_A 是黑色垃圾袋，台灣街上不常見，不放 put('bench', 0.9, bench); put('bush', 1.1, bush);
   plazaG.children.filter(o => o.isMesh && o.material === MAT.trunk && o.geometry.parameters && o.geometry.parameters.width === 2.2).forEach(o => o.visible = false);
 }
 async function loadAssets() {
   try {
-    const [man, kit, ppl] = await Promise.all([loadGLB('assets/mannequin.glb'), loadGLB('assets/citybits.glb'), loadGLB('assets/people.glb').catch(e => { console.warn('真人角色載入失敗，改用模特兒：', e && e.message); return null; })]);
-    setupCitybits(kit); if (ppl) setupPeople(ppl); setupMannequin(man); ASSET.ready = true;
+    const [mini, kit] = await Promise.all([loadGLB('assets/minis.glb'), loadGLB('assets/citybits.glb')]);
+    setupCitybits(kit); setupMinis(mini); ASSET.ready = true;
   } catch (e) { console.warn('3D 素材載入失敗，改用簡易模型：', e && (e.stack || e.message)); }
   window.__assets = ASSET.ready ? 'ok' : 'fallback';
 }
@@ -2748,6 +2739,7 @@ $('allLabels').addEventListener('change', e => { allLabels = e.target.checked; r
 /* ---------- 走路工具列、提示、對話框收合 ---------- */
 $('viewBtn').onclick = () => setView(ME.view === 'tp' ? 'fp' : 'tp');
 $('rideBtn').onclick = () => setRide(!ME.ride);
+$('avatarBtn').onclick = () => nextPlayerModel();
 $('mapBtn').onclick = () => toggleMap();
 $('mapClose').onclick = () => toggleMap(false);
 $('homeBtn').onclick = () => { closeCard(); goPlaza(); };

@@ -672,6 +672,7 @@ $('allLabels').addEventListener('change', e => { allLabels = e.target.checked; r
 /* ---------- 走路工具列、提示、對話框收合 ---------- */
 $('viewBtn').onclick = () => setView(ME.view === 'tp' ? 'fp' : 'tp');
 $('rideBtn').onclick = () => setRide(!ME.ride);
+$('avatarBtn').onclick = () => nextPlayerModel();
 $('mapBtn').onclick = () => toggleMap();
 $('mapClose').onclick = () => toggleMap(false);
 $('homeBtn').onclick = () => { closeCard(); goPlaza(); };
