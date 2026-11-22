@@ -4,51 +4,78 @@
 
 ## 流程圖 (v1.3)
 
+整個流程拆成 4 張圖：圖 1 是總覽，圖 2 到圖 4 分別是三個 loop 的細節。PNG 版放在 `docs/images/`，可以直接貼進報告。
+
+### 圖 1：總覽
+
+![圖 1 總覽](images/flow-1-overview.png)
+
 ```mermaid
-flowchart TD
-    A0[指定主題<br/>人] --> A1{主題有建議或<br/>預測的語氣?}
-    A1 -- 有 --> A2[改成中性說法<br/>例如 為什麼要買 改成 ETF 的特色]
-    A2 --> A
-    A1 -- 沒有 --> A
-    A[選資料<br/>人] --> B[建立資料卡<br/>raw/sXX]
-    B --> C[AI 讀資料卡與原文]
-    C --> C1{原文讀得到?}
-    C1 -- 讀不到 --> C2[找同一份內容的官方替代管道<br/>找不到就請人下載]
-    C2 --> C
-    C1 -- 讀得到 --> C3[報告重點與修改計畫<br/>列出卡片有但原文沒有的說法]
-    C3 --> D{人確認?}
-    D -- 要修改 --> C3
-    D -- 缺口要補資料 --> A
+flowchart LR
+    A[指定主題<br/>選資料] --> B[Ingest loop<br/>一次一篇寫入 Wiki]
+    B --> C[Eval loop<br/>用題目考 Wiki]
+    C -- 缺資料 --> A
+    C -- 寫錯 --> B
+    C -- 通過 --> D[Slides loop<br/>從 Wiki 做簡報]
+    D -- Wiki 缺內容 --> B
+    D --> E[GitHub Pages]
+```
+
+### 圖 2：Ingest loop (每篇資料跑一次)
+
+![圖 2 Ingest loop](images/flow-2-ingest.png)
+
+```mermaid
+flowchart LR
+    A0{主題有推薦或<br/>預測語氣?} -- 有 --> A1[改成<br/>中性說法]
+    A0 -- 沒有 --> B
+    A1 --> B[讀資料卡<br/>與原文]
+    B -- 原文讀不到 --> B1[找官方替代管道<br/>或請人下載]
+    B1 --> B
+    B --> C[報告重點<br/>與缺口]
+    C --> D{人確認}
+    D -- 要修改 --> C
     D -- 同意 --> E[寫入 Wiki]
-    E --> F1[機械檢查<br/>scripts/lint.py]
-    F1 -- 有問題 --> E
-    F1 -- 通過 --> F2[語意檢查<br/>AI 自己加料、缺日期、建議句、太難]
-    F2 -- 有問題 --> E
-    F2 -- 通過 --> G[寫 log + commit]
-    G --> H{還有資料?}
-    H -- 有 --> A
-    H -- 沒有 --> I[Eval dev<br/>先作答再看答案]
-    I -- 缺資料 --> A
-    I -- 寫錯 --> E
-    I -- 找錯頁 --> I2[修 index / aliases]
-    I2 --> I
-    I -- 通過 --> I3[Eval holdout<br/>只考一次]
-    X0[外部題庫] --> X1[人工審查標準答案<br/>用語、重複、錯誤、建議]
-    X1 --> X2[Eval 外部題庫]
-    X2 -- 缺資料 --> A
-    X2 -- 寫錯或矛盾 --> E
-    I3 --> K[簡報大綱<br/>每頁對應 wiki 頁面]
-    K --> L{人確認?}
+    E --> F[lint.py<br/>機械檢查]
+    F -- 有問題 --> E
+    F --> G[語意檢查]
+    G -- 有問題 --> E
+    G --> H[log + commit]
+```
+
+### 圖 3：Eval loop
+
+![圖 3 Eval loop](images/flow-3-eval.png)
+
+```mermaid
+flowchart LR
+    D[dev 題] --> Q
+    X0[外部題庫] --> X1[人工審查答案<br/>用語、重複、錯誤] --> Q
+    Q[作答<br/>只讀 Wiki] --> A[打開答案<br/>批改]
+    A --> R{結果}
+    R -- 寫錯或找錯頁 --> F[修頁面<br/>或 aliases]
+    F -- 再考 --> Q
+    R -- 缺資料 --> N[補新來源<br/>回到 Ingest]
+    R -- 通過 --> H[holdout<br/>只考一次]
+```
+
+### 圖 4：Slides loop
+
+![圖 4 Slides loop](images/flow-4-slides.png)
+
+```mermaid
+flowchart LR
+    K[提出大綱<br/>每頁對應 wiki 頁] --> L{人確認}
     L -- 要修改 --> K
-    L -- 同意 --> M[產生 HTML 簡報]
-    M --> N1[來源檢查<br/>scripts/check_slides.py]
-    N1 -- 路徑不存在 --> M
+    L -- 同意 --> M[產生<br/>HTML 簡報]
+    M --> N1[check_slides.py<br/>來源檢查]
+    N1 -- 路徑錯 --> M
     N1 --> N2[內容比對 Wiki]
-    N2 -- Wiki 缺內容 --> E
     N2 -- 不一致 --> M
-    N2 --> N3[截圖檢查<br/>電腦 + 手機]
+    N2 -- Wiki 缺內容 --> E[回到 Ingest<br/>補 Wiki]
+    N2 --> N3[16:9 截圖<br/>版面檢查]
     N3 -- 版面問題 --> M
-    N3 -- 通過 --> O[部署 GitHub Pages<br/>人實際打開確認]
+    N3 --> O[GitHub Pages<br/>人打開確認]
 ```
 
 ## 三個 loop
