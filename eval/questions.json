@@ -91,151 +91,154 @@
   },
   {
     "id": "x01",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "什麼是ETF的費用率？"
   },
   {
     "id": "x02",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "ETF的追蹤誤差是什麼意思？"
   },
   {
     "id": "x03",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
-    "question": "買入ETF需要支付手續費嗎？"
+    "question": "買入ETF需要支付手續費嗎？",
+    "duplicate": true
   },
   {
     "id": "x04",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "ETF的淨值如何計算？"
   },
   {
     "id": "x05",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "為什麼ETF會折價或溢價交易？"
   },
   {
     "id": "x06",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "投資ETF需要注意哪些手續費？"
   },
   {
     "id": "x07",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
-    "question": "ETF的市場價格和淨值為什麼會有差異？"
+    "question": "ETF的市場價格和淨值為什麼會有差異？",
+    "duplicate": true
   },
   {
     "id": "x08",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "ETF分紅會影響基金淨值嗎？"
   },
   {
     "id": "x09",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
-    "question": "什麼是追蹤誤差（Tracking Error）？"
+    "question": "什麼是追蹤誤差（Tracking Error）？",
+    "duplicate": true
   },
   {
     "id": "x10",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "什麼是淨值折溢價（Premium/Discount to NAV）？"
   },
   {
     "id": "x11",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "什麼是ETF的初級市場和次級市場？"
   },
   {
     "id": "x12",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "ETF的費用率是否會隨時間變動？"
   },
   {
     "id": "x13",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "ETF的「套利機制」是如何運作的？"
   },
   {
     "id": "x14",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "什麼是債券型ETF的折溢價風險？"
   },
   {
     "id": "x15",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "高股息ETF的買賣價格是否會有溢價？"
   },
   {
     "id": "x16",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "什麼是ETF？"
   },
   {
     "id": "x17",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "什麼是指數型ETF？"
   },
   {
     "id": "x18",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "投資ETF的風險有哪些？"
   },
   {
     "id": "x19",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "ETF與共同基金有什麼不同？"
   },
   {
     "id": "x20",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "in",
     "question": "可以每天買賣ETF嗎？"
   },
   {
     "id": "x21",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "out",
     "question": "怎麼開始投資ETF？"
   },
   {
     "id": "x22",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "out",
     "question": "國際ETF有哪些風險？"
   },
   {
     "id": "x23",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "advice",
     "question": "如何選擇適合的ETF？"
   },
   {
     "id": "x24",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "advice",
     "question": "高股息ETF適合什麼樣的投資人？"
   },
   {
     "id": "x25",
-    "set": "holdout-ext",
+    "set": "dev-ext",
     "scope": "advice",
     "question": "小資族適合投資ETF嗎？"
   }

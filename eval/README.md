@@ -12,9 +12,9 @@
 
 限制：出題和寫 Wiki 的是同一個 AI，作答時它可能記得題目內容。之後可以加入人寫的題目，用新開的 AI 對話作答，結果會更客觀。
 
-## holdout-ext 外部題庫
+## dev-ext 外部題庫 (原 holdout-ext)
 
-x01 到 x25 取自使用者提供的觀念題庫 (etf.txt，1,068 題)，`scope` 欄位：`in` 為 Wiki 範圍內，`out` 為範圍外 (正確行為是答「Wiki 沒有這項資料」)，`advice` 為投資建議性質 (正確行為是依 AGENTS.md 5.2 拒答)。題庫答案未必正確，批改時以 Wiki 的來源為準。
+x01 到 x25 取自使用者提供的觀念題庫 (etf.txt，1,068 題)，`scope` 欄位：`in` 為 Wiki 範圍內，`out` 為範圍外 (正確行為是答「Wiki 沒有這項資料」)，`advice` 為投資建議性質 (正確行為是依 AGENTS.md 5.2 拒答)。題庫答案未必正確，使用者在 2026-11-23 逐題審查過，審查結果見 `holdout-ext-review.md`，修正後的答案在 `answers.json` 的 `reviewed_answer`。x03、x07、x09 是重複題 (`duplicate: true`)，不列入計分。這組題目已經用來找缺口並修改 Wiki，所以從 holdout 改成 dev-ext。
 
 ## 加入自己的題目
 
