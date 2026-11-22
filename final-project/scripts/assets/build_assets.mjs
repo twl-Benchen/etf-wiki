@@ -1,5 +1,5 @@
 // 把 3D 素材整理成網頁用的小檔案 (都是 CC0 授權)，輸出到 web/assets/。
-// 用法：cd scripts/assets && npm install && node build_assets.mjs <UAL1_Standard.glb 的路徑>
+// 用法：cd scripts/assets && npm install && node build_assets.mjs [--people <prep_characters.py 的輸出資料夾>] [UAL1_Standard.glb 的路徑]
 //  1. 人物：Quaternius Universal Animation Library 的模特兒模型，只保留遊戲用到的動作 → mannequin.glb
 //  2. 街道道具：KayKit City Builder Bits (從 GitHub 下載) 的車輛、路燈、水塔… → citybits.glb
 import fs from 'fs';
@@ -55,7 +55,27 @@ async function citybits() {
   fs.rmSync(tmp, { recursive: true, force: true });
 }
 
+// 3. 真人外觀的角色 (Quaternius Universal Base Characters)：先用 prep_characters.py 整理，再合併成 people.glb
+async function people(dir) {
+  const parts = { male: 'Superhero_Male_FullBody', female: 'Superhero_Female_FullBody', hair_short: 'Hair_SimpleParted', hair_long: 'Hair_Long' };
+  let target = null;
+  for (const [key, file] of Object.entries(parts)) {
+    const doc = await io.read(path.join(dir, file + '.gltf'));
+    const scene = doc.getRoot().getDefaultScene() || doc.getRoot().listScenes()[0], wrap = doc.createNode(key);
+    for (const n of scene.listChildren()) { scene.removeChild(n); wrap.addChild(n); }
+    scene.addChild(wrap);
+    if (!target) target = doc; else mergeDocuments(target, doc);
+  }
+  const root = target.getRoot(), main = root.listScenes()[0];
+  for (const s of root.listScenes().slice(1)) { for (const n of s.listChildren()) { s.removeChild(n); main.addChild(n); } s.dispose(); }
+  root.setDefaultScene(main);
+  await target.transform(unpartition(), dedup(), prune({ keepLeaves: true }), quantize());
+  await io.write(path.join(OUT, 'people.glb'), target);
+}
+
 fs.mkdirSync(OUT, { recursive: true });
-if (process.argv[2]) await mannequin(process.argv[2]); else console.log('沒有給 UAL1_Standard.glb，略過人物');
-await citybits();
+const args = process.argv.slice(2), pi = args.indexOf('--people');
+if (pi >= 0) { await people(args[pi + 1]); args.splice(pi, 2); }
+if (args[0]) await mannequin(args[0]); else console.log('沒有給 UAL1_Standard.glb，略過動作庫');
+if (!process.env.SKIP_KAYKIT) await citybits();
 for (const f of fs.readdirSync(OUT)) if (f.endsWith('.glb')) console.log(f, fs.statSync(path.join(OUT, f)).size, 'bytes');

@@ -1569,24 +1569,75 @@ function attachToBone(bone, mesh, worldPos, refObj) {
   mesh.position.copy(worldPos.clone().applyMatrix4(inv)); mesh.quaternion.copy(bq.invert().multiply(rq)); mesh.scale.set(1 / bs.x, 1 / bs.y, 1 / bs.z);
   bone.add(mesh);
 }
-function makeCharacter(mainHex, jointHex, hairHex, backpack) {
-  const m = SkeletonUtils.clone(ASSET.base), main = new THREE.MeshLambertMaterial({ color: mainHex }), joint = new THREE.MeshLambertMaterial({ color: jointHex });
-  m.traverse(o => { if (o.isSkinnedMesh) { o.material = /Joint/i.test(o.material.name) ? joint : main; o.castShadow = true; } });
-  m.scale.setScalar(ASSET.scale);
+// 真人外觀 (Universal Base Characters) 是只穿內衣的基礎人體，用著色器依身體部位「穿上」T 恤、長褲和鞋子 (顏色每個人不同，保留原貼圖的陰影)
+function bodyParams(body) {
+  const sk = body.skeleton, pos = n => { const i = ASSET.jointNames.indexOf(n); const M = new THREE.Matrix4().copy(sk.boneInverses[i]).invert().premultiply(body.bindMatrixInverse); return new THREE.Vector3().setFromMatrixPosition(M); };
+  const head = pos('Head'), foot = pos('foot_l').add(pos('foot_r')).multiplyScalar(0.5), pel = pos('pelvis'), neck = pos('neck_01'), ul = pos('upperarm_l'), ur = pos('upperarm_r'), ll = pos('lowerarm_l');
+  const side = ul.clone().sub(ur).normalize(), up0 = head.clone().sub(foot), up = up0.sub(side.clone().multiplyScalar(up0.dot(side))).normalize(), H = head.clone().sub(foot).dot(up);
+  // 原始姿勢是 T 字形：手臂平舉在脖子附近的高度，所以肩膀和上臂另外判斷 (離身體中心夠遠、又在手臂高度範圍內)
+  return { up, side, center: pel.clone(), shoe: foot.dot(up) + 0.045 * H, waist: pel.dot(up) + 0.075 * H, neck: neck.dot(up) - 0.01 * H, sleeve: ul.clone().sub(pel).dot(side) + 0.55 * ll.clone().sub(ul).dot(side), neckW: 0.075 * H, armTop: neck.dot(up) + 0.09 * H };
+}
+function clothMaterial(map, P, o) {
+  const m = new THREE.MeshLambertMaterial({ map });
+  const u = { uUp: { value: P.up }, uSide: { value: P.side }, uCenter: { value: P.center }, uShoe: { value: P.shoe }, uWaist: { value: P.waist }, uNeck: { value: P.neck }, uSleeve: { value: P.sleeve }, uNeckW: { value: P.neckW }, uArmTop: { value: P.armTop },
+    uShirt: { value: new THREE.Color(o.shirt) }, uPants: { value: new THREE.Color(o.pants) }, uShoeC: { value: new THREE.Color(o.shoe) } };
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = 'varying vec3 vBind;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vBind = position;');
+    sh.fragmentShader = 'varying vec3 vBind;\nuniform vec3 uUp, uSide, uCenter, uShirt, uPants, uShoeC;\nuniform float uShoe, uWaist, uNeck, uSleeve, uNeckW, uArmTop;\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+  { float h = dot(vBind, uUp); float sx = abs(dot(vBind - uCenter, uSide)); float lum = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11));
+    vec3 c = vec3(-1.0);
+    if (h < uShoe) c = uShoeC; else if (h < uWaist) c = uPants; else if (sx < uSleeve && (h < uNeck || (sx > uNeckW && h < uArmTop))) c = uShirt;
+    if (c.x >= 0.0) diffuseColor.rgb = c * (0.5 + 1.2 * lum); }`);
+  };
+  m.customProgramCacheKey = () => 'cloth-v2';
+  return m;
+}
+function makeCharacter(o) {
+  const real = !!ASSET.people, kind = o.kind || 'male';
+  const m = SkeletonUtils.clone(real ? ASSET.people.getObjectByName(kind) : ASSET.base);
+  let body = null;
+  m.traverse(x => {
+    if (!x.isSkinnedMesh) return; x.castShadow = true;
+    if (!real) x.material = new THREE.MeshLambertMaterial({ color: /Joint/i.test(x.material.name) ? o.pants : o.shirt });
+    else if (/Superhero/i.test(x.material.name)) { body = x; x.material = clothMaterial(x.material.map, ASSET.body[kind], o); }
+  });
+  // three.js 載入時會把重複的骨頭名稱改成 Head_1 這種；三套骨架順序相同，改回標準名稱，動作才套得上
+  if (real) body.skeleton.bones.forEach((b, i) => { b.name = ASSET.jointNames[i]; });
+  m.scale.setScalar(real ? ASSET.pscale[kind] : ASSET.scale);
   const holder = new THREE.Group(); holder.add(m); scene.add(holder);
   const bones = boneMap(m); holder.updateMatrixWorld(true);
-  const hp = new THREE.Vector3(); bones.Head.getWorldPosition(hp);
-  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.122, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), new THREE.MeshLambertMaterial({ color: hairHex })); hair.castShadow = true; hair.scale.z = 1.08;
-  attachToBone(bones.Head, hair, new THREE.Vector3(hp.x, ASSET.headTop - 0.115, hp.z - 0.012), holder); hair.scale.multiply(new THREE.Vector3(1, 1, 1.08));
-  if (backpack) {
+  if (real) {   // 用骨頭量身高：頭部骨頭到腳踝骨頭大約是身高的 79%
+    const hp = new THREE.Vector3(), fp = new THREE.Vector3(); bones.Head.getWorldPosition(hp); bones.foot_l.getWorldPosition(fp);
+    m.scale.multiplyScalar((kind === 'female' ? 1.65 : 1.75) * 0.79 / Math.max(0.01, hp.y - fp.y)); holder.updateMatrixWorld(true);
+  }
+  if (real) {   // 頭髮綁到角色的骨架上 (頭髮模型本身也是同一套骨架)
+    let hm = null; ASSET.people.getObjectByName(o.hairStyle || (kind === 'female' ? 'hair_long' : 'hair_short')).traverse(x => { if (x.isSkinnedMesh) hm = x; });
+    if (hm) { const h = hm.clone(); h.material = hm.material.clone(); h.material.color.set(o.hair); h.castShadow = true; body.parent.add(h); h.bind(new THREE.Skeleton(hm.skeleton.bones.map((b, i) => bones[ASSET.jointNames[i]]), hm.skeleton.boneInverses), hm.bindMatrix); }
+  } else {
+    const hp = new THREE.Vector3(); bones.Head.getWorldPosition(hp);
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.122, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.56), new THREE.MeshLambertMaterial({ color: o.hair })); hair.castShadow = true;
+    attachToBone(bones.Head, hair, new THREE.Vector3(hp.x, ASSET.headTop - 0.115, hp.z - 0.012), holder); hair.scale.multiply(new THREE.Vector3(1, 1, 1.08));
+  }
+  if (o.backpack) {
     const sp = new THREE.Vector3(); bones.spine_03.getWorldPosition(sp);
     const bag = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.42, 0.16), new THREE.MeshLambertMaterial({ color: 0xf0a830 })); bag.castShadow = true;
-    attachToBone(bones.spine_03, bag, new THREE.Vector3(sp.x, sp.y - 0.06, sp.z - ASSET.chestDepth - 0.08), holder);
+    attachToBone(bones.spine_03, bag, new THREE.Vector3(sp.x, sp.y - 0.06, sp.z - (real ? ASSET.pchest[kind] : ASSET.chestDepth) - 0.08), holder);
   }
   const mixer = new THREE.AnimationMixer(m), acts = {};
   for (const [n, c] of Object.entries(ASSET.clips)) acts[n] = mixer.clipAction(c);
   for (const n of ['Jump_Start', 'Jump_Land', 'Interact']) if (acts[n]) { acts[n].setLoop(THREE.LoopOnce); acts[n].clampWhenFinished = true; }
   return { holder, m, bones, mixer, acts, cur: null };
+}
+function measure(root) { root.updateMatrixWorld(true); root.traverse(o => { if (o.isSkinnedMesh) o.skeleton.update(); }); return new THREE.Box3().setFromObject(root, true); }
+function setupPeople(gl) {
+  ASSET.people = gl.scene; ASSET.body = {}; ASSET.pscale = {}; ASSET.pchest = {};
+  gl.scene.getObjectByName('male').traverse(o => { if (o.isSkinnedMesh && /Superhero/i.test(o.material.name)) ASSET.jointNames = o.skeleton.bones.map(b => b.name); });
+  for (const k of ['male', 'female']) {
+    const r = gl.scene.getObjectByName(k); let body = null; r.traverse(o => { if (o.isSkinnedMesh && /Superhero/i.test(o.material.name)) body = o; });
+    ASSET.body[k] = bodyParams(body);
+    ASSET.pscale[k] = 1; ASSET.pchest[k] = 0.13;
+  }
 }
 function play(ch, name, fade = 0.22, ts = 1) {
   const a = ch.acts[name]; if (!a) return; a.timeScale = ts;
@@ -1601,15 +1652,16 @@ function setupMannequin(gl) {
   const box = new THREE.Box3().setFromObject(gl.scene, true), h = box.max.y - box.min.y;
   ASSET.scale = 1.74 / h; ASSET.headTop = (box.max.y - box.min.y) * ASSET.scale;  ASSET.chestDepth = Math.max(0.08, -box.min.z * ASSET.scale * 0.55);
   // 主角：藍色上衣、黃色背包
-  const P = makeCharacter(0x2f6fd6, 0x2a2f38, 0x2a211c, true);
+  const P = makeCharacter({ kind: 'male', shirt: 0x2f6fd6, pants: 0x2b3440, shoe: 0xf2f2f2, hair: 0x3a2a20, hairStyle: 'hair_short', backpack: true });
   scene.remove(P.holder); AV.g.add(P.holder); P.holder.position.set(0, 0, 0);
   AV.g.children.forEach(o => { if (o !== P.holder) o.visible = false; });
   play(P, 'Idle_Loop', 0); ASSET.player = P;
   // 路人與店長：離你近的才換成有動畫的模型
-  const nW = isDesk() ? 14 : 7, nK = isDesk() ? 8 : 4, hairs = [0x2a211c, 0x3b2a20, 0x111111, 0x6b4a2b, 0x8a8a8a];
+  const nW = isDesk() ? 14 : 7, nK = isDesk() ? 8 : 4, hairs = [0x3a2a20, 0x24180f, 0x111111, 0x7a5232, 0x9a9a9a, 0x5a3a22];
+  const NPC_C = [0xe53935, 0x43a047, 0xfdd835, 0x8e24aa, 0xfb8c00, 0x00897b, 0xf5f5f5, 0x6d4c41, 0xec407a, 0x9e9d24, 0x26a69a, 0x5c6bc0];
+  const PANTS = [0x2b3440, 0x37474f, 0x5d4037, 0x1a237e, 0x424242, 0x8d6e63, 0x263238, 0x6d7a86], SHOE = [0xf5f5f5, 0x212121, 0x795548, 0xb0bec5];
   for (let i = 0; i < nW + nK; i++) {
-    const NPC_C = [0xe53935, 0x43a047, 0xfdd835, 0x8e24aa, 0xfb8c00, 0x00897b, 0xf5f5f5, 0x6d4c41, 0xec407a, 0x9e9d24], JN = [0x2c3542, 0x3e2723, 0x37474f, 0x4a148c];
-    const c = NPC_C[(i * 3 + 1) % NPC_C.length], ch = makeCharacter(c, JN[i % JN.length], hairs[i % hairs.length], i % 5 === 2);
+    const ch = makeCharacter({ kind: i % 2 ? 'female' : 'male', shirt: NPC_C[(i * 5 + 1) % NPC_C.length], pants: PANTS[(i * 3) % PANTS.length], shoe: SHOE[i % SHOE.length], hair: hairs[(i * 7) % hairs.length], backpack: i % 5 === 2 });
     ch.holder.visible = false; ch.who = null; play(ch, 'Idle_Loop', 0);
     (i < nW ? ASSET.pool.walk : ASSET.pool.keep).push(ch);
   }
@@ -1717,9 +1769,9 @@ function setupCitybits(gl) {
 }
 async function loadAssets() {
   try {
-    const [man, kit] = await Promise.all([loadGLB('assets/mannequin.glb'), loadGLB('assets/citybits.glb')]);
-    setupCitybits(kit); setupMannequin(man); ASSET.ready = true;
-  } catch (e) { console.warn('3D 素材載入失敗，改用簡易模型：', e && e.message); }
+    const [man, kit, ppl] = await Promise.all([loadGLB('assets/mannequin.glb'), loadGLB('assets/citybits.glb'), loadGLB('assets/people.glb').catch(e => { console.warn('真人角色載入失敗，改用模特兒：', e && e.message); return null; })]);
+    setupCitybits(kit); if (ppl) setupPeople(ppl); setupMannequin(man); ASSET.ready = true;
+  } catch (e) { console.warn('3D 素材載入失敗，改用簡易模型：', e && (e.stack || e.message)); }
   window.__assets = ASSET.ready ? 'ok' : 'fallback';
 }
 
