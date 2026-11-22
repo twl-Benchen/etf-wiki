@@ -2,14 +2,14 @@
 
 給沒投資過的大學生的 ETF 知識庫，用 Andrej Karpathy 提出的 LLM Wiki 架構建立：人提供原始資料並負責討論與確認，AI 負責整理成互相連結的 Wiki 頁面。Wiki 再用來產生一份教學型 HTML 簡報。
 
-之後這個 Wiki 也會當作期末專案 ETF都會 (ETF 問答 Agent) 的知識庫。
+這個 Wiki 也已經當作期末專案 ETF都會 (ETF 問答 Agent，`final-project/` 資料夾) 的知識庫，第十週作業評分結束後，期末專案會搬到獨立的 repo。
 
 ## 目前進度
 
-- [x] 規則手冊 AGENTS.md (v0 → v1 → v1.1 → v1.2)
-- [x] Ingest 6 篇資料 (s01 到 s05，加上 eval 後補的 s06)，共 22 個 wiki 頁面
-- [x] Eval：dev 12 題 (第 1 次 91.7%，補資料後 100%)、holdout 6 題 (100%)、外部題庫 holdout 25 題 (範圍內 80%，缺口全是缺資料)
-- [x] 教學 HTML 簡報 17 頁：https://twl-benchen.github.io/etf-wiki/slides/
+- [x] 規則手冊 AGENTS.md (v0 → v1 → v1.1 → v1.2 → v1.3)
+- [x] Ingest 9 篇資料 (第一輪 s01 到 s06，第二輪 s07 到 s09)，共 30 個 wiki 頁面
+- [x] Eval：dev 12 題 (第 1 次 91.7%，補資料後 100%)、holdout 6 題 (100%)；外部題庫 25 題經人工審查 (用語、重複、答案錯誤) 後重新批改 58.8%，第二輪 ingest 後 76.5%
+- [x] 教學 HTML 簡報 21 頁 (固定 16:9)：https://twl-benchen.github.io/etf-wiki/slides/
 - [x] 反思與流程修改 (docs/workflow.md)
 
 ## 資料夾
