@@ -1,4 +1,11 @@
 (function () {
+  var stage = document.getElementById('stage');
+  function fit() {
+    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    stage.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
   var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
   var repo = 'https://github.com/twl-Benchen/etf-wiki/blob/main/';
   var paths = document.getElementById('paths');
