@@ -262,3 +262,7 @@ type: log
 ## [2026-11-23] rule-change | 流程圖改版 (不改規則內容)
 - 修改：docs/workflow.md 的流程圖從一張由上往下的長圖，拆成 4 張橫向圖 (總覽、Ingest loop、Eval loop、Slides loop)，並用 mermaid-cli 輸出 PNG 放在 docs/images/
 - 原因：使用者反映原本的圖太長，放不進報告；拆開後每張圖只講一個 loop，也比較好讀
+
+## [2026-11-23] slides | 人工確認
+- 檢查結果：使用者用電腦與手機實際打開 https://twl-benchen.github.io/etf-wiki/slides/ 逐頁確認 21 頁，沒有問題。AGENTS.md 5.5 第 6 步「最後由人實際打開確認」完成
+- 問題與修正：eval/answers.json 的 d04 出處原本只寫 s02b，但標準答案裡「股票 0.3%」是 eval 後補的 s06a 才有，更正出處欄位
