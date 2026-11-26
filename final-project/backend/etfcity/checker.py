@@ -36,13 +36,17 @@ def fill_and_check(draft: str, book: FactBook, allowed_text: str = "") -> dict:
         if allowed and re.search(r"(?<![\d.])" + re.escape(raw) + r"(?![\d])", allowed):
             continue
         stray.append(tok + (nxt if nxt in UNITS else ""))
+    # 編號沒有用大括號包住 (例如寫成 (ret_1y_0050) 或直接寫 ret_1y_0050)：數字沒有被填入，也算不合格
+    bare = [fid for fid in book.facts if re.search(r"(?<![A-Za-z0-9_])" + re.escape(fid) + r"(?![A-Za-z0-9_])", rest)]
     text = filled.replace("\x00", "").replace("\x01", "")
     # 編號後面多寫的單位 (例如 +5.21%%、3 家家)
     text = re.sub(r"%\s*[%％]", "%", text); text = re.sub(r"(元|家|次|檔)\s*\1", r"\1", text)
-    ok = not unknown and not stray
+    ok = not unknown and not stray and not bare
     msg = ""
+    if bare:
+        msg += f"編號沒有用大括號寫：{'、'.join(bare)}，要寫成 {{{bare[0]}}} 這種格式。"
     if unknown:
         msg += f"使用了不存在的編號：{'、'.join(unknown)}。"
     if stray:
         msg += f"出現不是用編號寫的數字：{'、'.join(stray)}，請改用編號或刪掉。"
-    return {"ok": ok, "text": text, "used": used, "unknown": unknown, "stray": stray, "message": msg}
+    return {"ok": ok, "text": text, "used": used, "unknown": unknown, "stray": stray, "bare": bare, "message": msg}

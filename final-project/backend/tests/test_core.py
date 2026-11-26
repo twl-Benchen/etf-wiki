@@ -129,3 +129,9 @@ def test_dividend_routing():
     r1 = A.ask("0056 去年配多少？"); r2 = A.ask("那 00878 呢？", r1["context"])
     t = r2["plan"]["tools"][0]; assert t["name"] == "get_dividends" and t["args"] == {"etf": "00878", "year": y}
     r = A.ask("0050 2025 年配息多少"); assert "換算" in r["answer"] and "未含息" in r["answer"]
+
+
+def test_checker_rejects_bare_ids():
+    b = FactBook(); b.add_all([Fact("ret_6m_0050", -7.61, "pct_signed", "報酬")])
+    assert not fill_and_check("0050 近半年的報酬是 (ret_6m_0050)，未含息。", b)["ok"]
+    assert fill_and_check("0050 近半年的報酬是 {ret_6m_0050}，未含息。", b)["ok"]
