@@ -12,7 +12,7 @@ from etfcity.llm import GroqLLM
 llm = GroqLLM(cache=False)
 for m in (config.PLANNER_MODEL, config.WRITER_MODEL):
     try:
-        print(f"[模型] {m} →", llm.chat(m, [{"role": "user", "content": "只回答：OK"}], max_tokens=20).strip()[:40])
+        print(f"[模型] {m} →", llm.chat(m, [{"role": "user", "content": "只回答：OK"}], max_tokens=50).strip()[:40])
     except Exception as e:
         print(f"[模型] {m} 失敗：{e}")
 a = Agent(llm=llm); bad = 0

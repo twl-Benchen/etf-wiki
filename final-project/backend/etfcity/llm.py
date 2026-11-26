@@ -9,6 +9,14 @@ class LLMError(RuntimeError):
     pass
 
 
+REASONING_EFFORT = os.environ.get("ETFCITY_REASONING_EFFORT", "low")
+REASONING_EXTRA = 1500   # 推理模型 (gpt-oss) 先用 token 思考，再寫答案；上限要多留這些，否則答案會是空的
+
+
+def is_reasoning(model: str) -> bool:
+    return "gpt-oss" in model
+
+
 class GroqLLM:
     name = "groq"
 
@@ -47,17 +55,27 @@ class GroqLLM:
 
     def _call(self, model, messages, json_mode, temperature, max_tokens) -> str:
         kw = {"temperature": temperature, "max_tokens": max_tokens}
+        if is_reasoning(model):
+            kw.update(max_tokens=max_tokens + REASONING_EXTRA, reasoning_effort=REASONING_EFFORT)
         if json_mode:
             kw["response_format"] = {"type": "json_object"}
         if self.client is not None and not any(isinstance(m.get("content"), list) for m in messages):
             r = self.client.chat.completions.create(model=f"groq:{model}", messages=messages, **kw)
-            return r.choices[0].message.content or ""
+            return _need_text(r.choices[0].message.content, getattr(r.choices[0], "finish_reason", ""))
         import requests
         r = requests.post("https://api.groq.com/openai/v1/chat/completions", timeout=60,
                           headers={"Authorization": f"Bearer {self.key}"}, json={"model": model, "messages": messages, **kw})
         if r.status_code != 200:
             raise LLMError(f"Groq {r.status_code}: {r.text[:200]}")
-        return r.json()["choices"][0]["message"]["content"] or ""
+        c = r.json()["choices"][0]
+        return _need_text(c["message"].get("content"), c.get("finish_reason", ""))
+
+
+def _need_text(text, finish: str = "") -> str:
+    """空白回答 (通常是 token 都用在推理上) 當成錯誤，不寫進快取，由呼叫端重試或退回規則版"""
+    if not (text or "").strip():
+        raise LLMError(f"模型沒有產生文字 (finish_reason={finish or '?'})")
+    return text
 
 
 class MockLLM:
@@ -92,15 +110,31 @@ def to_tw(text: str) -> str:
         from opencc import OpenCC  # type: ignore
         _CC = _CC or OpenCC("s2twp")
     except Exception:
-        return text
+        return halfwidth_parens(text)
     keep = {}
     for i, n in enumerate(_protected()):
         if n in text:
             k = f"\uE000{i}\uE001"; keep[k] = n; text = text.replace(n, k)
     out = _CC.convert(text).replace("臺", "台")
+    for a, b in OPENCC_FIX:
+        out = out.replace(a, b)
+    out = halfwidth_parens(out)
     for k, n in keep.items():
         out = out.replace(k, n)
     return out
+
+
+# s2twp 偶爾把「只」轉成「隻」(例如「前十大只有」變成「前十大隻有」)
+OPENCC_FIX = [("隻有", "只有"), ("隻是", "只是"), ("隻算", "只算"), ("隻計", "只計"), ("隻佔", "只佔"), ("隻占", "只占"), ("隻在", "只在"), ("隻要", "只要"), ("隻能", "只能")]
+
+
+def halfwidth_parens(text: str) -> str:
+    """介面規定括號用半形：（…） 改成 (…)，左括號前補一個空白"""
+    import re
+    text = re.sub(r"\s*（", " (", text).replace("）", ")")
+    text = re.sub(r"([。，、；：！？「『])\s+\(", r"\1(", text)   # 標點後面不用空白
+    text = re.sub(r"\)(?=[0-9A-Za-z\u4e00-\u9fff+\-])", ") ", text)
+    return re.sub(r"^ \(", "(", text, flags=re.M)
 
 
 def parse_json(text: str) -> dict:

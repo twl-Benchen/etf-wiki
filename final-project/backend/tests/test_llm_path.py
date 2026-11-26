@@ -48,3 +48,17 @@ def test_unknown_placeholder_rejected():
     llm = FakeLLM([GOOD_PLAN], ["重疊 {overlap_weight_0050_00878}，報酬 {ret_5y_0050}。", "重疊 {overlap_weight_0050_00878}，前十大。"]); a = Agent(llm=llm)
     r = a.ask("0050 跟 00878 差在哪？"); w = r["trace"]["writer"]["attempts"]
     assert "ret_5y_0050" in w[0]["message"] and w[1]["ok"]
+
+
+def test_empty_llm_answer_falls_back_and_parens():
+    from etfcity.llm import halfwidth_parens
+    assert halfwidth_parens("報酬（未含息）。（註）") == "報酬 (未含息)。(註)"
+
+    class Empty:
+        name = "fake"
+        def chat(self, model, messages, **k):
+            return "" if "Writer" not in model else ""
+    from etfcity.agent import Agent
+    a = Agent(llm=Empty())
+    r = a.ask("0050 跟 00878 差在哪？")
+    assert r["answer"].strip() and r["trace"]["writer"]["final"] == "template"

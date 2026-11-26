@@ -63,6 +63,8 @@ class Agent:
                     draft = self.llm.chat(self.writer_model, writer_messages(plan, results, book, q, role, feedback), temperature=0.3, max_tokens=700)
                 except LLMError as e:
                     attempts.append({"by": self.writer_model, "error": str(e)}); break
+                if len(draft.strip()) < 10:   # 空白或太短的回答不能當成通過
+                    attempts.append({"by": self.writer_model, "draft": draft.strip(), "ok": False, "message": "回答是空的"}); feedback = "上一版沒有寫出內容，請寫出完整的回答。"; continue
                 chk = fill_and_check(draft.strip(), book, allowed)
                 attempts.append({"by": self.writer_model, "draft": draft.strip(), "ok": chk["ok"], "message": chk["message"]})
                 if chk["ok"]:

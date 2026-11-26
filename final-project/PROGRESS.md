@@ -117,8 +117,14 @@
 - [x] 雲端環境改用個人環境「etf-wiki」(允許證交所、櫃買、Yahoo、FinMind、Groq；FinMind 與 Groq 金鑰存在環境的網路密鑰，由代理伺服器自動帶上，程式的環境變數放佔位值即可，例如 `FINMIND_TOKEN=proxy-injected`)
 - [x] 跑 `scripts/update_all.py`：價格 (FinMind) 5 檔更新到 2026-11-26；0050 依一拆四還原，分割前後沒有斷層 (2025-06-10 47.16，06-18 47.57)；當日行情 2026-11-25 (證交所 OpenAPI 還沒公布 11-26)，5 檔 ETF 收盤與漲跌和價格檔一致；配息、新聞 (73 家) 同步更新
 
+- [x] 第一次實際接上 Groq (`scripts/check_groq.py`)，Planner 與 Writer 7 題都由 LLM 完成 (0 次退回)。過程中修正：
+  - gpt-oss 是推理模型，token 先用在思考，`max_tokens` 太小時回答是空的 (原本有兩題空白卻判為通過)。現在 gpt-oss 會加上 `reasoning_effort` (預設 low，環境變數 `ETFCITY_REASONING_EFFORT`) 並多留 1500 個 token；空白回答當成錯誤，不寫進快取，Writer 會重寫或退回模板
+  - LLM 回答的全形括號統一改成半形；OpenCC 把「只有」轉成「隻有」的錯誤改回來
+  - Writer prompt 加上：不能用「六成、一半」代替數字、不寫英文狀態代碼 (crash)、不寫「建議多關注」、權重要說明是前十大、未含息只用在報酬
+  - 新增測試：空白回答退回模板、括號轉換 (後端 50 個全過)
+
 ## 待辦清單 (依序)
-1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。
+1. ~~申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt~~ (2026-11-26 完成)
 2. **需要使用者**：建 HF Space 部署後端 (docs/deploy.md 第 3 節)，把網址填進城市設定。
 3. ~~跑 `python scripts/update_all.py`~~ (2026-11-21 完成，之後要更新資料再跑一次即可)
 4. 前十大持股與投信官網核對 (要能連到投信網站；配息資料與配息問答已完成)。
