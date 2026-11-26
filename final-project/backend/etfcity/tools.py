@@ -99,16 +99,50 @@ def get_return(etfs: list[str], period: str = "1y", s: DataStore | None = None) 
                       sources=[f"{s.price_source}"], data={"period": period, "period_name": PERIOD_NAME[period], "rows": rows, "diff": diff, "basis": RET_NOTE})
 
 
+DIV_NOTE = "配息是每單位拿到的現金；報酬計算仍是價格報酬，未含息"
+
+
 def get_dividends(etf: str, year: int | None = None, s: DataStore | None = None) -> ToolResult:
-    s = s or get_store(); rows = s.dividends.get(etf, [])
+    """配息紀錄。year 有給就列那一年 (依除息日)，沒給就列最近一年 (最後一次除息往前 335 天，季配和半年配剛好一輪)。
+    amount 是除息當時每單位的配息；股票分割前的配息另外附上 amount_adj (換算成現在的單位)。"""
+    s = s or get_store(); allr = s.dividends.get(etf, []); args = {"etf": etf, "year": year}
+    meta = {"freq": s.etfs[etf].get("dividend_freq"), "months": s.etfs[etf].get("dividend_months")}
+    if not allr:
+        return ToolResult("get_dividends", args, ok=False, error=f"{etf} 的配息資料還沒有整理好，目前只提供價格報酬 (未含息)。", data=meta)
     if year:
-        rows = [r for r in rows if r["date"].startswith(str(year))]
-    if not rows:
-        return ToolResult("get_dividends", {"etf": etf, "year": year}, ok=False, error="配息資料還沒有整理好，目前只提供價格報酬 (未含息)。",
-                          data={"freq": s.etfs[etf].get("dividend_freq"), "months": s.etfs[etf].get("dividend_months")})
-    facts = [Fact(f"div_{etf}_{r['date'].replace('-', '')}", r["amount"], "price", f"{etf} 於 {r['date']} 除息的每單位配息", s.dividend_source) for r in rows]
-    return ToolResult("get_dividends", {"etf": etf, "year": year}, facts=facts, sources=[s.dividend_source],
-                      data={"rows": [{"date": r["date"], "fact": f"div_{etf}_{r['date'].replace('-', '')}"} for r in rows]})
+        rows = [r for r in allr if r["date"].startswith(str(year))]
+        if not rows:
+            first, last = allr[0]["date"][:4], allr[-1]["date"][:4]; src = s.dividend_source; p = f"div_{etf}"
+            facts = [Fact(p + "_first_year", first, "text", f"{etf} 配息紀錄的第一年", src), Fact(p + "_last_year", last, "text", f"{etf} 配息紀錄的最後一年", src),
+                     Fact(p + "_ask_year", str(year), "text", "查詢的年份", src)]
+            # 錯誤訊息裡的年份也用編號，回答時由 checker 填入
+            why = (f"{etf} 的配息紀錄從 {{{p}_first_year}} 年開始" if str(year) < first else f"{etf} 的配息紀錄目前到 {{{p}_last_year}} 年" if str(year) > last
+                   else f"{etf} 在 {{{p}_ask_year}} 年沒有除息紀錄")
+            return ToolResult("get_dividends", args, ok=False, error=why + "。", facts=facts, data={**meta, "first_year": int(first), "last_year": int(last)})
+        key, label = str(year), f"{year} 年"
+    else:
+        cut = _shift(allr[-1]["date"], 335); rows = [r for r in allr if r["date"] > cut]; key, label = "recent", "最近一年"
+    src = s.dividend_source; facts = []; out = []
+    for r in rows:
+        fid = f"div_{etf}_{r['date'].replace('-', '')}"
+        facts += [Fact(fid, r["amount"], "div", f"{etf} 於 {r['date']} 除息的每單位配息", src),
+                  Fact(fid + "_date", r["date"], "date", f"{etf} 這次的除息日", src)]
+        row = {"date": r["date"], "fact": fid, "date_fact": fid + "_date"}
+        adj = r.get("amount_adj")
+        if adj is not None and abs(adj - r["amount"]) > 1e-9:
+            facts.append(Fact(fid + "_adj", adj, "div", f"{etf} 這次配息換算成分割後的單位", src)); row["adj_fact"] = fid + "_adj"
+        out.append(row)
+    split = any("adj_fact" in r for r in out)
+    ratio = next((round(r["amount"] / r["amount_adj"]) for r in rows if r.get("amount_adj") and abs(r["amount_adj"] - r["amount"]) > 1e-9), None)
+    # 合計一律用現在的單位 (分割前的配息先換算)，不然分割前後的金額加在一起沒有意義
+    p = f"div_{etf}_{key}"; total = round(sum(r["amount_adj"] if r.get("amount_adj") is not None else r["amount"] for r in rows), 4)
+    facts += [Fact(p + "_sum", total, "div", f"{etf} {label}每單位配息合計" + (" (分割前的配息已換算成現在的單位)" if split else ""), src),
+              Fact(p + "_n", len(rows), "count:次", f"{etf} {label}的除息次數", src)]
+    if year:
+        facts.append(Fact(p + "_year", str(year), "text", "查詢的年份 (西元)", src))
+    return ToolResult("get_dividends", args, facts=facts, sources=[src], note=DIV_NOTE,
+                      data={**meta, "etf": etf, "year": year, "label": label, "prefix": p, "rows": out, "split": split, "split_ratio": ratio,
+                            "split_note": f"{etf} 曾經股票分割 (一拆{'零一二三四五六七八九十'[ratio] if ratio and ratio <= 10 else ratio})，分割前的配息是舊單位，要換算成現在的單位才能和現在的價格比較" if split else ""})
 
 
 def simulate_dca(etf: str, monthly: int = 5000, start: str = "2020-01", end: str | None = None, s: DataStore | None = None) -> ToolResult:

@@ -36,7 +36,7 @@ class Agent:
             if plan is None:
                 trace["planner"]["rule_error"] = err; plan, _ = validate_plan(HELP_PLAN)
         if guard and plan.type != "refuse":
-            keep = [t for t in plan.tools if t.name == "get_return"][:1]
+            keep = [t for t in plan.tools if t.name in ("get_return", "get_dividends")][:1]
             plan = Plan(type="refuse", tools=keep, reason="規則守門：預測漲跌或投資建議"); trace["planner"]["guard"] = True
         return plan
 
@@ -93,6 +93,9 @@ class Agent:
         scene = derive_scene(plan, results)
         dca = next((r for r in results if r.name == "simulate_dca" and r.ok), None)
         ctx = {"type": plan.type}
+        div = next((r for r in results if r.name == "get_dividends"), None)
+        if div:
+            ctx.update(div=True, etf=div.args["etf"], year=div.args.get("year"))
         if dca:
             ctx.update(etf=dca.args["etf"], monthly=dca.args["monthly"], start=dca.args["start"])
         return {

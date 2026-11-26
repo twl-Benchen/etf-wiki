@@ -22,6 +22,9 @@ for k in s.etfs:
             f = {x.id: x.value for x in r.facts}
             b["returns"][k][p] = {"ret": f[f"ret_{p}_{k}"], "from": f[f"ret_{p}_{k}_from"], "to": f[f"ret_{p}_{k}_to"], "ann": f.get(f"ann_{p}_{k}")}
 b["period_names"] = PERIOD_NAME
+# 配息：[除息日, 當時每單位配息, 換算成現在單位的配息]，離線版的 get_dividends 用
+b["dividends"] = {"source": s.dividend_source, "rows": {k: [[r["date"], r["amount"], r.get("amount_adj", r["amount"])] for r in v] for k, v in s.dividends.items()},
+                  "meta": {k: {"freq": e.get("dividend_freq"), "months": e.get("dividend_months")} for k, e in s.etfs.items()}}
 b["prev"] = {"label": s.prev["label"], "holdings": {k: sorted(v["top10"], key=lambda t: -t["weight"]) for k, v in s.prev["holdings"].items()}} if s.prev else None
 nw = s._json("news.json", {}) or {}
 b["news"] = {"source": nw.get("source"), "date": nw.get("date"), "items": {n: nw.get("news", {}).get(c["code"], []) for n, c in s.companies.items() if nw.get("news", {}).get(c["code"])}}

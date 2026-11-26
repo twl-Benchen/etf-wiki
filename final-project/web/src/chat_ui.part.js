@@ -12,6 +12,8 @@ const money = v => Math.round(v).toLocaleString('en-US');
 const ymText = s => { const [y, m, d] = s.split('-'); return d ? `${y}/${+m}/${+d}` : `${y}/${m}`; };
 const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
 const cn = n => '零一兩三四五六七八九十'[n] ?? String(n);
+const MONTH_CN = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
+const divFmt = v => (Math.round(v * 1000) / 1000).toFixed(3).replace(/0+$/, '').replace(/\.$/, '');   // 配息最多三位小數
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const RULES = { crash_below: -3, boom_above: 3, rain_below: -1.2 };
@@ -171,6 +173,19 @@ const TOOLS = {
     const moves = Object.keys(now).filter(n => n in old).sort((a, b) => Math.abs(now[b] - old[b]) - Math.abs(now[a] - old[a])).slice(0, 3).map(n => ({ name: n, now: now[n], old: old[n] }));
     return { etf, prev_label: CITY.prev.label, added, removed, moves };
   },
+  get_dividends({ etf, year }) {
+    // 和後端 tools.get_dividends 相同：有年份列那一年，沒有就列最近一年 (最後一次除息往前 335 天)；合計用換算成現在單位的配息
+    const D = CITY.dividends || { rows: {}, meta: {} }, meta = D.meta[etf] || {};
+    const all = (D.rows[etf] || []).map(([date, amount, adj]) => ({ date, amount, adj: adj ?? amount }));
+    if (!all.length) return { etf, ok: false, year, ...meta };
+    const first_year = +all[0].date.slice(0, 4), last_year = +all.at(-1).date.slice(0, 4);
+    const cut = new Date(Date.parse(all.at(-1).date) - 335 * 864e5).toISOString().slice(0, 10);
+    const rows = year ? all.filter(r => r.date.startsWith(String(year))) : all.filter(r => r.date > cut);
+    if (!rows.length) return { etf, ok: false, year, first_year, last_year, ...meta };
+    const old = rows.find(r => Math.abs(r.adj - r.amount) > 1e-9);
+    return { etf, ok: true, year, ...meta, rows, n: rows.length, sum: Math.round(rows.reduce((s, r) => s + r.adj, 0) * 10000) / 10000,
+      split: !!old, ratio: old ? Math.round(old.amount / old.adj) : null, basis: '每單位配息，報酬仍是價格報酬 (未含息)' };
+  },
   search_knowledge({ query }) {
     // 和後端 rag.py 相同的規則：內容相似度，加上標題或別名出現在問題裡的加分 (太短或太常見的詞不加分)
     const strip = query.replace(/什麼是|是什麼|什麼意思|為什麼|怎麼|如何|請問|可以|嗎|呢|多少|哪些|？|\?/g, ' ').trim() || query;
@@ -230,18 +245,29 @@ function extract(q) {
   }
   return { etfs: [...new Set(tok.filter(t => t.t === 'etf').map(t => t.v))], cos: cos.map(x => x.n), amounts: tok.filter(t => t.t === 'amt').map(t => t.v), pairs, year: yr ? +yr[1] : null, hour };
 }
+const DIV_RE = /配息|配了|配多少|配幾|股息|除息|領多少|領了多少/;
+const DIV_ASK_RE = /多少|幾次|幾元|幾塊|哪幾個月|哪些月|什麼時候|何時|幾月|紀錄|歷史|最近|上一次|上次|每次|一年|今年|去年|前年|\d{4}\s*年|列出|查/;
+const DIV_CONCEPT_RE = /什麼是|是什麼(?!時候)|為什麼|意思|怎麼算|如何計算|差別|差在哪|代表|會不會|填息|報酬|含息|收益平準金|殖利率|課稅|稅/;
+const isDividendQ = (q, E) => E.etfs.length === 1 && DIV_RE.test(q) && DIV_ASK_RE.test(q) && !DIV_CONCEPT_RE.test(q);
+function divYear(q, E, k) {   // 明確的年份優先；「今年、去年、前年」依這檔最後一次除息的年份換算
+  if (E.year) return E.year;
+  const rows = (CITY.dividends?.rows || {})[k] || [], now = rows.length ? +rows.at(-1)[0].slice(0, 4) : +HIST[k].last[0].slice(0, 4);
+  for (const [w, d] of [['前年', 2], ['去年', 1], ['今年', 0]]) if (q.includes(w)) return now - d;
+  return null;
+}
 function districtIn(q) { return /半導體|園區/.test(q) ? 'semi' : /電子|科技區/.test(q) ? 'tech' : /金融(街|區)/.test(q) ? 'fin' : /航運|港/.test(q) ? 'port' : /民生|工業區/.test(q) && DIST.life ? 'life' : null; }
 function planner(q0) {
   const q = q0.replace(/(\d),(?=\d{3})/g, '$1').trim(), E = extract(q), has = re => re.test(q);
   const followUp = /^(那|換成|改成|如果是|那如果|換)|呢[？?]?$/.test(q);
   let intent;
-  if (has(/(明天|下週|下周|明年|未來|之後|接下來).{0,8}(漲|跌|走勢|表現)|會(漲|跌)嗎|會不會(漲|跌|賺|賠)|該不該|要不要買|可以買嗎|值得買|推薦|明牌|保證|梭哈|all ?in|借錢|目標價|預測|穩賺/i)) intent = 'refuse';
+  if (has(/(明天|下週|下周|明年|未來|之後|接下來).{0,8}(漲|跌|走勢|表現)|會(漲|跌)嗎|會不會(漲|跌|賺|賠)|該不該|要不要買|可以買嗎|值得買|推薦|明牌|保證|梭哈|all ?in|借錢|目標價|預測|穩賺|(明年|下次|下一次|未來|之後|接下來|下一?季).{0,8}(配息|股息|會配|配多少)|會配多少|配息會(變多|變少|增加|減少|提高|降低|更多|更少)/i)) intent = 'refuse';
   else if (!has(/什麼是|是什麼/) && (has(/定期定額|每月|每個月|存股|回放|重播/) || (has(/如果|假設/) && has(/買|存|投入/) && E.amounts.length))) intent = 'replay';
   else if (Object.keys(E.pairs).length && has(/我(有|買|持有|手上|的)|持股|改成|換成|配置/)) intent = 'mine';
   else if (has(/我的城市|我的持股|看穿/)) intent = 'mine';
   else if (followUp && E.etfs.length === 1 && ctx && ['replay', 'etf', 'refuse'].includes(ctx.intent)) intent = ctx.intent;
   else if (E.etfs.length === 1 && CITY.prev && has(/換股|換了|改道|新增了|新進|剔除|退出|換掉|持股變化|成分股變化|調整了|有什麼變化/)) intent = 'rebalance';
   else if (E.etfs.length >= 2) intent = 'compare';
+  else if (isDividendQ(q, E) || (followUp && E.etfs.length === 1 && ctx?.intent === 'dividend' && !Object.keys(E.pairs).length && !has(/報酬|績效|前十大|成分股|持股|換股|定期定額/))) intent = 'dividend';
   else if (KB_KEYS.test(q)) intent = 'kb';
   else if (E.cos.length && has(/站|轉乘|經過|哪些 ?ETF|哪幾檔|持有/)) intent = 'station';
   else if (E.cos.length) intent = 'company';
@@ -464,6 +490,21 @@ const HANDLERS = {
       follow: () => ['改成 0050 20萬、00878 40萬', '哪些 ETF 持有聯發科？', '回到廣場'],
     };
   },
+  dividend({ E, q }) {
+    const k = E.etfs[0], y = divYear(q, E, k) ?? (isDividendQ(q, E) ? null : ctx?.year ?? null);
+    return {
+      role: [`${k} 導覽員`, '線', ETFS[k].color], tools: [['get_dividends', y ? { etf: k, year: y } : { etf: k }]],
+      scene: [['focus_lines', { lines: [k] }]],
+      act() { setMine(null); setRings([]); setFocus(new Set([k])); },
+      write([d]) { return divText(d); },
+      src: () => `資料：${(CITY.dividends && CITY.dividends.source) || '配息紀錄'}，每單位配息`,
+      follow: d => {
+        const ys = ((CITY.dividends?.rows || {})[k] || []).map(r => +r[0].slice(0, 4)), prev = ys.length ? ys.at(-1) - 1 : null;
+        return [`那 ${k === '00878' ? '0056' : '00878'} 呢？`, prev && ys.includes(prev) && d.year !== prev ? `${k} ${prev} 年配多少？` : `${k} 最近一年配多少？`, '配息多就代表賺比較多嗎？'];
+      },
+      ctx: { etf: k, year: y },
+    };
+  },
   kb({ q }) {
     return {
       role: ROLE.guide, tools: [['search_knowledge', { query: q }]],
@@ -477,15 +518,16 @@ const HANDLERS = {
       follow: k => k.hit && k._doc.id === 'income-equalization' ? ['什麼是除息和填息？', '0056 跟 00878 差在哪？'] : ['什麼是收益平準金？', '市值型跟高股息差在哪？', '今天城市怎麼了？'],
     };
   },
-  refuse({ E }) {
-    const k = E.etfs[0];
+  refuse({ E, q }) {
+    const k = E.etfs[0], dv = !!k && DIV_RE.test(q);   // 問未來配息：只提供過去的配息紀錄
     return {
-      role: ROLE.guide, guard: '拒答：預測漲跌或個人投資建議', tools: k ? [['get_return', { etf: k, period: '1y' }]] : [],
+      role: ROLE.guide, guard: dv ? '拒答：預測未來配息' : '拒答：預測漲跌或個人投資建議', tools: k ? [dv ? ['get_dividends', { etf: k }] : ['get_return', { etf: k, period: '1y' }]] : [],
       scene: k ? [['focus_lines', { lines: [k] }]] : [],
       act() { if (k) { setMine(null); setRings([]); setFocus(new Set([k])); } },
       write([r]) {
+        if (dv && r && r.ok) return `我不會預測未來會配多少，也不會告訴你該不該買賣，這是這個系統刻意設下的規則。每次配多少要看投信當次的公告。我能給你的是過去的紀錄：${k} 最近一年除息 ${r.n} 次，每單位合計 <b>${divFmt(r.sum)} 元</b>，過去的配息不代表未來。`;
         let h = '我不會預測漲跌，也不會告訴你該不該買，這是這個系統刻意設下的規則。';
-        if (r) h += `我能給你的是過去的資料：${k} 過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含息)，過去的表現不代表未來。`;
+        if (r && !dv) h += `我能給你的是過去的資料：${k} 過去一年價格報酬 <b class="${cls(r.ret)}">${fmtPct(r.ret)}</b> (${ymText(r.from)} 到 ${ymText(r.to)}，未含息)，過去的表現不代表未來。`;
         return h + '想知道長期持有是什麼感覺，可以用回放，看城市怎麼走過每一次下跌。';
       },
       src: '規則：不預測、不推薦，只說明資料',
@@ -518,11 +560,22 @@ const HANDLERS = {
     return {
       role: ROLE.guide, tools: [], scene: [],
       act() {},
-      write() { return (hi ? '嗨，我是城市導覽員。' : '這個問題我還聽不懂。') + '我現在會回答：今天的行情、某家公司 (例如台積電)、兩檔 ETF 比較、每月定期定額的回放、你的持股 (例如「我有 0050 30萬」)、ETF 名詞 (例如收益平準金)。也可以直接走到店門口，或點任何一家店。'; },
+      write() { return (hi ? '嗨，我是城市導覽員。' : '這個問題我還聽不懂。') + '我現在會回答：今天的行情、某家公司 (例如台積電)、兩檔 ETF 比較、某檔 ETF 的配息紀錄 (例如「0056 去年配多少」)、每月定期定額的回放、你的持股 (例如「我有 0050 30萬」)、ETF 名詞 (例如收益平準金)。也可以直接走到店門口，或點任何一家店。'; },
       src: '', follow: () => START_CHIPS,
     };
   },
 };
+
+function divText(d) {
+  const months = (d.months || []).map(m => MONTH_CN[m]).filter(Boolean).join('、');
+  let h = d.freq ? `${d.etf} 是${d.freq}${months ? `，通常在${months}月除息` : ''}。` : '';
+  if (!d.ok) return h + (d.first_year == null ? `${d.etf} 的配息資料還沒有整理好，目前只提供價格報酬 (未含息)。` : d.year < d.first_year ? `${d.etf} 的配息紀錄從 ${d.first_year} 年開始。`
+    : d.year > d.last_year ? `${d.etf} 的配息紀錄目前到 ${d.last_year} 年。` : `${d.etf} 在 ${d.year} 年沒有除息紀錄。`);
+  h += `${d.year ? d.year + ' 年' : '最近一年'}一共除息 ${d.n} 次，每單位合計 <b>${divFmt(d.sum)} 元</b>。`;
+  h += '每次是 ' + d.rows.map(r => `${ymText(r.date)} <b>${divFmt(r.amount)} 元</b>` + (Math.abs(r.adj - r.amount) > 1e-9 ? ` (分割前的舊單位，換算成現在約 <b>${divFmt(r.adj)} 元</b>)` : '')).join('、') + '。';
+  if (d.split) h += `${d.etf} 曾經股票分割 (一拆${cn(d.ratio)})，分割前的配息是舊單位，上面的合計已經換算成現在的單位。`;
+  return h + '配息是每一單位拿到的現金；這個系統算的報酬都是價格報酬，沒有把配息加回去 (未含息)。';
+}
 
 /* ================= writer check (reflection: numbers must come from tools) ================= */
 function numberCheck(html, results) {

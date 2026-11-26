@@ -8,7 +8,7 @@ from typing import Any
 class Fact:
     id: str
     value: Any
-    unit: str          # pct / pct_signed / pct1 / pp / twd / price / count:<量詞> / date / month / text
+    unit: str          # pct / pct_signed / pct1 / pp / twd / price / div / count:<量詞> / date / month / text
     label: str         # 這個數字是什麼 (給 Writer 看)
     source: str = ""
     as_of: str | None = None
@@ -29,6 +29,8 @@ class Fact:
             return f"{round(v):,} 元"
         if u == "price":
             return f"{v:,.2f} 元"
+        if u == "div":    # 配息：最多三位小數，去掉多餘的 0 (0.675 元、1 元)
+            return f"{round(v, 3):,.3f}".rstrip("0").rstrip(".") + " 元"
         if u.startswith("count:"):
             return f"{int(v)} {u[6:]}"
         if u == "date":   # YYYY-MM-DD -> YYYY/M/D

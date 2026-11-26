@@ -24,6 +24,9 @@ def derive_scene(plan: Plan, results: list[ToolResult]) -> list[dict]:
         k = hc.data["etf"]; added = [x["name"] for x in hc.data["added"]]
         return [A("focus_etfs", etfs=[k]), A("mark_companies", companies=added or [x["name"] for x in hc.data["moves"]], label="weights", etfs=[k], ring=added),
                 A("fly_to", companies=[x["name"] for x in s.top10(k)])]
+    dv = next((r for r in results if r.name == "get_dividends"), None)
+    if dv and t in ("number", "refuse"):   # 配息：只亮這檔的導引線，不移動角色
+        return [A("focus_etfs", etfs=[dv.args["etf"]])]
     if t == "number":
         h = _f(results, "get_top10_holdings"); rr = _f(results, "get_return")
         k = h.data["etf"] if h else rr.data["rows"][0]["etf"] if rr and rr.data["rows"] else None
@@ -81,6 +84,11 @@ def followups(plan: Plan, results: list[ToolResult]) -> list[str]:
     if hc:
         k = hc.data["etf"]
         return [f"{k} 前十大是哪些？", f"每月 5000 買 {k}，從 2020 到現在會怎樣？", "什麼是成分股調整？"]
+    dv = next((r for r in results if r.name == "get_dividends"), None)
+    if dv:
+        k = dv.args["etf"]; ys = [x["date"][:4] for x in get_store().dividends.get(k, [])]
+        prev = str(int(ys[-1]) - 1) if ys else None
+        return [f"那 {other(k)} 呢？", f"{k} {prev} 年配多少？" if prev and prev in ys and str(dv.args.get("year")) != prev else f"{k} 最近一年配多少？", "配息多就代表賺比較多嗎？"]
     if t == "number":
         h = _f(results, "get_top10_holdings"); rr = _f(results, "get_return")
         k = h.data["etf"] if h else rr.data["rows"][0]["etf"] if rr and rr.data["rows"] else codes[0]

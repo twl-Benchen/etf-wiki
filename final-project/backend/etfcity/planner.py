@@ -10,10 +10,13 @@ ETF_ALIAS = {"元大台灣50": "0050", "台灣50": "0050", "台灣五十": "0050
 CO_ALIAS = {"台積": "台積電", "TSMC": "台積電", "tsmc": "台積電", "發哥": "聯發科", "中華電信": "中華電", "日月光": "日月光投控", "長榮海運": "長榮", "長榮航空": "長榮航",
             "陽明海運": "陽明", "華南": "華南金", "國泰金控": "國泰金", "富邦金控": "富邦金", "中信": "中信金", "元大金控": "元大金", "世界先進": "世界", "上海銀": "上海商銀"}
 CN = {"零": 0, "〇": 0, "一": 1, "二": 2, "兩": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
-REFUSE_RE = re.compile(r"(明天|下週|下周|明年|未來|之後|接下來|下個月).{0,8}(漲|跌|走勢|表現)|會(漲|跌)嗎|會不會(漲|跌|賺|賠)|該不該|要不要買|可以買嗎|能買嗎|值得買|推薦|明牌|保證|梭哈|all ?in|借錢|貸款.{0,4}買|開槓桿|融資|目標價|預測|穩賺|哪(一)?(檔|支)(最好|比較好|會賺)|現在.{0,4}(進場|上車|賣)|(該|要)買哪|買哪一?(檔|支)|哪一?(檔|支).{0,10}最(好|強|會賺)|要不要跟|跟單|進場的?好時機", re.I)
+REFUSE_RE = re.compile(r"(明天|下週|下周|明年|未來|之後|接下來|下個月).{0,8}(漲|跌|走勢|表現)|會(漲|跌)嗎|會不會(漲|跌|賺|賠)|該不該|要不要買|可以買嗎|能買嗎|值得買|推薦|明牌|保證|梭哈|all ?in|借錢|貸款.{0,4}買|開槓桿|融資|目標價|預測|穩賺|哪(一)?(檔|支)(最好|比較好|會賺)|現在.{0,4}(進場|上車|賣)|(該|要)買哪|買哪一?(檔|支)|哪一?(檔|支).{0,10}最(好|強|會賺)|要不要跟|跟單|進場的?好時機|(明年|下次|下一次|未來|之後|接下來|下一?季).{0,8}(配息|股息|會配|配多少)|會配多少|配息會(變多|變少|增加|減少|提高|降低|更多|更少)", re.I)
 KB_RE = re.compile(r"成本|交易成本|代號|代碼|怎麼買|在哪買|什麼是|是什麼|什麼意思|意思|怎麼算|如何計算|為什麼|差別|差在哪|收益平準金|折價|溢價|淨值|除息|填息|配息|內扣|費用|經理費|手續費|證交稅|稅|市值型|高股息型|定期定額是|成分股調整|換股|追蹤誤差|申購|買回|槓桿|反向|債券|殖利率|零股|下市|清算|風險|主動式|被動式")
 PERIOD_RE = [("ytd", r"今年以來|今年|年初至今"), ("max", r"上市以來|成立以來|掛牌以來"), ("5y", r"(五|5)\s*年"), ("3y", r"(三|3)\s*年"), ("1y", r"(一|1)\s*年|去年到現在"),
              ("6m", r"半年|(六|6)\s*個月"), ("3m", r"(三|3)\s*個月|一季"), ("1m", r"(一|1)\s*個月|這個月")]
+DIV_RE = re.compile(r"配息|配了|配多少|配幾|股息|除息|領多少|領了多少")
+DIV_ASK_RE = re.compile(r"多少|幾次|幾元|幾塊|哪幾個月|哪些月|什麼時候|何時|幾月|紀錄|歷史|最近|上一次|上次|每次|一年|今年|去年|前年|\d{4}\s*年|列出|查")
+DIV_CONCEPT_RE = re.compile(r"什麼是|是什麼(?!時候)|為什麼|意思|怎麼算|如何計算|差別|差在哪|代表|會不會|填息|報酬|含息|收益平準金|殖利率|課稅|稅")
 DISTRICT_RE = [("semi", r"半導體|園區"), ("tech", r"電子|科技區"), ("fin", r"金融"), ("port", r"航運|港"), ("life", r"民生|工業區")]
 
 
@@ -79,6 +82,22 @@ def extract(q: str) -> dict:
             "year": int(ym.group(1)) if ym else int(yr.group(1)) if yr else None, "month": int(ym.group(2)) if ym else None, "hour": hour, "period": period, "district": district}
 
 
+def dividend_year(q: str, E: dict, s=None) -> int | None:
+    """問題裡的年份：明確寫出的年份優先，「今年、去年、前年」依資料最新的日期換算"""
+    if E.get("year"):
+        return E["year"]
+    s = s or get_store(); k = (E.get("etfs") or [next(iter(s.etfs))])[0]
+    now = int((s.dividends.get(k) or [{"date": s.last_date(k)}])[-1]["date"][:4]) if s.dividends.get(k) else int(s.last_date(k)[:4])
+    for w, d in (("前年", 2), ("去年", 1), ("今年", 0)):
+        if w in q:
+            return now - d
+    return None
+
+
+def is_dividend_q(q: str, E: dict) -> bool:
+    return len(E["etfs"]) == 1 and bool(DIV_RE.search(q)) and bool(DIV_ASK_RE.search(q)) and not DIV_CONCEPT_RE.search(q)
+
+
 def is_refusal(q: str) -> bool:
     return bool(REFUSE_RE.search(q))
 
@@ -90,6 +109,8 @@ def rule_plan(q: str, ctx: dict | None = None) -> dict:
     T = lambda n, **a: {"name": n, "args": {k: v for k, v in a.items() if v is not None}}
     if is_refusal(q):
         k = E["etfs"][:1]
+        if k and DIV_RE.search(q):   # 問未來配息：拒答，只提供過去的配息紀錄
+            return {"type": "refuse", "tools": [T("get_dividends", etf=k[0])], "reason": "預測未來配息，依規則拒答", "focus": {"entities": E}}
         return {"type": "refuse", "tools": [T("get_return", etfs=k, period="1y")] if k else [], "reason": "預測漲跌或個人投資建議，依規則拒答", "focus": {"entities": E}}
     is_dca = not has("什麼是|是什麼") and (has("定期定額|每月|每個月|存股|回放|重播") or (has("如果|假設") and has("買|存|投入") and E["amounts"]))
     if not is_dca and follow and len(E["etfs"]) == 1 and ctx.get("type") == "scenario" and not E["pairs"]:
@@ -115,6 +136,10 @@ def rule_plan(q: str, ctx: dict | None = None) -> dict:
     if has("晚上|夜景|夜晚|天黑|白天|早上|中午|下午|傍晚") or E["hour"] is not None:
         h = E["hour"] if E["hour"] is not None else 20.5 if has("晚上|夜景|夜晚|天黑") else 18 if has("傍晚") else 9.5 if has("早上") else 12.5 if has("中午") else 14.5
         return {"type": "scene", "scene": [{"name": "set_time", "args": {"hour": max(8, min(22, h))}}], "reason": "切換時間", "focus": {"entities": E}}
+    div_follow = follow and len(E["etfs"]) == 1 and ctx.get("div") and not E["pairs"] and not has("報酬|績效|前十大|成分股|持股|換股|定期定額")
+    if is_dividend_q(q, E) or div_follow:
+        y = dividend_year(q, E) if (is_dividend_q(q, E) or E["year"] or has("今年|去年|前年")) else ctx.get("year")
+        return {"type": "number", "tools": [T("get_dividends", etf=E["etfs"][0], year=y)], "reason": "查詢配息紀錄", "focus": {"entities": E, "dividend": True}}
     if len(E["etfs"]) == 1 and has("換股|換了|改道|新增了|新進|剔除|退出|換掉|持股變化|成分股變化|調整了|有什麼變化"):
         return {"type": "number", "tools": [T("holdings_change", etf=E["etfs"][0])], "reason": "比較前後兩份持股", "focus": {"entities": E}}
     if len(E["etfs"]) == 1 and not (KB_RE.search(q) and not has("報酬|績效|漲了|跌了|前十大|成分股|持股|持有")):
@@ -137,6 +162,7 @@ def rule_plan(q: str, ctx: dict | None = None) -> dict:
 def planner_prompt() -> str:
     s = get_store()
     etfs = "、".join(f"{k} ({e['name']}，{e['type']})" for k, e in s.etfs.items())
+    this_year = max(s.last_date(k) for k in s.etfs if s.has_prices(k))[:4]
     return f"""你是 ETF 問答系統的 Planner。你的工作是把使用者的問題變成 JSON 執行計畫，不要回答問題本身，也不要計算任何數字。
 
 可用的 ETF：{etfs}
@@ -146,6 +172,7 @@ def planner_prompt() -> str:
 - get_etf_info(etf)：ETF 基本資料
 - get_top10_holdings(etf)：前十大成分股與權重
 - top10_overlap(a, b)：兩檔 ETF 前十大的共同持股與重疊權重
+- get_dividends(etf, year?)：配息紀錄 (每次除息日與每單位配息、合計、次數)。year 可省略 (最近一年)，或寫西元年。只有過去的紀錄，不能預測未來配息
 - get_return(etfs: list, period)：價格報酬 (未含息)。period 只能是 1m, 3m, 6m, 1y, 3y, 5y, ytd, max
 - simulate_dca(etf, monthly, start)：定期定額回測。monthly 是每月金額 (整數)，start 是 "YYYY-MM"
 - lookthrough(positions)：穿透持股。positions 是 {{"ETF 代號": 金額}}
@@ -156,7 +183,7 @@ def planner_prompt() -> str:
 
 問題類型 type：
 - concept：觀念題 (名詞解釋、制度、費用) → search_knowledge
-- number：單一 ETF 的數字 (報酬、成分股) 
+- number：單一 ETF 的數字 (報酬、成分股、配息紀錄) 
 - compare：比較兩檔 ETF → top10_overlap 加 get_return
 - scenario：情境模擬 (定期定額) → simulate_dca
 - portfolio：使用者說出自己的持股與金額 → lookthrough
@@ -169,8 +196,9 @@ def planner_prompt() -> str:
 規則：
 1. 只輸出一個 JSON 物件，格式：{{"type": "...", "tools": [{{"name": "...", "args": {{...}}}}], "scene": [], "reason": "一句話說明"}}
 2. ETF 一律用代號。使用者沒有說金額或起始時間時，monthly 用 5000，start 用 "2020-01"。
-3. 不要發明工具或參數。不確定就用 help。
-4. scene 通常留空陣列，系統會依工具結果自動決定畫面動作。
+3. 問某檔 ETF 配了多少、什麼時候除息，用 get_dividends；「今年、去年」換成西元年 (資料最新的年份是 {this_year} 年)。問配息的觀念 (例如配息多是不是賺比較多) 用 concept。問未來會配多少屬於 refuse，tools 可以放 get_dividends 提供過去的紀錄。
+4. 不要發明工具或參數。不確定就用 help。
+5. scene 通常留空陣列，系統會依工具結果自動決定畫面動作。
 
 範例：
 問：0050 跟 00878 差在哪？
@@ -179,6 +207,8 @@ def planner_prompt() -> str:
 答：{{"type": "scenario", "tools": [{{"name": "simulate_dca", "args": {{"etf": "0056", "monthly": 10000, "start": "2021-01"}}}}], "scene": [], "reason": "定期定額回測"}}
 問：0056 明天會漲嗎？
 答：{{"type": "refuse", "tools": [{{"name": "get_return", "args": {{"etfs": ["0056"], "period": "1y"}}}}], "scene": [], "reason": "預測漲跌，拒答並提供歷史資料"}}
+問：0056 去年配多少？
+答：{{"type": "number", "tools": [{{"name": "get_dividends", "args": {{"etf": "0056", "year": {int(this_year) - 1}}}}}], "scene": [], "reason": "查詢配息紀錄"}}
 問：什麼是收益平準金？
 答：{{"type": "concept", "tools": [{{"name": "search_knowledge", "args": {{"query": "收益平準金"}}}}], "scene": [], "reason": "觀念題"}}"""
 

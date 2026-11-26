@@ -6,6 +6,7 @@ from .facts import FactBook, ToolResult
 from .schemas import Plan
 
 CN_NUM = "零一兩三四五六七八九十"
+MONTH_CN = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"]
 cn = lambda n: CN_NUM[n] if 0 <= n <= 10 else str(n)
 P = lambda fid: "{" + fid + "}"
 STATE_TEXT = {"boom": "漲超過 {rule_boom}，店門口掛起彩帶、燈全亮", "up": "小漲，店裡燈比平常亮", "flat": "變動不大，照常營業", "down": "下跌，店裡燈暗了一些",
@@ -34,6 +35,11 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
     failed = [r for r in results if not r.ok]
     if t == "refuse":
         out.append("我不會預測漲跌，也不會告訴你該不該買賣，這是這個系統刻意設下的規則。")
+        dv = _find(results, "get_dividends")
+        if dv:
+            d = dv.data; p = d["prefix"]
+            out[0] = "我不會預測未來會配多少，也不會告訴你該不該買賣，這是這個系統刻意設下的規則。每次配多少要看投信當次的公告。"
+            out.append(f"我能給你的是過去的紀錄：{d['etf']} {d['label']}除息 {P(p + '_n')}，每單位合計 {P(p + '_sum')}，過去的配息不代表未來。")
         r = _find(results, "get_return")
         if r:
             row = r.data["rows"][0]; f = row["facts"]
@@ -57,6 +63,8 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
             x, y = rr.data["rows"]
             out.append(f"{rr.data['period_name']} ({P(x['facts']['from'])} 到 {P(x['facts']['to'])}) 的價格報酬：{x['etf']} {P(x['facts']['ret'])}，{y['etf']} {P(y['facts']['ret'])}，相差 {P(rr.data['diff']['fact'])}。這只算股價，配息沒有加回來；配息比較多的 ETF，加回去之後差距會不一樣。")
         out.append("以上只計前十大成分股，不是完整持股。")
+    elif t == "number" and any(r.name == "get_dividends" for r in results):
+        out += _dividend_text(next(r for r in results if r.name == "get_dividends"))
     elif t == "number" and _find(results, "holdings_change"):
         d = _find(results, "holdings_change").data; k = d["etf"]
         if not d["added"] and not d["removed"]:
@@ -180,11 +188,33 @@ def template_write(plan: Plan, results: list[ToolResult], question: str = "") ->
             out.append("回到 ETF 廣場。地上每條彩色的導引線是一檔 ETF，沿著線走會經過它的前十大；櫥窗上的貼紙代表哪幾檔 ETF 持有這家店。")
     else:
         hi = "嗨，我是城市導覽員。" if plan.focus.get("greeting") else "這個問題我還聽不懂。"
-        out.append(hi + "我可以回答：今天的行情、某家公司、兩檔 ETF 的比較、某檔 ETF 的報酬與前十大成分股、每月定期定額的回放、你的持股穿透，以及 ETF 的名詞與觀念。也可以直接走到店門口，或點任何一家店。")
+        out.append(hi + "我可以回答：今天的行情、某家公司、兩檔 ETF 的比較、某檔 ETF 的報酬、前十大成分股與配息紀錄、每月定期定額的回放、你的持股穿透，以及 ETF 的名詞與觀念。也可以直接走到店門口，或點任何一家店。")
     for r in failed:
         if r.error and t not in ("concept",):
             out.append(r.error)
     return "".join(out)
+
+
+def _dividend_text(r: ToolResult) -> list[str]:
+    d = r.data; k = r.args["etf"]; out = []
+    months = "、".join(MONTH_CN[m] for m in d.get("months") or [] if 1 <= m <= 12)
+    if d.get("freq"):
+        out.append(f"{k} 是{d['freq']}" + (f"，通常在{months}月除息。" if months else "。"))
+    if not r.ok:
+        return out   # 錯誤說明 (例如那一年沒有紀錄) 由 template_write 最後統一加上
+    p = d["prefix"]; when = f"{P(p + '_year')} 年" if d["year"] else "最近一年"
+    out.append(f"{when}一共除息 {P(p + '_n')}，每單位合計 {P(p + '_sum')}。")
+    items = []
+    for x in d["rows"]:
+        s = f"{P(x['date_fact'])} {P(x['fact'])}"
+        if x.get("adj_fact"):
+            s += f" (分割前的舊單位，換算成現在約 {P(x['adj_fact'])})"
+        items.append(s)
+    out.append("每次是" + "、".join(items) + "。")
+    if d.get("split"):
+        out.append(d["split_note"].replace("要換算成現在的單位才能和現在的價格比較", "上面的合計已經換算成現在的單位") + "。")
+    out.append("配息是每一單位拿到的現金；這個系統算的報酬都是價格報酬，沒有把配息加回去 (未含息)。")
+    return out
 
 
 def _first_section(md: str, limit: int = 420) -> str:
@@ -216,6 +246,7 @@ WRITER_SYSTEM = """你是「ETF 都會」的城市導覽員，用繁體中文、
 - 只根據工具結果和參考文件回答，不要補充清單以外的事實。
 - 不預測漲跌，不建議買賣，不說哪一檔比較好。
 - 報酬都是價格報酬，要說明「未含息」。持股資料只有前十大，要說明是「前十大」的結果。
+- 配息是每單位的現金，只有過去的紀錄，不能說未來會配多少。工具結果的 split 是 true 時，要說明分割前的配息是舊單位、合計已換算成現在的單位。
 - 三到六句話，口語、好懂，不要條列、不要標題、不要 markdown。括號用半形 ()。
 - 如果角色是店長或導覽員，用那個角色的口吻。"""
 

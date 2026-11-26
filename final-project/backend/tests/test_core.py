@@ -13,7 +13,8 @@ from etfcity import tools
 S = get_store(); A = Agent(); C = TestClient(app)
 QS = ["今天城市怎麼了？", "台積電今天怎麼了？", "聯發科站有哪些線經過？", "0050 跟 006208 差在哪？", "0056 跟 00878 差在哪？", "0056 前十大是哪些？", "什麼是收益平準金？",
       "市值型跟高股息差在哪？", "0056 明天會漲嗎？", "晚上的城市長怎樣？", "切回白天", "為什麼港區在放煙火？", "改成 0050 20萬、00878 40萬", "我的持股", "回到全城", "嗨",
-      "每月 5000 買 0050，從 2020 到現在會怎樣？", "每月五千存0056從2022年開始", "我有 30萬的0050、20萬的00919", "0050 近三年報酬", "00919 今年以來績效", "什麼是量子糾纏？", "00878 最近換股換了什麼？", "0050 的前十大有什麼變化？", "大立光今天怎麼了？", "哪些 ETF 持有大立光？", "回到廣場"]
+      "每月 5000 買 0050，從 2020 到現在會怎樣？", "每月五千存0056從2022年開始", "我有 30萬的0050、20萬的00919", "0050 近三年報酬", "00919 今年以來績效", "什麼是量子糾纏？", "00878 最近換股換了什麼？", "0050 的前十大有什麼變化？", "大立光今天怎麼了？", "哪些 ETF 持有大立光？", "回到廣場",
+      "0056 去年配多少？", "0050 2025 年配息多少", "00878 最近一次配息是什麼時候", "00919 2020 年配多少", "0056 明年會配多少？"]
 
 
 def test_overlap_definition():
@@ -102,3 +103,29 @@ def test_api():
     r = C.post("/api/portfolio/lookthrough", json={"positions": {"0050": 100000}}).json(); assert r["type"] == "portfolio" and r["check"]["ok"]
     assert C.post("/api/portfolio/lookthrough", json={"positions": {"9999": 1}}).status_code == 422
     assert C.post("/api/ask", json={"question": ""}).status_code == 422
+
+
+def test_dividends():
+    rows = S.dividends["0056"]; y = int(rows[-1]["date"][:4]) - 1
+    r = tools.get_dividends("0056", y); f = {x.id: x.value for x in r.facts}
+    exp = [x for x in rows if x["date"].startswith(str(y))]
+    assert f[f"div_0056_{y}_n"] == len(exp) and abs(f[f"div_0056_{y}_sum"] - sum(x["amount"] for x in exp)) < 1e-6
+    # 0050 分割前的配息：合計用換算後的單位，並保留當時的金額
+    r = tools.get_dividends("0050", 2025); f = {x.id: x.value for x in r.facts}
+    old = [x for x in S.dividends["0050"] if x["date"].startswith("2025")]
+    assert r.data["split"] and r.data["split_ratio"] == 4
+    assert abs(f["div_0050_2025_sum"] - sum(x["amount_adj"] for x in old)) < 1e-6
+    assert any(x.id.endswith("_adj") for x in r.facts)
+    # 最近一年：季配四次、半年配兩次
+    assert tools.get_dividends("0056").data["rows"].__len__() == 4 and len(tools.get_dividends("0050").data["rows"]) == 2
+    assert not tools.get_dividends("00919", 2020).ok
+
+
+def test_dividend_routing():
+    y = int(S.dividends["0056"][-1]["date"][:4]) - 1
+    t = rule_plan("0056 去年配多少？")["tools"][0]; assert t == {"name": "get_dividends", "args": {"etf": "0056", "year": y}}
+    assert rule_plan("配息多就代表賺比較多嗎？")["type"] == "concept" and rule_plan("什麼是除息？")["type"] == "concept"
+    assert rule_plan("0056 明年會配多少？")["type"] == "refuse"
+    r1 = A.ask("0056 去年配多少？"); r2 = A.ask("那 00878 呢？", r1["context"])
+    t = r2["plan"]["tools"][0]; assert t["name"] == "get_dividends" and t["args"] == {"etf": "00878", "year": y}
+    r = A.ask("0050 2025 年配息多少"); assert "換算" in r["answer"] and "未含息" in r["answer"]
