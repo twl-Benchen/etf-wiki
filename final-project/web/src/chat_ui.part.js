@@ -275,7 +275,7 @@ function planner(q0) {
   else if (has(/晚上|夜景|夜晚|天黑|白天|早上|中午|下午|傍晚/) || E.hour != null) intent = 'time';
   else if (E.etfs.length === 1) intent = 'etf';
   else if (has(/總覽|全部|回到|重置|重來|整個城市|全城|看全部|廣場/)) intent = 'overview';
-  else if (has(/今天|今日|大盤|市場|怎麼了|發生|新聞|日報|為什麼|下雨|煙火|港區|園區|金融區|科技區|行情/) || districtIn(q)) intent = 'market';
+  else if (has(/今天|今日|大盤|市場|怎麼了|發生|新聞|日報|下雨|煙火|港區|園區|金融區|科技區|行情/) || districtIn(q)) intent = 'market';
   else if (has(/什麼是|是什麼|意思|差在哪|差別/)) intent = 'kb';
   else intent = TOOLS.search_knowledge({ query: q }).hit ? 'kb' : 'help';
   return { intent, E, q };

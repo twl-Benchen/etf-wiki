@@ -1,7 +1,7 @@
 ---
 title: 初級市場與次級市場
 summary: 初級市場是大額向投信用淨值申購或買回，次級市場是一般人用證券帳戶以市價買賣。
-aliases: [初級市場, 次級市場, 一級市場, 二級市場, 申購, 買回]
+aliases: [初級市場, 次級市場, 一級市場, 二級市場, 申購, 買回, 創建, 贖回]
 source_name: ETF 入門 Wiki (twl-Benchen/etf-wiki)
 source_urls: [https://www.twse.com.tw/downloads/zh/ETF/concept08.pdf, https://moneymate.space/etf-important-points/]
 status: 已核對來源

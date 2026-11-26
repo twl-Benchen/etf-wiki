@@ -1,7 +1,7 @@
 ---
 title: 配息與總報酬
 summary: 配息只是報酬的一部分，ETF 也不保證固定配息，證交所提醒看表現要看總報酬率。
-aliases: [配息, 配息率, 殖利率, 總報酬率, 總報酬, 月配, 季配, 高股息]
+aliases: [配息, 配息率, 殖利率, 總報酬率, 總報酬, 月配, 季配, 高股息, 分紅, 股息]
 source_name: ETF 入門 Wiki (twl-Benchen/etf-wiki)
 source_urls: [https://anuenews.cnyes.com/news/id/5794181]
 status: 已核對來源

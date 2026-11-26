@@ -108,6 +108,10 @@
   - LLM 版 Planner 的 prompt 加上 `get_dividends` 和範例；Writer 的 prompt 加上配息規則
   - 前端：`city.json` 多了 `dividends`，離線版有相同的工具、判斷與回答，數字檢查全過
   - 測試：後端 49 個全過 (新增配息工具與路由測試)；`web/tests/run.py qa` 用 11 題配息與既有題目檢查，回答和後端一致，沒有錯誤
+- [x] 重新匯入上層 wiki (`python scripts/import_wiki.py ..`)：wiki 在 11-23 有更新，新增 5 篇 (`wiki-ex-dividend`、`wiki-compound-interest`、`wiki-etf-features`、`wiki-etf-vs-stock-and-fund`、`wiki-price-movement`)，更新 6 篇；知識庫共 37 篇
+  - 自編的 `ex-dividend` 和 `wiki-ex-dividend` 標題相同，檢索仍是自編的排第一、wiki 版第二 (實驗一的檢索命中不變)，LLM Writer 會同時拿到兩篇；兩篇內容沒有矛盾，但自編那篇的「除息日前一個交易日」等說法 wiki 沒有，仍標示待核對
+  - 前端離線版的「為什麼…」原本一律導到今日行情，「ETF 為什麼會漲跌？」現在和後端一樣導到知識庫 (「為什麼港區在放煙火？」仍是行情)
+  - 實驗一 `C_rule` 重跑仍全部通過
 
 ## 待辦清單 (依序)
 1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。
@@ -127,6 +131,6 @@
 - 雲端環境預裝的瀏覽器配合 Playwright 1.63.0；`pip install -r requirements-dev.txt` 會裝最新版而找不到瀏覽器，這時執行 `pip install playwright==1.63.0`。
 - 知識庫觀念題的模板回答取文件開頭，遇到後面接表格的句子會變成「…截至 2025-01：。」(例如「0050 是什麼」)，接 LLM Writer 後影響較小，有空再修 `_first_section` 與前端的 `firstSection`。
 - 價格改用 FinMind 後，Yahoo 在 2008 到 2009 年的錯誤價格已經修正。沒有設定 `FINMIND_TOKEN` 而且 FinMind 額度用完時，會退回 Yahoo，這時候那段期間的價格會不準 (log 的 `source` 會寫 yahoo)。
-- 知識庫自編文件：`income-equalization`、`split` 已對照來源改寫 (status: 已核對)；其餘標示「待核對」的 9 篇期末前要對照來源檢查 (`grep -l '待核對' data/kb/*.md`)。
+- 知識庫自編文件：`income-equalization`、`split` 已對照來源改寫 (status: 已核對)；其餘標示「待核對」的 9 篇期末前要對照來源檢查 (要能連到證交所等網站) (`grep -l '待核對' data/kb/*.md`)。
 - 商店街還沒在真的手機上測過效能 (開發環境只有軟體模擬的顯示卡)；實驗二建議用電腦做。
 - 從廣場看對面時，站在某些角度點招牌可能先點到前面的東西 (站牌、牌樓)，屬於正常的遮擋。

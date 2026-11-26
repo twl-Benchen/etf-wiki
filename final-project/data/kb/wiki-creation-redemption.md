@@ -1,7 +1,7 @@
 ---
 title: 申購買回與套利
 summary: 利用初級市場的淨值和次級市場的市價之間的價差來套利，這個機制會把市價拉回淨值附近。
-aliases: [套利, 申購買回, 套利機制, creation, redemption, arbitrage]
+aliases: [套利, 申購買回, 套利機制, creation, redemption, arbitrage, 創建, 贖回, 創建與贖回]
 source_name: ETF 入門 Wiki (twl-Benchen/etf-wiki)
 source_urls: [https://www.twse.com.tw/downloads/zh/ETF/concept08.pdf, https://www.twse.com.tw/zh/ETFortune/invest/8a8216d69e2f5671019e4805aa92005d]
 status: 已核對來源

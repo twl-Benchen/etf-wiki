@@ -1,7 +1,7 @@
 ---
 title: 內扣費用與費用率
 summary: 持有 ETF 期間的經理費、保管費等費用，直接從淨值裡扣除，不會另外寄帳單給你。
-aliases: [內扣費用, 費用率, 經理費, 保管費, expense ratio, 管理費]
+aliases: [內扣費用, 費用率, 經理費, 保管費, expense ratio, 管理費, 總費用率]
 source_name: ETF 入門 Wiki (twl-Benchen/etf-wiki)
 source_urls: [https://technews.tw/2025/01/23/expense-rate/, https://moneymate.space/etf-important-points/]
 status: 已核對來源
