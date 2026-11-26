@@ -114,6 +114,8 @@
   - 實驗一 `C_rule` 重跑仍全部通過
 - [x] 觀念題模板回答：略過表格 (後端原本沒有略過)，原本接表格的句子去掉結尾冒號 (「0050 是什麼」原本結尾是「截至 2025-01：。」)
 - [x] `docs/demo.md` 加上配息問答 (7-2) 與未來配息的拒答
+- [x] 雲端環境改用個人環境「etf-wiki」(允許證交所、櫃買、Yahoo、FinMind、Groq；FinMind 與 Groq 金鑰存在環境的網路密鑰，由代理伺服器自動帶上，程式的環境變數放佔位值即可，例如 `FINMIND_TOKEN=proxy-injected`)
+- [x] 跑 `scripts/update_all.py`：價格 (FinMind) 5 檔更新到 2026-11-26；0050 依一拆四還原，分割前後沒有斷層 (2025-06-10 47.16，06-18 47.57)；當日行情 2026-11-25 (證交所 OpenAPI 還沒公布 11-26)，5 檔 ETF 收盤與漲跌和價格檔一致；配息、新聞 (73 家) 同步更新
 
 ## 待辦清單 (依序)
 1. **需要使用者**：申請 Groq 金鑰，跑 `scripts/check_groq.py`，依結果調整 prompt。
@@ -129,7 +131,7 @@
 
 ## 已知問題
 - 開發環境 2026-11-21 起可以連證交所、櫃買、Yahoo、FinMind、Groq (Groq 還沒有金鑰，所以 LLM 路徑還沒實際跑過)。
-- Claude Code 網頁版的雲端環境 (2026-11-26 檢查) 連不到證交所、櫃買、Yahoo、FinMind、Groq (代理伺服器回 403)，資料更新與 Groq 測試要在 Colab 或實驗室伺服器跑，或在環境設定的允許網域加上這些網站。
+- Claude Code 雲端的預設環境連不到證交所、櫃買、Yahoo、FinMind、Groq；要用個人環境「etf-wiki」(已設定好允許網域與金鑰)。Yahoo 偶爾回 429 (流量限制)，價格以 FinMind 為主所以不影響。
 - 雲端環境預裝的瀏覽器配合 Playwright 1.63.0；`pip install -r requirements-dev.txt` 會裝最新版而找不到瀏覽器，這時執行 `pip install playwright==1.63.0`。
 - 價格改用 FinMind 後，Yahoo 在 2008 到 2009 年的錯誤價格已經修正。沒有設定 `FINMIND_TOKEN` 而且 FinMind 額度用完時，會退回 Yahoo，這時候那段期間的價格會不準 (log 的 `source` 會寫 yahoo)。
 - 知識庫自編文件：`income-equalization`、`split` 已對照來源改寫 (status: 已核對)；其餘標示「待核對」的 9 篇期末前要對照來源檢查 (要能連到證交所等網站) (`grep -l '待核對' data/kb/*.md`)。
