@@ -1996,7 +1996,7 @@ function firstSection(md, limit = 420) {
   for (let ln of md.split('\n')) {
     ln = ln.trim();
     if (!ln || ln.startsWith('#') || ln.startsWith('|')) { if (n > 120 && ln.startsWith('#')) break; continue; }
-    ln = ln.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s*\(來源[:：][^)]*\)/g, '').replace(/^[-*]\s*/, '').replace(/\*\*/g, '');
+    ln = ln.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\s*\(來源[:：][^)]*\)/g, '').replace(/^[-*]\s*/, '').replace(/\*\*/g, '').replace(/[:：]\s*$/, '');   // 後面原本接表格的冒號
     out.push(/[。！？]$/.test(ln) ? ln : ln + '。'); n += ln.length; if (n > limit) break;
   }
   return esc(out.join(''));

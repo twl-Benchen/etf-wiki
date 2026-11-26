@@ -223,11 +223,14 @@ def _first_section(md: str, limit: int = 420) -> str:
     lines = []
     for ln in md.splitlines():
         ln = ln.strip()
+        if ln.startswith("|"):   # 表格模板版不呈現
+            continue
         if not ln or ln.startswith("#"):
             if lines and sum(len(x) for x in lines) > 120:
                 break
             continue
         ln = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", ln); ln = re.sub(r"\s*\(來源[:：][^)]*\)", "", ln); ln = re.sub(r"^[-*]\s*", "", ln).replace("**", "")
+        ln = re.sub(r"[:：]\s*$", "", ln)   # 後面原本接表格的冒號
         lines.append(ln)
         if sum(len(x) for x in lines) > limit:
             break
