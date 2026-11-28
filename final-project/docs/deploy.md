@@ -21,7 +21,24 @@ python scripts/check_groq.py                # 確認模型名稱與 LLM 的規�
 
 `check_groq.py` 最後會列出「退回規則或模板的次數」。次數偏多時，把輸出貼給 Claude 調整 `planner.py` 的 `planner_prompt()` 或 `writer.py` 的 `WRITER_SYSTEM`。
 
-## 3. 後端部署到 Hugging Face Space
+## 3. 後端部署到 Render (目前採用)
+
+Hugging Face 從 2026-11 起，Docker 與 Gradio 類型的 Space 要訂閱 PRO 才能用免費 CPU (只有純前端的 Static Space 免費)，所以後端改放 Render。Render 直接從 GitHub repo 建置 `final-project/Dockerfile`，不用另外上傳檔案。
+
+1. 用 GitHub 帳號登入 render.com，授權 Render 讀取 `twl-Benchen/etf-wiki`。
+2. New → Web Service → 選 `twl-Benchen/etf-wiki`，設定：
+   - Name：`etf-metropolis` (網址會是 `https://etf-metropolis.onrender.com`，名稱被用走時 Render 會加後綴)
+   - Branch：`main`
+   - Root Directory：`final-project`
+   - Runtime / Language：Docker (Dockerfile Path 留預設 `./Dockerfile`)
+   - Instance Type：Free
+3. Environment Variables：新增 `GROQ_API_KEY` (值是 Groq 金鑰) 與 `ETFCITY_CORS=https://twl-benchen.github.io`。
+4. 建立後等建置完成，打開 `<網址>/api/health` 應該看到 `"llm":"groq"`。
+5. Dockerfile 會讀 Render 給的環境變數 `PORT`；後端啟動後約用 180 MB 記憶體。
+6. 免費方案閒置一段時間會休眠，第一次連線要等它醒來，展示前先打開一次網址。免費方案的細節以 Render 網站上的說明為準。
+7. main 有新的 commit 時 Render 預設會自動重新部署 (資料更新也會跟著上線)。
+
+## 3-1. 後端部署到 Hugging Face Space (需要 PRO)
 
 1. 在 Hugging Face 建一個 Space，SDK 選 **Docker**。
 2. 在 `final-project/` 執行 `python scripts/make_space.py`，把產生的 `dist/space/` 裡的全部檔案上傳到 Space (網頁上的 Files → Add file → Upload files，或 git push 到 Space 的 repo)。
