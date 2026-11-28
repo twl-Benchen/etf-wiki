@@ -639,6 +639,10 @@ async function ask(q) {
   $('hud').hidden = true;
   busy = true; $('send').disabled = true; $('q').value = '';
   addUser(q); setChips([]); if (typeof gameOnAsk === 'function') gameOnAsk(q);
+  if (!online && waking) {   // 後端還在休眠中醒來：等它，醒不來就改用離線版
+    addBot(ROLE.guide, '後端正在醒來 (免費伺服器閒置後會休眠，大約要等 1 分鐘)，好了就馬上回答。', '');
+    const typing0 = addTyping(); await waking; typing0.remove();
+  }
   const typing = addTyping();
   if (online && await askApi(q, typing)) { busy = false; $('send').disabled = false; return; }
   const P = planner(q), Hd = HANDLERS[P.intent](P);

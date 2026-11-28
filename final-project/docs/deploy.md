@@ -54,7 +54,9 @@ Hugging Face 從 2026-11 起，Docker 與 Gradio 類型的 Space 要訂閱 PRO �
 - 表格介面：`.../final-project/web/table.html`
 - 實驗二測試頁：`.../final-project/web/study.html`
 
-要連上後端：打開城市 →「城市設定」→ 後端網址填 Space 的網址 → 連線。也可以直接用網址參數 `?api=https://<帳號>-<space>.hf.space`，設定會記在瀏覽器裡。
+城市預設連 Render 的後端 `https://etf-metropolis.onrender.com` (`web/src/api.part.js` 的 `API_DEFAULT`)。要換後端：打開城市 →「城市設定」→ 後端網址 → 連線，或用網址參數 `?api=<網址>`，設定會記在瀏覽器裡；`?api=` 留空就固定用離線示範模式。
+
+後端休眠時，城市先快速試 6 秒，沒回應就顯示「後端喚醒中」並每隔幾秒再試，最多等 90 秒；這段時間問的問題會等後端醒來再回答，90 秒還連不上才改用離線版。問答途中後端斷線時，那一題用離線版回答，同時在背景重新喚醒。
 
 修改前端後：
 

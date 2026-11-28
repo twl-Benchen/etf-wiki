@@ -1,5 +1,7 @@
 /* ================= 後端連線：連上時問答交給後端的 LLM Agent，畫面動作由這裡執行 ================= */
-let online = false, API = '', apiCtx = null, apiInfo = null;
+const API_DEFAULT = 'https://etf-metropolis.onrender.com';   // Render 免費方案，閒置後會休眠
+const WAKE_MS = 90000;                                         // 休眠後第一次連線可能要等 50 秒以上
+let online = false, API = '', apiCtx = null, apiInfo = null, waking = null, apiSeq = 0;
 const LS = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} } };
 async function fetchJson(url, opt = {}, ms = 45000) {
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
@@ -11,21 +13,40 @@ async function fetchJson(url, opt = {}, ms = 45000) {
 }
 function setMode() {
   const sub = $('modeTxt');
-  if (sub) sub.textContent = online ? `已連線後端｜${apiInfo && apiInfo.llm === 'groq' ? 'LLM Agent' : '規則版 Agent (後端未設定金鑰)'}` : '離線示範｜瀏覽器內的規則版 Agent';
-  const st = $('apiState'); if (st) st.textContent = online ? `已連線：${API}` : API ? `連不上：${API}` : '未設定，使用離線示範模式';
+  if (sub) sub.textContent = online ? `已連線後端｜${apiInfo && apiInfo.llm === 'groq' ? 'LLM Agent' : '規則版 Agent (後端未設定金鑰)'}` : waking ? '後端喚醒中，先用瀏覽器內的規則版 Agent' : '離線示範｜瀏覽器內的規則版 Agent';
+  const st = $('apiState'); if (st) st.textContent = online ? `已連線：${API}` : waking ? `喚醒中：${API} (免費伺服器休眠後約要等 1 分鐘)` : API ? `連不上：${API}` : '未設定，使用離線示範模式';
   const pb = $('pfParse'); if (pb) pb.disabled = !online;
 }
 async function connectApi(url) {
   API = (url || '').trim().replace(/\/+$/, ''); online = false; apiInfo = null;
   if (API && !/^https?:\/\//.test(API)) API = 'https://' + API;
-  if (API) {
-    try { apiInfo = await fetchJson(API + '/api/health', {}, 6000); online = !!apiInfo.ok; } catch (e) { online = false; }
-  }
-  LS.set('etfcity.api', API); setMode(); return online;
+  LS.set('etfcity.api', API);
+  const seq = ++apiSeq; waking = null; setMode();
+  if (!API) return false;
+  // 先快速試一次；沒回應代表伺服器可能在休眠，改成每隔一段時間再試，直到 WAKE_MS 為止
+  const job = (async () => {
+    const end = Date.now() + WAKE_MS;
+    for (let first = true; seq === apiSeq && Date.now() < end; first = false) {
+      const t0 = Date.now();
+      try {
+        const h = await fetchJson(API + '/api/health', {}, first ? 6000 : Math.max(3000, Math.min(30000, end - Date.now())));
+        if (seq !== apiSeq) return false;
+        apiInfo = h; online = !!h.ok; return online;
+      } catch (e) {
+        if (seq !== apiSeq) return false;
+        if (first) { waking = job; setMode(); }
+        await sleep(Math.max(0, 3000 - (Date.now() - t0)));
+      }
+    }
+    return false;
+  })();
+  const ok = await job;
+  if (seq === apiSeq) { waking = null; setMode(); }
+  return ok;
 }
 function initApi() {
   const qs = new URLSearchParams(location.search).get('api');
-  const url = qs ?? LS.get('etfcity.api') ?? (CITY.api_default || '');
+  const url = qs ?? LS.get('etfcity.api') ?? (CITY.api_default || API_DEFAULT);
   if ($('apiUrl')) $('apiUrl').value = url;
   setMode();
   if (url) connectApi(url);
@@ -77,8 +98,8 @@ async function askApi(q, typing) {
     const r = await fetchJson(API + '/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q, context: apiCtx }) });
     typing.remove(); renderApi(r); return true;
   } catch (e) {
-    online = false; setMode();
-    addBot(ROLE.guide, '後端暫時連不上 (免費的伺服器閒置後會休眠，可能要等一下)，這題先用離線模式回答。', '');
+    addBot(ROLE.guide, '後端暫時連不上 (免費的伺服器閒置後會休眠，大約要等 1 分鐘)，這題先用離線模式回答，同時在背景叫醒後端。', '');
+    connectApi(API);
     return false;
   }
 }

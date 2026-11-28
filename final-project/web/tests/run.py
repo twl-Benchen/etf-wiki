@@ -38,7 +38,8 @@ def open_page(p, w=1366, h=768, page="index.html", **ctx):
         else:
             r.continue_()
     pg.route("**/*", route)
-    pg.goto(serve() + page)
+    # 預設後端是 Render；測試加 ?api= 固定用離線版 (要測連線模式時設環境變數 API=網址)
+    pg.goto(serve() + page + ("?api=" + os.environ.get("API", "") if page == "index.html" else ""))
     if page == "index.html":
         pg.wait_for_function("window.__ready===true", timeout=90000)
         pg.wait_for_function("!!window.__assets", timeout=90000)
